@@ -32,7 +32,7 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
         )
 
         response_str = response.choices[0].message.content.replace("\n", "").replace("```json", "").replace("```", "")
-        #print(response_str)
+        print(response_str)
 
         json_match = re.search(r'\{.*\}', response_str, re.DOTALL)
         if not json_match:
