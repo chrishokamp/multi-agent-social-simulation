@@ -37,17 +37,23 @@ To run this project locally, ensure you have the following installed:
 
 ### Running Backend Service
 
-1. Install required python modules: \
+- Install required python modules: \
    `pip install -r backend/src/requirements.txt`
-2. Populate required environment variables in `backend/src/.env`:
 
-```
-OPENAI_API_KEY="..."
-DB_CONNECTION_STRING="mongodb://localhost:27017"
+- Install mongo: \
+```bash
+# on Mac
+brew tap mongodb/brew
+brew install mongodb-community@6.0
+brew services start mongodb/brew/mongodb-community@6.0
 ```
 
-3. Run service: \
-   `python backend/src/main.py`
+- Run service:
+  ```bash
+  export OPENAI_API_KEY="..."  # or AZURE_OPENAI_API_KEY="..."
+  export DB_CONNECTION_STRING="mongodb://localhost:27017"
+  python backend/src/main.py
+  ```
 
 ### Running Frontend
 
