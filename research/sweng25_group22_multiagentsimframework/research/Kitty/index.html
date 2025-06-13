@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negotiation Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 70%;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin: 10px 0;
+            display: inline-block;
+            position: relative;
+        }
+
+        .customer-bubble {
+            background-color: #e0e0e0;
+            align-self: flex-start;
+        }
+
+        .salesperson-bubble {
+            background-color: #e0e0e0;
+            align-self: flex-start;
+        }
+
+        /* speach bubble tail */
+        .chat-bubble::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+
+        /* speech bubble tail */
+        .customer-bubble::after {
+            top: 50%;
+            left: -10px;
+            border-top: 10px solid #e0e0e0;
+            transform: translateY(-50%);
+        }
+
+        .salesperson-bubble::after {
+            top: 50%;
+            left: -10px;
+            border-top: 10px solid #e0e0e0;
+            transform: translateY(-50%);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 20px;
+            display: inline-block;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .name {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Negotiation Simulation </h1>
+    <h2 style="text-align: center;">Conversation History </h2>
+    <div class="chat-container" id="chat-container"></div>
+
+    <script>
+        // Fetch and render conversation log
+        async function renderChat() {
+            try {
+                // Fetch negotiation_log.json file
+                const response = await fetch('negotiation_log_saved.json');
+
+                // Check if the fetch request was successful
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log(data);
+                // Get conversation history
+                const conversation = data.conversation;
+
+                const chatContainer = document.getElementById('chat-container');
+                
+                // Loop through each message in the conversation log
+                conversation.forEach((entry) => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message-container');
+                    
+                    // Create the avatar based on the role
+                    const avatar = document.createElement('img');
+                    avatar.classList.add('avatar');
+                    avatar.src = entry.role === 'customer' ? 'images/customer.jpg' : 'images/sales.jpg';
+                    avatar.alt = entry.role === 'customer' ? 'Customer Avatar' : 'Salesperson Avatar';
+
+                    // Create the message bubble
+                    const messageBubble = document.createElement('div');
+                    messageBubble.classList.add('chat-bubble');
+                    messageBubble.classList.add(entry.role === 'customer' ? 'customer-bubble' : 'salesperson-bubble');
+                    
+                    // Add the role label (Salesperson: or Customer:) inside the bubble
+                    const label = document.createElement('span');
+                    label.classList.add('label');
+                    label.innerText = entry.role === 'customer' ? 'Customer: ' : 'Salesperson: ';
+                    
+                    // Append the label and the message to the message bubble
+                    messageBubble.appendChild(label);
+                    messageBubble.appendChild(document.createTextNode(entry.message));
+
+                    // Append the avatar and message bubble to the message container
+                    messageDiv.appendChild(avatar);
+                    messageDiv.appendChild(messageBubble);
+
+                    // Append the message container to the chat container
+                    chatContainer.appendChild(messageDiv);
+                });
+            } catch (error) {
+                console.error('Error loading or parsing negotiation_log.json:', error);
+            }
+        }
+        window.onload = renderChat;
+    </script>
+</body>
+</html>
+

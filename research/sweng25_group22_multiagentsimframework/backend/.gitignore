@@ -1,0 +1,6 @@
+.env
+__pycache__
+gfg_postman.json
+.DS_Store
+.vscode
+.venv

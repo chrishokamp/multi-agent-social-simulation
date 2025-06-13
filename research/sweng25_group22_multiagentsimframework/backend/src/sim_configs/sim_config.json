@@ -1,0 +1,41 @@
+{
+    "name": "Car Sales Simulation",
+    "models": {
+      "agent": "GPT",
+      "info_return_agent": "GPT",
+      "group_chat": "GPT"
+    },
+    "agents": [
+      {
+        "name": "SalesAgent",
+        "description": "Agent responsible for providing car sales information, provide concise 1-2 sentences, with relevant information",
+        "parameters": {
+          "inventory": ["Sedan", "SUV", "Truck", "Electric"],
+          "region": "North America",
+          "sales_target": 1000
+        },
+        "free_prompt": "Can you tell me about the latest car models?"
+      },
+      {
+        "name": "CustomerAgent",
+        "description": "Agent acting as a customer browsing for a car, provide concise 1-2 sentences",
+        "parameters": {
+          "preferred_model": "Sedan",
+          "budget": 30000,
+          "interest": ["fuel_efficiency", "price"]
+        },
+        "free_prompt": "What are the most fuel-efficient cars within my budget?"
+      }
+    ],
+    "termination_condition": "max_sales_target_reached",
+    "output_variables": [
+      {
+        "name": "car_recommendation",
+        "type": "String"
+      },
+      {
+        "name": "sale_result",
+        "type": "Boolean"
+      }
+    ]
+}  

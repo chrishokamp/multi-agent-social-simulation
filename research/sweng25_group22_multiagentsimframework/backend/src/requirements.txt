@@ -1,0 +1,12 @@
+python-dotenv
+ipdb
+numpy
+openai
+autogen
+autogen_ext
+autogen_core
+autogen_agentchat
+pymongo
+flask
+flask-cors
+prefect

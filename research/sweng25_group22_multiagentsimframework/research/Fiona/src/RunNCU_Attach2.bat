@@ -1,0 +1,1 @@
+ncu --mode attach --set full -f -o NCU_Output %*
