@@ -1,17 +1,23 @@
 import os
-from pymongo import MongoClient
-from flask import Blueprint, request, jsonify
-
-import openai
 import re
 import json
+from pymongo import MongoClient
+from flask import Blueprint, request, jsonify
+from openai import AsyncOpenAI, AsyncAzureOpenAI
+from utils import create_logger, client_for_endpoint
+
+logger = create_logger(__name__)
 
 mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
 
 gen_config_bp = Blueprint("gen_config", __name__)
 
 def run_sim(def_prompt, json_prompt, desc_prompt):
-    client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    if os.environ.get("AZURE_OPENAI_API_KEY"):
+        client = client_for_endpoint(endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"), api_key=os.environ.get("AZURE_OPENAI_API_KEY"))
+    else:
+        client = client_for_endpoint(api_key=os.environ.get("OPENAI_API_KEY"))
+    
 
     while True:
         print("Running sim to generate config")

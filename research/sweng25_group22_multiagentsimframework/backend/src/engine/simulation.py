@@ -3,14 +3,26 @@ import os
 import json
 
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
-from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.ui import Console
 
+from utils import create_logger
+logger = create_logger(__name__)
+
 class SelectorGCSimulation:
     def __init__(self, config, max_messages=25, min_messages=5):
-        self.model_client = OpenAIChatCompletionClient(model="gpt-4o", api_key=os.environ["OPENAI_API_KEY"])
+        if os.environ.get("AZURE_OPENAI_API_KEY"):
+            logger.info("Using Azure OpenAI client for simulation.")
+            self.model_client = AzureOpenAIChatCompletionClient(
+                azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
+            )
+        else:
+            logger.info("Using OpenAI client for simulation.")
+            self.model_client = OpenAIChatCompletionClient(model="gpt-4o", api_key=os.environ["OPENAI_API_KEY"])
         self.config = config
         self.min_messages = min_messages
 
