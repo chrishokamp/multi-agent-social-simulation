@@ -84,3 +84,7 @@ class SimulationQueue(MongoBase):
 
         print(f"Retrieved simulation: {simulation_id}, {config}")  
         return simulation_id, config
+    
+    def delete(self, simulation_id):
+        result = self.queue_collection.delete_one({"simulation_id": simulation_id})
+        return result.deleted_count > 0

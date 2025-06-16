@@ -111,6 +111,31 @@ curl -X POST http://localhost:5000/sim/create \
   -d @example_config.json
 ```
 
+- Stop the simulation
+
+```bash
+curl -X POST http://localhost:5000/sim/stop \
+  -H "Content-Type: application/json" \
+  -d '{"id": "129d3d68"}'
+```
+
+- View the simulation catalog:
+
+```bash
+curl http://localhost:5000/sim/catalog
+```
+
+- Delete an item from the catalog:
+
+```bash
+curl -X POST http://localhost:5000/sim/del_catalog \   
+  -H "Content-Type: application/json" \
+  -d '{"id": "1b5206ba"}'
+```
+
+
+
+
 ## ✨ Key Features
 
 Our framework makes it easy to create and analyze complex multi-agent simulations powered by LLMs.

@@ -1,4 +1,5 @@
 import os
+import json
 from pymongo import MongoClient
 from flask import Blueprint, jsonify
 
@@ -11,4 +12,4 @@ catalog_bp = Blueprint("catalog", __name__)
 
 @catalog_bp.route("/catalog", methods=["GET"])
 def create_simulation():
-    return jsonify(simulation_catalog.get_all())
+    return json.dumps(simulation_catalog.get_all(), indent=4)
