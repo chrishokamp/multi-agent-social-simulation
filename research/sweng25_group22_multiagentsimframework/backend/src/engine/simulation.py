@@ -3,36 +3,16 @@ import os
 import json
 
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
-from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
-from autogen_ext.models.ollama import OllamaChatCompletionClient
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.ui import Console
 
-from utils import create_logger
+from utils import create_logger, get_autogen_client
 logger = create_logger(__name__)
 
 class SelectorGCSimulation:
     def __init__(self, config, max_messages=25, min_messages=5):
-        if os.environ.get("OLLAMA_MODEL"):
-            logger.info("Using Ollama client for simulation.")
-            self.model_client = OllamaChatCompletionClient(
-                model=os.environ.get("OLLAMA_MODEL"),
-                options={} # TODO: make configurable
-            )
-        elif os.environ.get("AZURE_OPENAI_API_KEY"):
-            logger.info("Using Azure OpenAI client for simulation.")
-            self.model_client = AzureOpenAIChatCompletionClient(
-                azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-                api_key=os.environ["AZURE_OPENAI_API_KEY"],
-                api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
-            )
-        else:
-            logger.info("Using OpenAI client for simulation.")
-            self.model_client = OpenAIChatCompletionClient(
-                model="gpt-4o", 
-                api_key=os.environ["OPENAI_API_KEY"]
-            )
+        self.model_client = get_autogen_client()
         self.config = config
         self.min_messages = min_messages
 
