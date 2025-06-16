@@ -20,8 +20,12 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
         client = client_for_endpoint(endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"), api_key=os.environ.get("AZURE_OPENAI_API_KEY"))
         model_name = os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
     else:
-        client = client_for_endpoint(api_key=os.environ.get("OPENAI_API_KEY"))
+        client = client_for_endpoint(
+            endpoint="https://api.openai.com/v1",
+            api_key=os.environ.get("OPENAI_API_KEY")
+        )
         model_name = None
+
     
 
     max_retries = 5
