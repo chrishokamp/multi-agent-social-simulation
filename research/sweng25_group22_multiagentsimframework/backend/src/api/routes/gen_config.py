@@ -108,7 +108,7 @@ def generate_config():
         """
     
     DEFAULT_PROMPT = """
-        You are an AI Assistent who converts a plain text description of a multi-agent AI simulation into a valid JSON config file.
+        You are an AI Assistant who converts a plain text description of a multi-agent AI simulation into a valid JSON config file.
         You should insert one agent into the config for each person or sentient entity in the description. All humans should be given a unique name such as "Teacher" or "Sarah", but not "Agent 3".
         You should also include as many output variables as needed to determine the result of the simulation.
         Output variables should be concrete and not vague, the name alone should describe the units, range or any other information such that all simulations will fill the variables with comparable data.
