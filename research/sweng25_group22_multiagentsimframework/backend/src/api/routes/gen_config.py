@@ -24,9 +24,12 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
         model_name = None
     
 
-    while True:
+    max_retries = 5
+    retries = 0
+    while retries < max_retries:
         print("Running sim to generate config with model:", model_name)
-        response = client.chat.completions.create(
+        try:
+            response = client.chat.completions.create(
             model=model_name or "gpt-4o", 
             messages=[
                 {"role": "system", "content": def_prompt},
@@ -50,7 +53,12 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
         except json.JSONDecodeError:
             continue
 
-        return response_str
+            return response_str
+        retries += 1
+        logger.error("Failed to generate valid JSON on attempt %d", retries)
+        if retries >= max_retries:
+            logger.error("Max retries reached. Unable to generate valid JSON.")
+            return None
     
 def parse_config_str(s):
     """Removes <think> tags and leading/trailing newlines from the config string."""

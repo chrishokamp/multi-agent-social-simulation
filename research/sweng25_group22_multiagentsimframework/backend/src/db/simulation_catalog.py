@@ -32,7 +32,11 @@ class SimulationCatalog(MongoBase):
         return progress_percentage
     
     def get_all(self):
-        data = self.catalog_collection.find()
+        try:
+            data = self.catalog_collection.find()
+        except Exception as e:
+            logger.error("Error fetching data from catalog: %s", e)
+            return []
         catalog = []
 
         for doc in data:
