@@ -27,38 +27,38 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
     max_retries = 5
     retries = 0
     while retries < max_retries:
-        print("Running sim to generate config with model:", model_name)
         try:
             response = client.chat.completions.create(
-            model=model_name or "gpt-4o", 
-            messages=[
-                {"role": "system", "content": def_prompt},
-                {"role": "user", "content": json_prompt},
-                {"role": "user", "content": desc_prompt}
-            ]
-        )
+                model=model_name or "gpt-4o",
+                messages=[
+                    {"role": "system", "content": def_prompt},
+                    {"role": "user", "content": json_prompt},
+                    {"role": "user", "content": desc_prompt},
+                ],
+            )
 
-        response_str = response.choices[0].message.content.replace("\n", "").replace("```json", "").replace("```", "")
-        print(response_str)
+            response_str = (
+                response.choices[0].message.content
+                .replace("\n", "")
+                .replace("```json", "")
+                .replace("```", "")
+            )
 
-        json_match = re.search(r'\{.*\}', response_str, re.DOTALL)
-        if not json_match:
-            continue
-            
-        try:
+            json_match = re.search(r"\{.*\}", response_str, re.DOTALL)
+            if not json_match:
+                raise ValueError("no JSON found")
+
             parsed_json = json.loads(json_match.group(0))
-            for variable in parsed_json:
-                if parsed_json[variable] == None:
-                    continue
-        except json.JSONDecodeError:
-            continue
+            if any(v is None for v in parsed_json.values()):
+                raise ValueError("null values in JSON")
 
-            return response_str
-        retries += 1
-        logger.error("Failed to generate valid JSON on attempt %d", retries)
-        if retries >= max_retries:
-            logger.error("Max retries reached. Unable to generate valid JSON.")
-            return None
+            return json_match.group(0)          # success
+        except Exception as exc:
+            logger.error("run_sim retry %d failed: %s", retries + 1, exc)
+            retries += 1
+
+    return None  # all retries exhausted
+
     
 def parse_config_str(s):
     """Removes <think> tags and leading/trailing newlines from the config string."""
