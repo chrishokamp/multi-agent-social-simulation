@@ -13,17 +13,21 @@ mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
 gen_config_bp = Blueprint("gen_config", __name__)
 
 def run_sim(def_prompt, json_prompt, desc_prompt):
-    if os.environ.get("AZURE_OPENAI_API_KEY"):
+    if os.environ.get("OLLAMA_MODEL"):
+        client = client_for_endpoint(endpoint="http://localhost:11434/v1")
+        model_name = os.environ.get("OLLAMA_MODEL")
+    elif os.environ.get("AZURE_OPENAI_API_KEY"):
         client = client_for_endpoint(endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"), api_key=os.environ.get("AZURE_OPENAI_API_KEY"))
+        model_name = os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
     else:
         client = client_for_endpoint(api_key=os.environ.get("OPENAI_API_KEY"))
+        model_name = None
     
 
     while True:
-        print("Running sim to generate config")
-
+        print("Running sim to generate config with model:", model_name)
         response = client.chat.completions.create(
-            model="gpt-4o", 
+            model=model_name or "gpt-4o", 
             messages=[
                 {"role": "system", "content": def_prompt},
                 {"role": "user", "content": json_prompt},
@@ -47,6 +51,12 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
             continue
 
         return response_str
+    
+def parse_config_str(s):
+    """Removes <think> tags and leading/trailing newlines from the config string."""
+    s = re.sub(r"<think>.*?</think>", "", s, flags=re.DOTALL)
+    s = s.strip("\n")
+    return s
 
 @gen_config_bp.route("/gen_config", methods=["POST"])
 def generate_config():
@@ -96,6 +106,7 @@ def generate_config():
 
     prompt = "\n\nThis is your simulation description: " + desc + "\n\nDo not write anything except the JSON" 
 
-    config_str = run_sim(DEFAULT_PROMPT, JSON_CONFIG_PROMPT, prompt)   
+    config_str = run_sim(DEFAULT_PROMPT, JSON_CONFIG_PROMPT, prompt)
+    config_str = parse_config_str(config_str)  
 
     return jsonify(json.loads(config_str))

@@ -4,6 +4,7 @@ import json
 
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
 from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
+from autogen_ext.models.ollama import OllamaChatCompletionClient
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.ui import Console
@@ -13,7 +14,13 @@ logger = create_logger(__name__)
 
 class SelectorGCSimulation:
     def __init__(self, config, max_messages=25, min_messages=5):
-        if os.environ.get("AZURE_OPENAI_API_KEY"):
+        if os.environ.get("OLLAMA_MODEL"):
+            logger.info("Using Ollama client for simulation.")
+            self.model_client = OllamaChatCompletionClient(
+                model=os.environ.get("OLLAMA_MODEL"),
+                options={} # TODO: make configurable
+            )
+        elif os.environ.get("AZURE_OPENAI_API_KEY"):
             logger.info("Using Azure OpenAI client for simulation.")
             self.model_client = AzureOpenAIChatCompletionClient(
                 azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
@@ -22,7 +29,10 @@ class SelectorGCSimulation:
             )
         else:
             logger.info("Using OpenAI client for simulation.")
-            self.model_client = OpenAIChatCompletionClient(model="gpt-4o", api_key=os.environ["OPENAI_API_KEY"])
+            self.model_client = OpenAIChatCompletionClient(
+                model="gpt-4o", 
+                api_key=os.environ["OPENAI_API_KEY"]
+            )
         self.config = config
         self.min_messages = min_messages
 
@@ -37,7 +47,8 @@ class SelectorGCSimulation:
         }
 
         # inject InformationReturnAgent into config
-        if not any(agent["name"] == "InformationReturnAgent" for agent in self.config["agents"]): # check if InformationReturnAgent is there already
+        if not any(agent["name"] == "InformationReturnAgent" for agent in self.config["agents"]):
+            # check if InformationReturnAgent is there already
             with open(os.path.join(self.config_directory, "InformationReturnAgent.json"), "r", encoding="utf-8") as file:
                 information_return_agent = json.load(file)
                 information_return_agent["prompt"] = information_return_agent["prompt"].format(
@@ -65,7 +76,7 @@ class SelectorGCSimulation:
         with open(os.path.join(self.config_directory, "selector_prompt.txt"), "r", encoding="utf-8") as file:
             selector_prompt = file.read()
 
-        self.gc = SelectorGroupChat(
+        self.group_chat = SelectorGroupChat(
             self.agents,
             model_client=self.model_client,
             selector_prompt=selector_prompt,
@@ -103,5 +114,5 @@ class SelectorGCSimulation:
 
 
     async def run(self):
-        simulation_results = await Console(self.gc.run_stream())
+        simulation_results = await Console(self.group_chat.run_stream())
         return self._process_result(simulation_results)

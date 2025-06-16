@@ -10,3 +10,4 @@ pymongo
 flask
 flask-cors
 prefect
+ollama

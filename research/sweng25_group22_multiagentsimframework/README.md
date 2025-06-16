@@ -40,27 +40,34 @@ To run this project locally, ensure you have the following installed:
 - Install required python modules: \
    `pip install -r backend/src/requirements.txt`
 
-- Install mongo: \
-```bash
-# on Mac
-brew tap mongodb/brew
-brew install mongodb-community@6.0
-brew services start mongodb/brew/mongodb-community@6.0
-```
+- Install mongo:
+  ```bash
+  # on Mac
+  brew tap mongodb/brew
+  brew install mongodb-community@6.0
+  brew services start mongodb/brew/mongodb-community@6.0
+  ```
 
 - Run service:
   ```bash
-  export OPENAI_API_KEY="..."  # or AZURE_OPENAI_API_KEY="..."
+  export OPENAI_API_KEY="..."  
+  # export AZURE_OPENAI_ENDPOINT="..." AZURE_OPENAI_API_KEY="..."
+  # export OLLAMA_MODEL="qwen3:4b"
   export DB_CONNECTION_STRING="mongodb://localhost:27017"
   python backend/src/main.py
   ```
 
 ### Running Frontend
 
-1. Install required node modules: \
-   `npm install`
-2. Run the frontend: \
-   `npm run dev`
+1. Install required node modules:
+   ```bash
+   nvm use 20
+   npm install
+   ```
+2. Run the frontend:
+   ```bash
+   npm run dev
+   ```
 
 ## ✨ Key Features
 
