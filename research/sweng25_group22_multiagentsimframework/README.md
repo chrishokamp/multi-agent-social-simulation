@@ -57,6 +57,26 @@ To run this project locally, ensure you have the following installed:
   python backend/src/main.py
   ```
 
+- See all service routes:
+```bash
+curl http://localhost:5000/routes
+```
+
+```json
+{
+    "routes": [
+        "/static/<path:filename>",
+        "/sim/results",
+        "/sim/create",
+        "/sim/catalog",
+        "/sim/gen_config",
+        "/sim/del_results",
+        "/sim/del_catalog",
+        "/routes"
+    ]
+}
+```
+
 ### Running Frontend
 
 1. Install required node modules:
@@ -68,6 +88,28 @@ To run this project locally, ensure you have the following installed:
    ```bash
    npm run dev
    ```
+
+### Making requests to the backend
+
+- Generate a config:
+
+```bash
+curl -X POST http://localhost:5000/sim/gen_config \
+  -H "Content-Type: application/json" \
+  -d '{
+        "def": "You are an agent in a negotiation scenario.",
+        "json": "Please return a JSON object with fields: item, price, urgency.",
+        "desc": "You are trying to buy a car under your budget and prefer a quick deal."
+      }' | tee example_config.json
+```
+
+- Run a simulation with a given config:
+
+```bash
+curl -X POST http://localhost:5000/sim/create \        
+  -H "Content-Type: application/json" \
+  -d @example_config.json
+```
 
 ## ✨ Key Features
 
