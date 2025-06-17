@@ -3,6 +3,9 @@ import time
 
 from db.base import MongoBase
 
+from utils import create_logger
+logger = create_logger(__name__)
+
 class SimulationQueue(MongoBase):
     def __init__(self, mongo_client):
         super().__init__(mongo_client)
@@ -77,6 +80,7 @@ class SimulationQueue(MongoBase):
         self.queue_collection.update_one(query, {"$inc": {"remaining_runs": -1}})
 
         if remaining_runs <= 0:
+            logger.info("Simulation %s has no remaining runs, deleting from queue.", oldest_object["simulation_id"])
             self.queue_collection.delete_one(query)
 
         simulation_id = oldest_object["simulation_id"]
