@@ -241,7 +241,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
         ))}
       </div>
     </div>
-  );
+);
 };
 
 const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating }) => {
@@ -375,8 +375,7 @@ const Tab = ({ label, isActive, onClick }) => {
 
 const Configurator = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('ai'); // Changed from 'manual' to 'ai'
-
+  const [activeTab, setActiveTab] = useState('ai');
   // Manual configuration state
   const [name, setName] = useState('');
   const [numRuns, setNumRuns] = useState(1);
@@ -384,13 +383,33 @@ const Configurator = () => {
   const [terminationCondition, setTerminationCondition] = useState('');
   const [outputVariables, setOutputVariables] = useState([]);
 
+  const [rawJson, setRawJson] = useState('');
+
   // Shared state
   const [simulationConfig, setSimulationConfig] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
-  // Handle AI-generated configuration
+  // Load raw JSON into form
+  const loadJson = () => {
+    try {
+      const parsed = JSON.parse(rawJson);
+      if (!parsed.config || !parsed.num_runs) {
+        throw new Error('Must include top-level "config" and "num_runs"');
+      }
+      setName(parsed.config.name || '');
+      setNumRuns(parsed.num_runs);
+      setAgents(parsed.config.agents || []);
+      setTerminationCondition(parsed.config.termination_condition || '');
+      setOutputVariables(parsed.config.output_variables || []);
+      setSimulationConfig(parsed);
+      setError('');
+    } catch (e) {
+      setError(`Invalid JSON: ${e.message}`);
+    }
+  };
+
   const handleConfigGenerated = (config) => {
     setIsGenerating(false);
 
@@ -549,9 +568,24 @@ const Configurator = () => {
 
         {/* Tab content */}
         <div className="pt-4">
-          {activeTab === 'manual' ? (
-            // Manual configuration form
+          {activeTab === 'manual' && (
             <>
+              {/* Raw JSON input */}
+              <TextArea
+                label="Raw JSON"
+                description="Paste full config here to auto-populate fields"
+                value={rawJson}
+                onChange={setRawJson}
+                placeholder='{"num_runs":10,"config":{...}}'
+                height="min-h-24"
+                container="bg-transparent"
+                textSize="text-sm"
+                textArea="bg-violet-900/10"
+              />
+              <Button color="green" onClick={loadJson}>
+                Load JSON
+              </Button>
+
               <TextField
                 label="Simulation Name"
                 description="Provide a descriptive name for this simulation"
@@ -582,8 +616,9 @@ const Configurator = () => {
 
               <OutputVariablesList variables={outputVariables} setVariables={setOutputVariables} />
             </>
-          ) : (
-            // AI configuration generator
+          )}
+
+          {activeTab === 'ai' && (
             <AIConfigGenerator
               onConfigGenerated={handleConfigGenerated}
               isGenerating={isGenerating}
