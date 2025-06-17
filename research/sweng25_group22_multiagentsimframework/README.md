@@ -125,6 +125,13 @@ curl -X POST http://localhost:5000/sim/stop \
 curl http://localhost:5000/sim/catalog
 ```
 
+- view the simulation results:
+
+```bash
+curl -G http://localhost:5000/sim/results \
+  --data-urlencode "id=129d3d68"
+```
+
 - Delete an item from the catalog:
 
 ```bash
