@@ -1,6 +1,9 @@
 from db.base import MongoBase
 from db.simulation_results import SimulationResults
 
+from utils import create_logger
+logger = create_logger(__name__)
+
 class SimulationCatalog(MongoBase):
     def __init__(self, mongo_client):
         super().__init__(mongo_client)
