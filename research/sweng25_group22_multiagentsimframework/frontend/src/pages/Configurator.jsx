@@ -9,6 +9,7 @@ import { RiAiGenerate } from 'react-icons/ri';
 import { MdOutlineQueuePlayNext } from 'react-icons/md';
 import { FaListUl } from 'react-icons/fa6';
 
+
 const TextField = ({ label, description, value, onChange, placeholder }) => {
   return (
     <label className="flex flex-col mt-3 p-3 rounded-lg text-white bg-transparent border border-violet-400/40 hover:border-violet-400">
@@ -382,6 +383,8 @@ const Configurator = () => {
   const [agents, setAgents] = useState([]);
   const [terminationCondition, setTerminationCondition] = useState('');
   const [outputVariables, setOutputVariables] = useState([]);
+  const [temperature, setTemperature] = useState(1);   // 0-2
+  const [topP, setTopP]             = useState(1);   // 0-1
 
   const [rawJson, setRawJson] = useState('');
 
@@ -430,6 +433,8 @@ const Configurator = () => {
     setSimulationConfig({
       ...config,
       num_runs: 10,
+      temperature: parseFloat(temperature),
+      top_p: parseFloat(topP)
     });
 
     // Log the simulation ID
@@ -500,6 +505,8 @@ const Configurator = () => {
 
     const config = {
       num_runs: parseInt(numRuns),
+      temperature: parseFloat(temperature),
+      top_p: parseFloat(topP),
       config: {
         name: name,
         agents: agents,
@@ -601,6 +608,23 @@ const Configurator = () => {
                 onChange={(value) => setNumRuns(value)}
                 placeholder="e.g., 10"
               />
+
+              <TextField
+                label="Temperature"
+                description="0 = deterministic, 2 = very random"
+                value={temperature}
+                onChange={setTemperature}
+                placeholder="e.g., 1"
+              />
+
+              <TextField
+                label="Top-p"
+                description="Nucleus sampling cutoff (0-1)"
+                value={topP}
+                onChange={setTopP}
+                placeholder="e.g., 1"
+              />
+
 
               <AgentsList agents={agents} setAgents={setAgents} />
 

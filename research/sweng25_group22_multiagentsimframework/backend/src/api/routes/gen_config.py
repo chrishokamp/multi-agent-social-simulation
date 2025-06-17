@@ -12,7 +12,7 @@ mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
 
 gen_config_bp = Blueprint("gen_config", __name__)
 
-def run_sim(def_prompt, json_prompt, desc_prompt):
+def run_sim(def_prompt, json_prompt, desc_prompt, *, temperature=1.0, top_p=1.0):
     if os.environ.get("OLLAMA_MODEL"):
         client = client_for_endpoint(endpoint="http://localhost:11434/v1")
         model_name = os.environ.get("OLLAMA_MODEL")
@@ -34,6 +34,8 @@ def run_sim(def_prompt, json_prompt, desc_prompt):
         try:
             response = client.chat.completions.create(
                 model=model_name or "gpt-4o",
+                temperature=temperature,
+                top_p=top_p,
                 messages=[
                     {"role": "system", "content": def_prompt},
                     {"role": "user", "content": json_prompt},
@@ -73,6 +75,9 @@ def parse_config_str(s):
 @gen_config_bp.route("/gen_config", methods=["POST"])
 def generate_config():
     request_json = request.get_json()
+    temperature = float(request_json.get("temperature", 1.0))
+    top_p       = float(request_json.get("top_p", 1.0))
+
 
     desc = request_json["desc"]
     if not desc:
@@ -118,7 +123,14 @@ def generate_config():
 
     prompt = "\n\nThis is your simulation description: " + desc + "\n\nDo not write anything except the JSON" 
 
-    config_str = run_sim(DEFAULT_PROMPT, JSON_CONFIG_PROMPT, prompt)
+    config_str = run_sim(
+    DEFAULT_PROMPT,
+    JSON_CONFIG_PROMPT,
+    prompt,
+    temperature=temperature,
+    top_p=top_p,
+    )
+
     config_str = parse_config_str(config_str)  
 
     return jsonify(json.loads(config_str))
