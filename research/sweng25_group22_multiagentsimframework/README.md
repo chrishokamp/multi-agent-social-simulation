@@ -58,24 +58,9 @@ To run this project locally, ensure you have the following installed:
   ```
 
 - See all service routes:
-```bash
-curl http://localhost:5000/routes
-```
-
-```json
-{
-    "routes": [
-        "/static/<path:filename>",
-        "/sim/results",
-        "/sim/create",
-        "/sim/catalog",
-        "/sim/gen_config",
-        "/sim/del_results",
-        "/sim/del_catalog",
-        "/routes"
-    ]
-}
-```
+  ```bash
+  curl http://localhost:5000/routes
+  ```
 
 ### Running Frontend
 
