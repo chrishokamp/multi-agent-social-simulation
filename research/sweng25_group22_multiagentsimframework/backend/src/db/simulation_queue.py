@@ -61,6 +61,12 @@ class SimulationQueue(MongoBase):
             "config": config
         })
         
+        self.db["configs"].update_one(
+            {"simulation_id": simulation_id},
+            {"$set": {"config": config}},
+            upsert=True,
+        )
+        
         print(f"Inserted simulation: {simulation_id}")
         
         return simulation_id

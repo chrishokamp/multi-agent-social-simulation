@@ -148,6 +148,24 @@ const Dashboard = () => {
     setSimulationId(event.target.value);
   };
 
+  const handleDownloadConfig = async () => {
+    try {
+      const cfg = await api.getSimulationConfig(simulationId);
+      const blob = new Blob([JSON.stringify(cfg, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `simulation_${simulationId}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(`Failed to download config: ${err.message}`);
+    }
+  };
+
+
   // Submit simulation ID to view dashboard
   const handleViewDashboard = async () => {
     if (!simulationId) {
@@ -856,14 +874,27 @@ const Dashboard = () => {
       <Navbar />
       <div className="flex justify-between items-center mb-4 mt-22">
         <h1 className="text-2xl text-white font-bold">Simulation Dashboard</h1>
-        <Link
-          to="/simulations"
-          className="px-4 py-2 bg-violet-800 hover:shadow-button text-white rounded-lg transition-colors cursor-pointer"
-        >
-          <TbArrowBackUp className="inline-block -ml-2 mr-2 mb-0.75 h-5 w-5" />
-          Return to Catalog
-        </Link>
+
+        {/* action buttons */}
+        <div className="flex space-x-2">
+          <Link
+            to="/simulations"
+            className="px-4 py-2 bg-violet-800 hover:shadow-button text-white rounded-lg transition-colors flex items-center"
+          >
+            <TbArrowBackUp className="mr-2 h-5 w-5" />
+            Catalog
+          </Link>
+
+          <button
+            onClick={handleDownloadConfig}
+            className="px-4 py-2 bg-violet-800 hover:shadow-button text-white rounded-lg transition-colors flex items-center"
+          >
+            <IoMdSave className="mr-2 h-5 w-5" />
+            Download&nbsp;JSON
+          </button>
+        </div>
       </div>
+    
       {/* Simulation Info Panel */}
       <div className="text-white">
         <div className="p-2 bg-violet-600/5 border border-violet-400 rounded mb-4">
@@ -891,7 +922,7 @@ const Dashboard = () => {
       <div className="mb-6">
         <ReactECharts option={generateMessageChartOption()} className="h-80 w-full" />
       </div>
-
+      
       {/* Mode Selector */}
       <div className="mb-6 flex space-x-4">
         <button

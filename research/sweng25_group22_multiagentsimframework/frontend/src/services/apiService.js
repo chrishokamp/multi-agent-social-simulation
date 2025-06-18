@@ -86,7 +86,14 @@ const apiService = {
     deleteSimulationCatalog: async (simulationId) => {
         const response = await fetch(`${API_BASE_URL}/del_catalog`, deleteRequestBody(simulationId));
         return handleResponse(response);
-    }
+    },
+
+      // ↓ add below deleteSimulationCatalog
+    getSimulationConfig: async (simulationId) => {
+        const response = await fetch(`${API_BASE_URL}/config?id=${simulationId}`);
+        return handleResponse(response);
+    },
+
 };
 
 export default apiService;

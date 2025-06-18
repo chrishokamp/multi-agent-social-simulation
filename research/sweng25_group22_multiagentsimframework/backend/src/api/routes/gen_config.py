@@ -2,15 +2,31 @@ import os
 import re
 import json
 from pymongo import MongoClient
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from utils import create_logger, client_for_endpoint
+from db.base import MongoBase 
 
 logger = create_logger(__name__)
 
 mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
+db = MongoBase(mongo_client).db 
 
 gen_config_bp = Blueprint("gen_config", __name__)
+
+get_config_bp = Blueprint("get_config", __name__)
+
+@get_config_bp.route("/config", methods=["GET"])
+def get_config():
+    sim_id = request.args.get("id")
+    if not sim_id:
+        return jsonify({"message": "id not given"}), 400
+
+    doc = db["configs"].find_one({"simulation_id": sim_id}) 
+    if not doc:
+        return jsonify({"message": "config not found"}), 404
+
+    return jsonify(doc["config"])
 
 def run_sim(def_prompt, json_prompt, desc_prompt, *, temperature=1.0, top_p=1.0):
     if os.environ.get("OLLAMA_MODEL"):

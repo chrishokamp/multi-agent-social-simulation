@@ -3,7 +3,7 @@ import json
 from api.routes.results import results_bp
 from api.routes.create import create_bp
 from api.routes.catalog import catalog_bp
-from api.routes.gen_config import gen_config_bp
+from api.routes.gen_config import gen_config_bp, get_config_bp
 from api.routes.del_results import del_results_bp
 from api.routes.del_catalog import del_catalog_bp
 from api.routes.stop import stop_bp
@@ -21,6 +21,7 @@ app.register_blueprint(gen_config_bp, url_prefix="/sim")
 app.register_blueprint(del_results_bp, url_prefix="/sim")
 app.register_blueprint(del_catalog_bp, url_prefix="/sim")
 app.register_blueprint(stop_bp, url_prefix="/sim")
+app.register_blueprint(get_config_bp, url_prefix="/sim")
 
 @app.route("/routes", methods=["GET"])
 def list_routes():
