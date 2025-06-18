@@ -52,6 +52,7 @@ def get_autogen_client():
         elif os.environ.get("AZURE_OPENAI_API_KEY"):
             logger.info("Using Azure OpenAI client for simulation.")
             return AzureOpenAIChatCompletionClient(
+                model="gpt-4o", # NOTE: this is unused, but it needs to be a valid model for Azure OpenAI
                 azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
                 api_key=os.environ["AZURE_OPENAI_API_KEY"],
                 api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]

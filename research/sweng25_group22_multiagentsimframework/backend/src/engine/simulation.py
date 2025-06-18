@@ -16,6 +16,8 @@ class SelectorGCSimulation:
         self.config = config
         self.min_messages = min_messages
 
+        logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
+
         self.config_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
         
         type_mapping = {
@@ -62,8 +64,9 @@ class SelectorGCSimulation:
             selector_prompt=selector_prompt,
             termination_condition=(
                 TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=max_messages)
-            )
-        )
+            ),
+            emit_team_events=True,
+        )   
 
     def _process_result(self, simulation_result):
         if len(simulation_result.messages) < self.min_messages:
