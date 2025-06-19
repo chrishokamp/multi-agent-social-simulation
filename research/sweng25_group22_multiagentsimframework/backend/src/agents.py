@@ -13,6 +13,8 @@ from typing import Any, Mapping
 
 from autogen_agentchat.agents import AssistantAgent
 
+from utils import client_for_endpoint
+
 
 class UtilityAgent(AssistantAgent, ABC):
     """
@@ -21,14 +23,18 @@ class UtilityAgent(AssistantAgent, ABC):
     """
     def __init__(
         self,
+        system_prompt: str,
         *args,
         strategy: Mapping[str, Any] | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        self.system_prompt: str = system_prompt
         self.strategy: dict[str, Any] = dict(strategy or {})
         # Let the agent remember the environment it saw last time
         self._last_environment: Mapping[str, Any] | None = None
+        self._client, self.model_name = client_for_endpoint()
+        self._utility_history: list[float] = []
 
     def compute_utility(
         self,
@@ -46,11 +52,53 @@ class UtilityAgent(AssistantAgent, ABC):
         self._last_environment = environment
         return 0.0
 
-    @property
-    def last_utility(self) -> float | None:
-        if self._last_environment is None:
-            return None
-        return self.compute_utility(self._last_environment)
+    def learn_from_feedback(
+        self,
+        utility: float,
+        environment: Mapping[str, Any] | None = None
+    ) -> None:
+        
+        if environment is None:
+            return  # no environment to learn from
+
+        history = []
+        for run_id, run in environment["runs"]:
+            history.append(f"###########\nRUN {run_id}:")
+            for m in run["messages"]:
+                msg = f"{m['agent']}: {m['message']}"
+                history.append(msg)
+            history.append("###########\n")
+
+        # history = "\n".join(history[-10:])  # truncate to last 10 messages
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an AI prompt-optimizer. Rewrite the prompt "
+                    "to achieve a lower final price next time. Respond with "
+                    "ONLY the new prompt. Do not include markdown."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"CURRENT PROMPT:\n{self.system_prompt}\n\n"
+                    f"LAST DIALOGUE (truncated):\n{history}\n\n"
+                    f"UTILITY ACHIEVED: {utility:.3f}\n\n"
+                    "Rewrite now:"
+                ),
+            },
+        ]
+
+        response = self._client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+        )
+
+        new_prompt = response.choices[0].message.content.strip()
+        self.system_prompt = new_prompt
+        return
 
 
 # ----------- example agents -------------
@@ -70,15 +118,18 @@ class BuyerAgent(UtilityAgent):
     ) -> float:
         if environment is None:
             environment = self._last_environment or {}
+        self._last_environment = environment
 
-        try:
-            final_price = environment["outputs"]["final_price"]
-            max_price   = self.strategy["max_price"]
-        except (KeyError, TypeError):              # graceful fallback
+        final_price = environment["outputs"]["final_price"]
+        max_price   = self.strategy["max_price"]
+
+        if environment["outputs"]["deal_reached"] is False:
+            # No deal reached, so no utility
             return 0.0
 
         # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
-        return 1.0 - (final_price / max_price)
+        utility = 1.0 - (final_price / max_price)
+        return utility
 
 
 class SellerAgent(UtilityAgent):
@@ -87,11 +138,14 @@ class SellerAgent(UtilityAgent):
     """
 
     def compute_utility(self, environment=None):
-        env = environment or self._last_environment or {}
-        try:
-            final_price = env["outputs"]["final_price"]
-            target      = self.strategy["target_price"]
-        except (KeyError, TypeError):
+        environment = environment or self._last_environment or {}
+        self._last_environment = environment
+        final_price = environment["outputs"]["final_price"]
+        target      = self.strategy["target_price"]
+
+        if environment["outputs"]["deal_reached"] is False:
+            # No deal reached, so no utility
             return 0.0
-        # Cap at 1 so overshooting does not dominate later averaging
-        return min(final_price / target, 1.0)
+
+        utility = min(final_price / target, 1.0)
+        return utility
