@@ -13,20 +13,7 @@ mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
 gen_config_bp = Blueprint("gen_config", __name__)
 
 def run_sim(def_prompt, json_prompt, desc_prompt, *, temperature=1.0, top_p=1.0):
-    if os.environ.get("OLLAMA_MODEL"):
-        client = client_for_endpoint(endpoint="http://localhost:11434/v1")
-        model_name = os.environ.get("OLLAMA_MODEL")
-    elif os.environ.get("AZURE_OPENAI_API_KEY"):
-        client = client_for_endpoint(endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"), api_key=os.environ.get("AZURE_OPENAI_API_KEY"))
-        model_name = os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
-    else:
-        client = client_for_endpoint(
-            endpoint="https://api.openai.com/v1",
-            api_key=os.environ.get("OPENAI_API_KEY")
-        )
-        model_name = None
-
-    
+    client, model_name = client_for_endpoint()
 
     max_retries = 5
     retries = 0
