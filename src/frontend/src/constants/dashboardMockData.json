@@ -1,0 +1,223 @@
+{
+  "id": "1",
+  "num_runs": "3",
+  "runs": [
+    {
+      "num_messages": "15",
+      "chat_log": [
+        {
+          "agent": "Carman",
+          "message": "Hi there! Welcome to CarWorld. How can I assist you today?"
+        },
+        {
+          "agent": "Buyman",
+          "message": "I'm interested in a family SUV with good safety features"
+        },
+        {
+          "agent": "Carman",
+          "message": "I recommend the Honda CR-V, it has a 5-star safety rating and great family features"
+        },
+        {
+          "agent": "Buyman",
+          "message": "What's the price range for that model?"
+        },
+        {
+          "agent": "Carman",
+          "message": "The CR-V starts at $32,000 for the base model"
+        },
+        {
+          "agent": "Buyman",
+          "message": "That's within my budget. Can we discuss financing options?"
+        },
+        {
+          "agent": "Carman",
+          "message": "Of course! We offer competitive rates starting at 3.9% APR"
+        }
+      ],
+      "output_variables": [
+        {
+          "name": "Model",
+          "value": "Honda CR-V"
+        },
+        {
+          "name": "InitialPrice",
+          "value": "32000"
+        },
+        {
+          "name": "FinalPrice",
+          "value": "31500"
+        },
+        {
+          "name": "CustomerSatisfaction",
+          "value": "0.85"
+        },
+        {
+          "name": "ConversationDuration",
+          "value": "25"
+        },
+        {
+          "name": "SaleCompleted",
+          "value": "true"
+        },
+        {
+          "name": "FinancingDiscussed",
+          "value": "true"
+        },
+        {
+          "name": "InterestRate",
+          "value": "3.9"
+        },
+        {
+          "name": "SafetyFeaturesMentioned",
+          "value": "5"
+        },
+        {
+          "name": "TestDriveRequested",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "num_messages": "12",
+      "chat_log": [
+        {
+          "agent": "Carman",
+          "message": "Hello, welcome back to CarWorld!"
+        },
+        {
+          "agent": "Buyman",
+          "message": "I need a car with excellent fuel efficiency."
+        },
+        {
+          "agent": "Carman",
+          "message": "You might consider the Honda CR-V for its balance of performance and efficiency."
+        },
+        {
+          "agent": "Buyman",
+          "message": "What about the pricing?"
+        },
+        {
+          "agent": "Carman",
+          "message": "It starts at $32,200, and we have financing options available."
+        },
+        {
+          "agent": "Buyman",
+          "message": "Sounds reasonable."
+        }
+      ],
+      "output_variables": [
+        {
+          "name": "Model",
+          "value": "Honda CR-V"
+        },
+        {
+          "name": "InitialPrice",
+          "value": "32200"
+        },
+        {
+          "name": "FinalPrice",
+          "value": "31800"
+        },
+        {
+          "name": "CustomerSatisfaction",
+          "value": "0.78"
+        },
+        {
+          "name": "ConversationDuration",
+          "value": "27"
+        },
+        {
+          "name": "SaleCompleted",
+          "value": "false"
+        },
+        {
+          "name": "FinancingDiscussed",
+          "value": "false"
+        },
+        {
+          "name": "InterestRate",
+          "value": "4.1"
+        },
+        {
+          "name": "SafetyFeaturesMentioned",
+          "value": "5"
+        },
+        {
+          "name": "TestDriveRequested",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "num_messages": "17",
+      "chat_log": [
+        {
+          "agent": "Carman",
+          "message": "Good day! Welcome to CarWorld."
+        },
+        {
+          "agent": "Buyman",
+          "message": "I’m looking for a safe and reliable family car."
+        },
+        {
+          "agent": "Carman",
+          "message": "I would recommend the Honda CR-V. It’s well-equipped and very safe."
+        },
+        {
+          "agent": "Buyman",
+          "message": "Great, what’s the deal on pricing and financing?"
+        },
+        {
+          "agent": "Carman",
+          "message": "The starting price is $31,900, and we have some attractive financing plans."
+        },
+        {
+          "agent": "Buyman",
+          "message": "I’m interested. Let’s proceed with that."
+        }
+      ],
+      "output_variables": [
+        {
+          "name": "Model",
+          "value": "Honda CR-V"
+        },
+        {
+          "name": "InitialPrice",
+          "value": "31900"
+        },
+        {
+          "name": "FinalPrice",
+          "value": "31400"
+        },
+        {
+          "name": "CustomerSatisfaction",
+          "value": "0.92"
+        },
+        {
+          "name": "ConversationDuration",
+          "value": "23"
+        },
+        {
+          "name": "SaleCompleted",
+          "value": "true"
+        },
+        {
+          "name": "FinancingDiscussed",
+          "value": "true"
+        },
+        {
+          "name": "InterestRate",
+          "value": "3.7"
+        },
+        {
+          "name": "SafetyFeaturesMentioned",
+          "value": "5"
+        },
+        {
+          "name": "TestDriveRequested",
+          "value": "true"
+        }
+      ]
+    }
+  ]
+}
