@@ -20,27 +20,34 @@ def create_logger(name: str) -> logging.Logger:
 
 logger = create_logger(__name__)
 
-def client_for_endpoint(endpoint: str, api_key: str | None = None):
+def client_for_endpoint():
     CLIENT_TIMEOUT = 6000
-    logger.info(f"Creating client for endpoint: {endpoint}")
-    if "azure" in endpoint:
+    if os.environ.get("OLLAMA_MODEL"):
+        endpoint = "http://localhost:11434/v1"
+        logger.info("Using Ollama-style local server client.")
+        client = OpenAI(
+            base_url=endpoint, 
+            api_key="ollama", 
+            timeout=CLIENT_TIMEOUT
+        )
+        model_name = os.environ.get("OLLAMA_MODEL")
+    elif os.environ.get("AZURE_OPENAI_API_KEY"):
         logger.info("Using *Azure* OpenAI client.")
-        return AzureOpenAI(
-            azure_endpoint=endpoint,
-            api_key=api_key or os.environ["AZURE_OPENAI_API_KEY"],
-            api_version=endpoint.split("api-version=")[-1],
+        client = AzureOpenAI(
+            azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+            api_key=os.environ["AZURE_OPENAI_API_KEY"],
+            api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1],
             timeout=CLIENT_TIMEOUT,
         )
-    elif "local" in endpoint:
-        logger.info("Using Ollama-style local server client.")
-        return OpenAI(
-            base_url=endpoint, api_key="ollama", timeout=CLIENT_TIMEOUT
-        )
+        model_name = os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
     else:
         logger.info("Using OpenAI client.")
-        return OpenAI(
-            api_key=api_key or os.environ["OPENAI_API_KEY"], timeout=CLIENT_TIMEOUT
+        client = OpenAI(
+            api_key=os.environ["OPENAI_API_KEY"], 
+            timeout=CLIENT_TIMEOUT
         )
+        model_name = None
+    return client, model_name
     
 def get_autogen_client():
         if os.environ.get("OLLAMA_MODEL"):

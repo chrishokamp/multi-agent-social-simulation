@@ -3,8 +3,7 @@ import re
 import json
 from pymongo import MongoClient
 from flask import Blueprint, request, jsonify
-from openai import AsyncOpenAI, AsyncAzureOpenAI
-from utils import create_logger, client_for_endpoint
+from utils import create_logger
 from flask import Blueprint, jsonify
 from db.simulation_queue import SimulationQueue
 from db.simulation_catalog import SimulationCatalog

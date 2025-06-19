@@ -4,17 +4,25 @@ import json
 
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
 from autogen_agentchat.teams import SelectorGroupChat
-from autogen_agentchat.agents import AssistantAgent
+from agents import UtilityAgent, BuyerAgent, SellerAgent
 from autogen_agentchat.ui import Console
+import uuid
 
 from utils import create_logger, get_autogen_client
 logger = create_logger(__name__)
 
+_utility_class_registry = {
+    "UtilityAgent": UtilityAgent,
+    "BuyerAgent":   BuyerAgent,
+    "SellerAgent":  SellerAgent,
+}
+
 class SelectorGCSimulation:
-    def __init__(self, config, max_messages=25, min_messages=5):
+    def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5):
         self.model_client = get_autogen_client()
         self.config = config
         self.min_messages = min_messages
+        self.run_id = str(uuid.uuid4())
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
 
@@ -43,16 +51,36 @@ class SelectorGCSimulation:
                     termination_condition=self.config["termination_condition"]
                 )
                 self.config["agents"].append(information_return_agent)
-    
+
         # initialize agents
-        self.agents = [
-            AssistantAgent(
-                agent["name"],
-                description=agent["description"],
+        self.agents = []
+        for agent_config in self.config["agents"]:
+            cls_name   = agent_config.get("utility_class", "UtilityAgent")
+            AgentClass = _utility_class_registry[cls_name]
+
+            ag = AgentClass(
+                name=agent_config["name"],
+                description=agent_config["description"],
                 model_client=self.model_client,
-                system_message=agent["prompt"]
-            ) for agent in self.config["agents"]
-        ]
+                system_message=agent_config["prompt"],
+                strategy=agent_config.get("strategy")
+            )
+
+            # (+ self-improvement)
+            utility = ag.compute_utility(environment)
+            if agent_config.get("self_improve", False):
+                ag.learn_from_feedback(utility, environment)
+
+            # re-init agent with update
+            ag = AgentClass(
+                name=agent_config["name"],
+                description=agent_config["description"],
+                model_client=self.model_client,
+                system_message=ag.system_prompt,
+                strategy=agent_config.get("strategy")
+            )
+
+            self.agents.append(ag)
 
         # initialize group chat
         with open(os.path.join(self.config_directory, "selector_prompt.txt"), "r", encoding="utf-8") as file:

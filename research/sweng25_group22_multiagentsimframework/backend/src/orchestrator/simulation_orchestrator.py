@@ -11,6 +11,9 @@ from db.simulation_results import SimulationResults
 from db.simulation_catalog import SimulationCatalog
 from engine.simulation import SelectorGCSimulation
 
+from utils import create_logger
+logger = create_logger(__name__)
+
 executor = None
 
 def signal_handler(_sig, _frame):
@@ -22,8 +25,9 @@ def signal_handler(_sig, _frame):
 async def run_simulation(simulation_id, simulation_config):
     print(f"Starting run for simulation ID: {simulation_id}...")
 
+    env = None
     while True:
-        simulation = SelectorGCSimulation(simulation_config)
+        simulation = SelectorGCSimulation(simulation_config, environment=env)
         simulation_result = await simulation.run()
         if simulation_result:
             mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
@@ -33,7 +37,18 @@ async def run_simulation(simulation_id, simulation_config):
             print(f"Successfull run for simulation ID {simulation_id}! Saving result...", end="")
             simulation_results.insert(simulation_id, simulation_result)
             simulation_catalog.update_progress(simulation_id)
-            print(" Done!")
+
+            env["runs"] = env.get("runs", {})
+            env["runs"].append(
+                {
+                    "run_id": simulation.run_id,
+                    "messages": simulation_result["messages"],
+                    "outputs": {
+                        v["name"]: v["value"] for v in simulation_result["output_variables"]
+                    },
+                }
+            )
+
             break
         else:
             print(f"Failed run for simulation ID {simulation_id}! Retrying...")
