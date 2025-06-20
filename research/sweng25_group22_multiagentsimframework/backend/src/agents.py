@@ -42,7 +42,7 @@ class UtilityAgent(AssistantAgent, ABC):
         """
         A list of the utility values computed in previous rounds
         """
-        return [run["outputs"]["utility"] for run in self._last_environment["runs"]]
+        return [run["output_variables"]["utility"] for run in self._last_environment["runs"]]
 
     def compute_utility(
         self,
@@ -74,7 +74,7 @@ class UtilityAgent(AssistantAgent, ABC):
             msg = f"###########\nRUN {run_id}:\n"
             for m in run["messages"]:
                 msg += f"{m['agent']}: {m['message']}\n"
-            msg += f"FINAL OUTPUTS: {run['outputs']}\n"
+            msg += f"FINAL OUTPUTS: {run['output_variables']}\n"
             msg += "###########\n"
             history.append(msg)
 
@@ -117,7 +117,7 @@ class BuyerAgent(UtilityAgent):
     Scores itself on the *money saved* in a negotiation.
 
     Assumes:
-      environment["outputs"]["final_price"] – price actually paid
+      environment["output_variables"]["final_price"] – price actually paid
       self.strategy["max_price"]            – highest acceptable price
     """
 
@@ -127,20 +127,19 @@ class BuyerAgent(UtilityAgent):
     ) -> Mapping[str, Any]:
         if environment is None:
             environment = self._last_environment or {}
-
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["outputs"]["deal_reached"] is False:
+        if most_recent_run["output_variables"]["deal_reached"] is False:
             # No deal reached, so no utility
             utility = 0.0
         else:
-            final_price = float(most_recent_run["outputs"]["final_price"])
+            final_price = float(most_recent_run["output_variables"]["final_price"])
             max_price   = float(self.strategy["max_price"])
             # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
             utility = 1.0 - (final_price / max_price)
 
-        environment["runs"][-1]["outputs"]["utility"] = environment["runs"][-1]["outputs"].get("utility", {})
-        environment["runs"][-1]["outputs"]["utility"][self.name] = utility
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
 
@@ -154,15 +153,15 @@ class SellerAgent(UtilityAgent):
         environment = environment or self._last_environment or {}
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["outputs"]["deal_reached"] is False:
+        if most_recent_run["output_variables"]["deal_reached"] is False:
             # No deal reached, so no utility
             utility = 0.0
         else:
-            final_price = float(most_recent_run["outputs"]["final_price"])
+            final_price = float(most_recent_run["output_variables"]["final_price"])
             target      = float(self.strategy["target_price"])
             utility = min(final_price / target, 1.0)
         
-        environment["runs"][-1]["outputs"]["utility"] = environment["runs"][-1]["outputs"].get("utility", {})
-        environment["runs"][-1]["outputs"]["utility"][self.name] = utility
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
