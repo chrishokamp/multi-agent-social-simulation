@@ -14,7 +14,7 @@ logger = create_logger(__name__)
 _utility_class_registry = {
     "UtilityAgent": UtilityAgent,
     "BuyerAgent":   BuyerAgent,
-    "SellerAgent":  SellerAgent,
+    "SellerAgent":  SellerAgent
 }
 
 class SelectorGCSimulation:
@@ -101,6 +101,7 @@ class SelectorGCSimulation:
 
     def _process_result(self, simulation_result):
         if len(simulation_result.messages) < self.min_messages:
+            logger.warning(f"Simulation result has too few messages: {len(simulation_result.messages)} < {self.min_messages}")
             return None
 
         messages = []
@@ -120,8 +121,10 @@ class SelectorGCSimulation:
                         value = "Unspecified"
                     output_variables.append({"name": variable, "value": value})
             except json.JSONDecodeError:
+                logger.error(f"Failed to parse JSON from message: {information_return_agent_message}")
                 return None
         else:
+            logger.error(f"No JSON found in message: {information_return_agent_message}")
             return None
 
         return {"messages": messages, "output_variables": output_variables}
