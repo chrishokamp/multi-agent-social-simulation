@@ -48,14 +48,6 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
         results_store.insert(simulation_id, simulation_result)
         catalog_store.update_progress(simulation_id)
 
-        env["runs"].append({
-            "run_id": sim.run_id,
-            "messages": simulation_result["messages"],
-            "outputs": {
-                v["name"]: v["value"] 
-                for v in simulation_result["output_variables"]
-            }
-        })
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         sim_history_dir = f"simulations/{simulation_id}/history"
         os.makedirs(sim_history_dir, exist_ok=True)

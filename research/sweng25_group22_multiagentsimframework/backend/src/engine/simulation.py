@@ -125,5 +125,15 @@ class SelectorGCSimulation:
 
     async def run(self):
         simulation_results = await Console(self.group_chat.run_stream())
+        simulation_results = self._process_result(simulation_results)
+
+        self.environment["runs"].append({
+            "run_id": self.run_id,
+            "messages": simulation_results["messages"],
+            "output_variables": {
+                v["name"]: v["value"] 
+                for v in simulation_results["output_variables"]
+            }
+        })
         self.calculate_utility()
-        return self._process_result(simulation_results)
+        return simulation_results
