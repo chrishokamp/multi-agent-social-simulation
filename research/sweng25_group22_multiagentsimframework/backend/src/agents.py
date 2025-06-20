@@ -130,15 +130,15 @@ class BuyerAgent(UtilityAgent):
 
         most_recent_run = environment["runs"][-1]
 
-        final_price = most_recent_run["outputs"]["final_price"]
-        max_price   = self.strategy["max_price"]
-
         if most_recent_run["outputs"]["deal_reached"] is False:
             # No deal reached, so no utility
             utility = 0.0
+        else:
+            final_price = float(most_recent_run["outputs"]["final_price"])
+            max_price   = float(self.strategy["max_price"])
+            # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
+            utility = 1.0 - (final_price / max_price)
 
-        # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
-        utility = 1.0 - (final_price / max_price)
         environment["runs"][-1]["outputs"]["utility"] = utility
         self._last_environment = environment
         return environment
@@ -153,14 +153,13 @@ class SellerAgent(UtilityAgent):
         environment = environment or self._last_environment or {}
         most_recent_run = environment["runs"][-1]
 
-        final_price = most_recent_run["outputs"]["final_price"]
-        target      = self.strategy["target_price"]
-
         if most_recent_run["outputs"]["deal_reached"] is False:
             # No deal reached, so no utility
             utility = 0.0
-
-        utility = min(final_price / target, 1.0)
+        else:
+            final_price = float(most_recent_run["outputs"]["final_price"])
+            target      = float(self.strategy["target_price"])
+            utility = min(final_price / target, 1.0)
         environment["runs"][-1]["outputs"]["utility"] = utility
         self._last_environment = environment
         return environment
