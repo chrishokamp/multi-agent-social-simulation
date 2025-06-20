@@ -12,6 +12,7 @@ from db.simulation_catalog import SimulationCatalog
 from engine.simulation import SelectorGCSimulation
 
 from utils import create_logger
+import json
 logger = create_logger(__name__)
 
 executor = None
@@ -55,43 +56,16 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
                 for v in simulation_result["output_variables"]
             }
         })
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        sim_history_dir = "sim_history"
+        os.mkdir(sim_history_dir, exist_ok=True)
+        env_path = f"{sim_history_dir}/simulation_{simulation_id}_env_run_{i+1}_{timestamp}.json"
+        with open(env_path, "w") as f:
+            json.dump(env, f, indent=2)
+        logger.info(f"Saved environment to {env_path}")
 
     print(f"All {num_runs} runs of simulation {simulation_id} complete.")
 
-
-async def run_simulation(simulation_id, simulation_config):
-    print(f"Starting run for simulation ID: {simulation_id}...")
-
-    env = None
-    while True:
-        simulation = SelectorGCSimulation(simulation_config, environment=env)
-        simulation_result = await simulation.run()
-        if simulation_result:
-            mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
-            simulation_results = SimulationResults(mongo_client)
-            simulation_catalog = SimulationCatalog(mongo_client)
-
-            print(f"Successfull run for simulation ID {simulation_id}! Saving result...", end="")
-            simulation_results.insert(simulation_id, simulation_result)
-            simulation_catalog.update_progress(simulation_id)
-
-            env["runs"] = env.get("runs", {})
-            env["runs"].append(
-                {
-                    "run_id": simulation.run_id,
-                    "messages": simulation_result["messages"],
-                    "outputs": {
-                        v["name"]: v["value"] for v in simulation_result["output_variables"]
-                    },
-                }
-            )
-
-            break
-        else:
-            print(f"Failed run for simulation ID {simulation_id}! Retrying...")
-
-def start_simulation(simulation_id, simulation_config):
-    asyncio.run(run_simulation(simulation_id, simulation_config))
 
 def orchestrator():
     mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
@@ -102,6 +76,7 @@ def orchestrator():
         job = queue.retrieve_full_job()
         if job is None:
             time.sleep(5)
+            logger.info("No jobs in queue, sleeping for 5 seconds...")
             continue
 
         sim_id, config, num_runs = job
