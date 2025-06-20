@@ -1,6 +1,6 @@
 {
   "config": {
-    "name": "Online-Learning Car Negotiation",
+    "name": "Car Negotiation",
     "agents": [
       {
         "name": "Buyer",
@@ -21,8 +21,8 @@
     "termination_condition": "Deal reached",
     "output_variables": [
       { "name": "final_price",   "type": "Number" },
-      { "name": "deal_accepted", "type": "Boolean" }
+      { "name": "deal_reached", "type": "Boolean" }
     ]
   },
-  "num_runs": 10
+  "num_runs": 2
 }

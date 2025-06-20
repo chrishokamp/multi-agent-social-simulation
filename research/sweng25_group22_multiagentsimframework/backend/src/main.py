@@ -16,16 +16,11 @@ from api.app import app
 def run_api():
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
 
-def run_simulation_orchestrator():
-    orchestrator(max_threads=4)
-
-
 if __name__ == "__main__":
-    simulation_orchestrator_process = multiprocessing.Process(target=run_simulation_orchestrator)
     api_process = multiprocessing.Process(target=run_api)
-
-    simulation_orchestrator_process.start()
     api_process.start()
-
-    simulation_orchestrator_process.join()
-    api_process.join()
+    try:
+        orchestrator()
+    finally:
+        api_process.terminate()
+        api_process.join()

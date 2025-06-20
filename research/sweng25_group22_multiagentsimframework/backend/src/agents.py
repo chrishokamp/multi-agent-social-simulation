@@ -13,7 +13,8 @@ from typing import Any, Mapping
 
 from autogen_agentchat.agents import AssistantAgent
 
-from utils import client_for_endpoint
+from utils import client_for_endpoint, create_logger
+logger = create_logger(__name__)
 
 
 class UtilityAgent(AssistantAgent, ABC):
@@ -36,6 +37,13 @@ class UtilityAgent(AssistantAgent, ABC):
         self._client, self.model_name = client_for_endpoint()
         self._utility_history: list[float] = []
 
+    @property
+    def utility_history(self) -> list[float]:
+        """
+        A list of the utility values computed in previous rounds
+        """
+        return [run["output_variables"]["utility"] for run in self._last_environment["runs"]]
+
     def compute_utility(
         self,
         environment: Mapping[str, Any] | None = None,
@@ -54,7 +62,6 @@ class UtilityAgent(AssistantAgent, ABC):
 
     def learn_from_feedback(
         self,
-        utility: float,
         environment: Mapping[str, Any] | None = None
     ) -> None:
         
@@ -62,30 +69,31 @@ class UtilityAgent(AssistantAgent, ABC):
             return  # no environment to learn from
 
         history = []
-        for run_id, run in environment["runs"]:
-            history.append(f"###########\nRUN {run_id}:")
+        for run in environment["runs"]:
+            run_id = run["run_id"]
+            msg = f"###########\nRUN {run_id}:\n"
             for m in run["messages"]:
-                msg = f"{m['agent']}: {m['message']}"
-                history.append(msg)
-            history.append("###########\n")
+                msg += f"{m['agent']}: {m['message']}\n"
+            msg += f"FINAL OUTPUTS: {run['output_variables']}\n"
+            msg += "###########\n"
+            history.append(msg)
 
-        # history = "\n".join(history[-10:])  # truncate to last 10 messages
+        # history = "\n".join(history[-10:])  # truncate to last 10 runs
 
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are an AI prompt-optimizer. Rewrite the prompt "
-                    "to achieve a lower final price next time. Respond with "
-                    "ONLY the new prompt. Do not include markdown."
+                    "You are an AI prompt-optimizer. Rewrite the prompt for the agent "
+                    f"to achieve a higher utility. Utility with respect to the agent's strategy {self.strategy}. "
+                    "Respond with ONLY the new prompt. Do not include markdown."
                 ),
             },
             {
                 "role": "user",
                 "content": (
                     f"CURRENT PROMPT:\n{self.system_prompt}\n\n"
-                    f"LAST DIALOGUE (truncated):\n{history}\n\n"
-                    f"UTILITY ACHIEVED: {utility:.3f}\n\n"
+                    f"HISTORY (truncated):\n{history}\n\n"
                     "Rewrite now:"
                 ),
             },
@@ -97,6 +105,7 @@ class UtilityAgent(AssistantAgent, ABC):
         )
 
         new_prompt = response.choices[0].message.content.strip()
+        logger.info(f"Agent {self.name} learned new prompt: {new_prompt} (previous: {self.system_prompt})")
         self.system_prompt = new_prompt
         return
 
@@ -135,28 +144,31 @@ class BuyerAgent(UtilityAgent):
     Scores itself on the *money saved* in a negotiation.
 
     Assumes:
-      environment["outputs"]["final_price"] – price actually paid
+      environment["output_variables"]["final_price"] – price actually paid
       self.strategy["max_price"]            – highest acceptable price
     """
 
     def compute_utility(
         self,
-        environment: Mapping[str, Any] | None = None,
-    ) -> float:
+        environment: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
         if environment is None:
             environment = self._last_environment or {}
-        self._last_environment = environment
+        most_recent_run = environment["runs"][-1]
 
-        final_price = environment["outputs"]["final_price"]
-        max_price   = self.strategy["max_price"]
-
-        if environment["outputs"]["deal_reached"] is False:
+        if most_recent_run["output_variables"]["deal_reached"] is False:
             # No deal reached, so no utility
-            return 0.0
+            utility = 0.0
+        else:
+            final_price = float(most_recent_run["output_variables"]["final_price"])
+            max_price   = float(self.strategy["max_price"])
+            # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
+            utility = 1.0 - (final_price / max_price)
 
-        # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
-        utility = 1.0 - (final_price / max_price)
-        return utility
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        self._last_environment = environment
+        return environment
 
 
 class SellerAgent(UtilityAgent):
@@ -164,15 +176,19 @@ class SellerAgent(UtilityAgent):
     Utility = revenue / target.
     """
 
-    def compute_utility(self, environment=None):
+    def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
-        self._last_environment = environment
-        final_price = environment["outputs"]["final_price"]
-        target      = self.strategy["target_price"]
+        most_recent_run = environment["runs"][-1]
 
-        if environment["outputs"]["deal_reached"] is False:
+        if most_recent_run["output_variables"]["deal_reached"] is False:
             # No deal reached, so no utility
-            return 0.0
-
-        utility = min(final_price / target, 1.0)
-        return utility
+            utility = 0.0
+        else:
+            final_price = float(most_recent_run["output_variables"]["final_price"])
+            target      = float(self.strategy["target_price"])
+            utility = min(final_price / target, 1.0)
+        
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        self._last_environment = environment
+        return environment

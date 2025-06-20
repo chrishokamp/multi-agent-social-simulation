@@ -23,6 +23,7 @@ class SelectorGCSimulation:
         self.config = config
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
+        self.environment = environment
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
 
@@ -67,21 +68,10 @@ class SelectorGCSimulation:
                 strategy=agent_config.get("strategy"),
             )
 
-
-            # (+ self-improvement)
-            utility = ag.compute_utility(environment)
-            if agent_config.get("self_improve", False):
-                ag.learn_from_feedback(utility, environment)
-
-            # re-init agent with update
-            ag = AgentClass(
-                system_prompt=agent_config["prompt"],
-                name=agent_config["name"],
-                description=agent_config["description"],
-                model_client=self.model_client,
-                system_message=ag.system_prompt,
-                strategy=agent_config.get("strategy")
-            )
+            if len(self.environment["runs"]) > 0:
+                # we have >=1 runs to learn from
+                if agent_config.get("self_improve", False):
+                    ag.learn_from_feedback(self.environment)
 
             self.agents.append(ag)
 
@@ -130,6 +120,11 @@ class SelectorGCSimulation:
 
         return {"messages": messages, "output_variables": output_variables}
 
+    def calculate_utility(self) -> None:
+        for ag in self.agents:
+            if len(self.environment["runs"]) > 0:
+                # we have >=1 runs to learn from
+                self.environment = ag.compute_utility(self.environment)
 
     async def run(self):
 
@@ -153,6 +148,16 @@ class SelectorGCSimulation:
                     break
 
         processed = self._process_result(self.group_chat.result)
+        
+        self.environment["runs"].append({
+            "run_id": self.run_id,
+            "messages": processed["messages"],
+            "output_variables": {
+                v["name"]: v["value"] 
+                for v in processed["output_variables"]
+            }
+        })
+        self.calculate_utility()
 
         if processed:
             processed["private_reflections"] = [
