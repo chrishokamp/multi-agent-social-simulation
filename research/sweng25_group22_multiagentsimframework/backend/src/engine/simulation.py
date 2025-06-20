@@ -64,8 +64,9 @@ class SelectorGCSimulation:
                 description=agent_config["description"],
                 model_client=self.model_client,
                 system_message=agent_config["prompt"],
-                strategy=agent_config.get("strategy")
+                strategy=agent_config.get("strategy"),
             )
+
 
             # (+ self-improvement)
             utility = ag.compute_utility(environment)
@@ -131,5 +132,32 @@ class SelectorGCSimulation:
 
 
     async def run(self):
-        simulation_results = await Console(self.group_chat.run_stream())
-        return self._process_result(simulation_results)
+
+        running_history: list[dict[str, str]] = []
+
+        async for event in self.group_chat.run_stream():
+
+
+            if event.type == "message":
+                print(f"{event.source}: {event.content}", flush=True)
+            else:                       # join/leave/system events
+                print(event, flush=True)
+
+            running_history.append({"agent": event.source, "msg": event.content})
+
+            for ag in self.agents:
+                if ag.name == event.source:
+                    # Skip reflection
+                    if ag.name != "InformationReturnAgent":
+                        await ag.think_and_print(running_history)
+                    break
+
+        processed = self._process_result(self.group_chat.result)
+
+        if processed:
+            processed["private_reflections"] = [
+                {"agent": h["agent"], "thought": h.get("thought", "")}
+                for h in running_history
+                if "thought" in h and h["agent"] != "InformationReturnAgent"
+            ]
+        return processed

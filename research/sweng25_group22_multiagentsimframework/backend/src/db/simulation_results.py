@@ -23,11 +23,17 @@ class SimulationResults(MongoBase):
             return None
         
         # insert into database
-        self.results_collection.insert_one({
+        doc = {
             "simulation_id": simulation_id,
             "messages": results["messages"],
-            "output_variables": results["output_variables"]
-        })
+            "output_variables": results["output_variables"],
+        }
+
+        # NEW: save silent thoughts when present
+        if "private_reflections" in results:
+            doc["private_reflections"] = results["private_reflections"]
+
+        self.results_collection.insert_one(doc)
 
         return simulation_id
     
