@@ -14,7 +14,7 @@ logger = create_logger(__name__)
 _utility_class_registry = {
     "UtilityAgent": UtilityAgent,
     "BuyerAgent":   BuyerAgent,
-    "SellerAgent":  SellerAgent,
+    "SellerAgent":  SellerAgent
 }
 
 class SelectorGCSimulation:
@@ -65,7 +65,7 @@ class SelectorGCSimulation:
                 description=agent_config["description"],
                 model_client=self.model_client,
                 system_message=agent_config["prompt"],
-                strategy=agent_config.get("strategy")
+                strategy=agent_config.get("strategy"),
             )
 
             if len(self.environment["runs"]) > 0:
@@ -92,6 +92,7 @@ class SelectorGCSimulation:
 
     def _process_result(self, simulation_result):
         if len(simulation_result.messages) < self.min_messages:
+            logger.warning(f"Simulation result has too few messages: {len(simulation_result.messages)} < {self.min_messages}")
             return None
 
         messages = []
@@ -111,8 +112,10 @@ class SelectorGCSimulation:
                         value = "Unspecified"
                     output_variables.append({"name": variable, "value": value})
             except json.JSONDecodeError:
+                logger.error(f"Failed to parse JSON from message: {information_return_agent_message}")
                 return None
         else:
+            logger.error(f"No JSON found in message: {information_return_agent_message}")
             return None
 
         return {"messages": messages, "output_variables": output_variables}
@@ -124,16 +127,42 @@ class SelectorGCSimulation:
                 self.environment = ag.compute_utility(self.environment)
 
     async def run(self):
-        simulation_results = await Console(self.group_chat.run_stream())
-        simulation_results = self._process_result(simulation_results)
 
+        running_history: list[dict[str, str]] = []
+
+        async for event in self.group_chat.run_stream():
+
+
+            if event.type == "message":
+                print(f"{event.source}: {event.content}", flush=True)
+            else:                       # join/leave/system events
+                print(event, flush=True)
+
+            running_history.append({"agent": event.source, "msg": event.content})
+
+            for ag in self.agents:
+                if ag.name == event.source:
+                    # Skip reflection
+                    if ag.name != "InformationReturnAgent":
+                        await ag.think_and_print(running_history)
+                    break
+
+        processed = self._process_result(self.group_chat.result)
+        
         self.environment["runs"].append({
             "run_id": self.run_id,
-            "messages": simulation_results["messages"],
+            "messages": processed["messages"],
             "output_variables": {
                 v["name"]: v["value"] 
-                for v in simulation_results["output_variables"]
+                for v in processed["output_variables"]
             }
         })
         self.calculate_utility()
-        return simulation_results
+
+        if processed:
+            processed["private_reflections"] = [
+                {"agent": h["agent"], "thought": h.get("thought", "")}
+                for h in running_history
+                if "thought" in h and h["agent"] != "InformationReturnAgent"
+            ]
+        return processed

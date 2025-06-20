@@ -109,6 +109,33 @@ class UtilityAgent(AssistantAgent, ABC):
         self.system_prompt = new_prompt
         return
 
+    async def _reflect_privately(self, last_public_msg: str) -> str:
+        """
+        Ask the LLM for a one-sentence silent reflection about the
+        latest public message.  Completely private – never sent back
+        into the chat.
+        """
+        prompt = (
+            "You are thinking silently as " + self.name + ". "
+            "In ONE short sentence, note what you believe or plan "
+            "after reading:\n“" + last_public_msg + "”"
+        )
+        response = self._client.chat.completions.create(
+            model=self.model_name or "gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content.strip()
+
+    async def think_and_print(self, running_history: list[dict[str, str]]) -> None:
+        """
+        Produce the reflection, print it, and attach it to the most
+        recent entry of `running_history` (so the simulation can store
+        it later).
+        """
+        thought = await self._reflect_privately(running_history[-1]["msg"])
+        print(f"[{self.name} – private] {thought}", flush=True)
+        running_history[-1]["thought"] = thought
+
 
 # ----------- example agents -------------
 
