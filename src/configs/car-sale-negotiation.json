@@ -1,0 +1,28 @@
+{
+  "config": {
+    "name": "Online-Learning Car Negotiation",
+    "agents": [
+      {
+        "name": "Buyer",
+        "description": "Wants the lowest possible price for the car.",
+        "prompt": "You are a car buyer. Negotiate aggressively but politely.",
+        "utility_class": "BuyerAgent",
+        "strategy": { "max_price": 50000 },
+        "self_improve": true
+      },
+      {
+        "name": "Seller",
+        "description": "Wants to sell the car at or above target price.",
+        "prompt": "You are a car seller. Negotiate calmly but aim high.",
+        "utility_class": "SellerAgent",
+        "strategy": { "target_price": 45000 }
+      }
+    ],
+    "termination_condition": "Deal reached",
+    "output_variables": [
+      { "name": "final_price",   "type": "Number" },
+      { "name": "deal_accepted", "type": "Boolean" }
+    ]
+  },
+  "num_runs": 10
+}

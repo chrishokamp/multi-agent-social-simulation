@@ -11,3 +11,8 @@ flask
 flask-cors
 prefect
 ollama
+pytest
+pytest-mock
+pytest-asyncio
+pytest-flask
+pytest-cov

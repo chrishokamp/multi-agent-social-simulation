@@ -11,6 +11,9 @@ from db.simulation_results import SimulationResults
 from db.simulation_catalog import SimulationCatalog
 from engine.simulation import SelectorGCSimulation
 
+from utils import create_logger
+logger = create_logger(__name__)
+
 executor = None
 
 def signal_handler(_sig, _frame):
@@ -22,8 +25,9 @@ def signal_handler(_sig, _frame):
 async def run_simulation(simulation_id, simulation_config):
     print(f"Starting run for simulation ID: {simulation_id}...")
 
+    env = None
     while True:
-        simulation = SelectorGCSimulation(simulation_config)
+        simulation = SelectorGCSimulation(simulation_config, environment=env)
         simulation_result = await simulation.run()
         if simulation_result:
             mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])

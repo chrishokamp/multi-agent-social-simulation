@@ -101,6 +101,37 @@ db-status: ## Check MongoDB status
 	brew services list | grep mongodb
 
 # Testing and linting
+.PHONY: test
+test: test-backend ## Run all tests
+
+.PHONY: test-backend
+test-backend: ## Run backend tests
+	@echo "$(YELLOW)Running backend tests...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/ -v
+	@echo "$(GREEN)Backend tests completed!$(NC)"
+
+.PHONY: test-unit
+test-unit: ## Run unit tests only
+	@echo "$(YELLOW)Running unit tests...$(NC)"
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/unit/ -v -m unit
+	@echo "$(GREEN)Unit tests completed!$(NC)"
+
+.PHONY: test-integration
+test-integration: ## Run integration tests only
+	@echo "$(YELLOW)Running integration tests...$(NC)"
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/integration/ -v -m integration
+	@echo "$(GREEN)Integration tests completed!$(NC)"
+
+.PHONY: test-coverage
+test-coverage: ## Run tests with coverage report
+	@echo "$(YELLOW)Running tests with coverage...$(NC)"
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/ --cov=. --cov-report=html --cov-report=term
+	@echo "$(GREEN)Coverage report generated in htmlcov/$(NC)"
+
 .PHONY: lint
 lint: lint-backend lint-frontend ## Run all linters
 
@@ -201,6 +232,26 @@ uv-install: ## Install backend dependencies with uv
 .PHONY: uv-setup
 uv-setup: uv-venv uv-install ## Create uv environment and install dependencies
 	@echo "$(GREEN)UV environment setup complete!$(NC)"
+
+# Example simulation
+.PHONY: run-example
+run-example: ## Run the car negotiation example simulation
+	@echo "$(YELLOW)Running car negotiation example simulation...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -c "\
+import sys, os, json, asyncio; \
+sys.path.insert(0, '.'); \
+from engine.simulation import SelectorGCSimulation; \
+config_path = '../../src/configs/car-sale-negotiation.json'; \
+with open(config_path) as f: config = json.load(f); \
+sim = SelectorGCSimulation(config['config'], environment=None); \
+result = asyncio.run(sim.run()); \
+print('Simulation completed!'); \
+print('Result:', json.dumps(result, indent=2) if result else 'No result')"
+	@echo "$(GREEN)Example simulation completed!$(NC)"
 
 # Docker support (future)
 .PHONY: docker-build
