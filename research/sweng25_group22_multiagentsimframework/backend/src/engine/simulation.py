@@ -23,6 +23,7 @@ class SelectorGCSimulation:
         self.config = config
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
+        self.environment = environment
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
 
@@ -67,11 +68,10 @@ class SelectorGCSimulation:
                 strategy=agent_config.get("strategy")
             )
 
-            if len(environment["runs"]) > 0:
+            if len(self.environment["runs"]) > 0:
                 # we have >=1 runs to learn from
-                environment = ag.compute_utility(environment)
                 if agent_config.get("self_improve", False):
-                    ag.learn_from_feedback(environment)
+                    ag.learn_from_feedback(self.environment)
 
             self.agents.append(ag)
 
@@ -117,7 +117,13 @@ class SelectorGCSimulation:
 
         return {"messages": messages, "output_variables": output_variables}
 
+    def calculate_utility(self) -> None:
+        for ag in self.agents:
+            if len(self.environment["runs"]) > 0:
+                # we have >=1 runs to learn from
+                self.environment = ag.compute_utility(self.environment)
 
     async def run(self):
         simulation_results = await Console(self.group_chat.run_stream())
+        self.calculate_utility()
         return self._process_result(simulation_results)
