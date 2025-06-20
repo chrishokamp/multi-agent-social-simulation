@@ -59,6 +59,7 @@ class SelectorGCSimulation:
             AgentClass = _utility_class_registry[cls_name]
 
             ag = AgentClass(
+                system_prompt=agent_config["prompt"],
                 name=agent_config["name"],
                 description=agent_config["description"],
                 model_client=self.model_client,
@@ -73,6 +74,7 @@ class SelectorGCSimulation:
 
             # re-init agent with update
             ag = AgentClass(
+                system_prompt=agent_config["prompt"],
                 name=agent_config["name"],
                 description=agent_config["description"],
                 model_client=self.model_client,
@@ -81,6 +83,7 @@ class SelectorGCSimulation:
             )
 
             self.agents.append(ag)
+
 
         # initialize group chat
         with open(os.path.join(self.config_directory, "selector_prompt.txt"), "r", encoding="utf-8") as file:
