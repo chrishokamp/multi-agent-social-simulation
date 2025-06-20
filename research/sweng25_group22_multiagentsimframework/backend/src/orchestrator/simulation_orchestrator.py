@@ -22,6 +22,43 @@ def signal_handler(_sig, _frame):
         executor.shutdown(wait=False, cancel_futures=True)
     sys.exit(0)
 
+def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
+    """
+        Run a simulation `num_runs` times synchronously, 
+        passing the growing `env` into each new run so 
+        self-improvment can happen
+    """
+    mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
+    results_store  = SimulationResults(mongo_client)
+    catalog_store  = SimulationCatalog(mongo_client)
+
+    env = {"runs": []}
+
+    for i in range(num_runs):
+        # each SelectorGCSimulation will call learn_from_feedback()
+        # on the previous `env` and then replay with the updated prompt
+        sim = SelectorGCSimulation(simulation_config, environment=env)
+        simulation_result = asyncio.run(sim.run())
+
+        if not simulation_result:
+            print(f"Run {i} failed; retrying...")
+            continue
+
+        results_store.insert(simulation_id, simulation_result)
+        catalog_store.update_progress(simulation_id)
+
+        env["runs"].append({
+            "run_id": sim.run_id,
+            "messages": simulation_result["messages"],
+            "outputs": {
+                v["name"]: v["value"] 
+                for v in simulation_result["output_variables"]
+            }
+        })
+
+    print(f"All {num_runs} runs of simulation {simulation_id} complete.")
+
+
 async def run_simulation(simulation_id, simulation_config):
     print(f"Starting run for simulation ID: {simulation_id}...")
 
@@ -56,28 +93,17 @@ async def run_simulation(simulation_id, simulation_config):
 def start_simulation(simulation_id, simulation_config):
     asyncio.run(run_simulation(simulation_id, simulation_config))
 
-def orchestrator(max_threads=4):
+def orchestrator():
     mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
-    simulation_queue = SimulationQueue(mongo_client)
+    queue = SimulationQueue(mongo_client)
 
-    print("Listening for simulations...")
-
-    global executor
-    signal.signal(signal.SIGINT, signal_handler)
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_threads)
-    future_to_id = {}
-    try:
-        while True:
-            next_simulation = simulation_queue.retrieve_next()
-            
-            if next_simulation:
-                future = executor.submit(start_simulation, next_simulation[0], next_simulation[1])
-                future_to_id[future] = next_simulation[0]
-            
-            done_futures = [f for f in future_to_id if f.done()]
-            for f in done_futures:
-                del future_to_id[f]
-            
+    print("Listening for simulations…")
+    while True:
+        job = queue.retrieve_full_job()
+        if job is None:
             time.sleep(5)
-    except SystemExit:
-        pass
+            continue
+
+        sim_id, config, num_runs = job
+        print(f"→ running simulation {sim_id} synchronously for {num_runs} runs…")
+        run_all_runs(sim_id, config, num_runs)

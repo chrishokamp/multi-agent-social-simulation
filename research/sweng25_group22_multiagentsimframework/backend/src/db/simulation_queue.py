@@ -71,29 +71,17 @@ class SimulationQueue(MongoBase):
         
         return simulation_id
     
-    def retrieve_next(self):
-        # get oldest object
-        print("Checking queue collection...")
-        
-        oldest_object = self.queue_collection.find_one(sort=[("timestamp", 1)])
-        
-        if not oldest_object:
-            print("Queue is empty.")  
-            return None  # return None or an empty dict if nothing is found
-
-        remaining_runs = oldest_object["remaining_runs"] - 1
-        query = {"simulation_id": oldest_object["simulation_id"]}
-        self.queue_collection.update_one(query, {"$inc": {"remaining_runs": -1}})
-
-        if remaining_runs <= 0:
-            logger.info("Simulation %s has no remaining runs, deleting from queue.", oldest_object["simulation_id"])
-            self.queue_collection.delete_one(query)
-
-        simulation_id = oldest_object["simulation_id"]
-        config = oldest_object["config"]
-
-        print(f"Retrieved simulation: {simulation_id}, {config}")  
-        return simulation_id, config
+    def retrieve_full_job(self):
+        """Atomically grab & delete the oldest queued simulation."""
+        record = self.queue_collection.find_one(sort=[("timestamp", 1)])
+        if not record:
+            return None
+        self.queue_collection.delete_one({"simulation_id": record["simulation_id"]})
+        return (
+            record["simulation_id"],
+            record["config"],
+            record["remaining_runs"],
+        )
     
     def delete(self, simulation_id):
         result = self.queue_collection.delete_one({"simulation_id": simulation_id})

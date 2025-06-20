@@ -67,20 +67,11 @@ class SelectorGCSimulation:
                 strategy=agent_config.get("strategy")
             )
 
-            # (+ self-improvement)
-            utility = ag.compute_utility(environment)
-            if agent_config.get("self_improve", False):
-                ag.learn_from_feedback(utility, environment)
-
-            # re-init agent with update
-            ag = AgentClass(
-                system_prompt=agent_config["prompt"],
-                name=agent_config["name"],
-                description=agent_config["description"],
-                model_client=self.model_client,
-                system_message=ag.system_prompt,
-                strategy=agent_config.get("strategy")
-            )
+            if len(environment["runs"]) > 0:
+                # we have >=1 runs to learn from
+                environment = ag.compute_utility(environment)
+                if agent_config.get("self_improve", False):
+                    ag.learn_from_feedback(environment)
 
             self.agents.append(ag)
 
