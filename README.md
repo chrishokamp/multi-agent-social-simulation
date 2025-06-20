@@ -27,7 +27,7 @@ A comprehensive framework for creating and running multi-agent social simulation
 - **Dashboard**: Analytics and performance metrics with ECharts
 - **Catalog**: Browse and manage simulation history
 
-## =Ë Prerequisites
+## Prerequisites
 
 - **Python 3.10+**
 - **Node.js 18+**
@@ -95,7 +95,7 @@ npm run dev
 
 The UI will be available at `http://localhost:3000`
 
-## <¯ Usage Examples
+## Usage Examples
 
 ### Create a Car Sale Negotiation
 
@@ -146,7 +146,7 @@ response = requests.post("http://localhost:5000/sim/gen_config", json={
 config = response.json()["config"]
 ```
 
-## >ê Testing
+## Testing
 
 Run all tests:
 ```bash
@@ -162,7 +162,7 @@ make test-backend
 make test-unit
 ```
 
-## =Á Project Structure
+## Project Structure
 
 ```
 src/
@@ -181,7 +181,7 @@ research/             # Research notebooks and experiments
 Makefile             # Build and development commands
 ```
 
-## =' Configuration
+## Configuration
 
 ### Agent Types
 
@@ -237,13 +237,6 @@ This framework is designed for:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## =O Acknowledgments
-
-- Built with [Autogen](https://github.com/microsoft/autogen) for multi-agent orchestration
-- Uses [Prefect](https://www.prefect.io/) for workflow management
-- Visualization powered by [Three.js](https://threejs.org/) and [ECharts](https://echarts.apache.org/)
-- Frontend built with [React](https://reactjs.org/) and [Vite](https://vitejs.dev/)
 
 ## Documentation
 
