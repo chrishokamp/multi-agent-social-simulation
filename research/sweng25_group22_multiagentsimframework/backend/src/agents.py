@@ -139,7 +139,8 @@ class BuyerAgent(UtilityAgent):
             # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
             utility = 1.0 - (final_price / max_price)
 
-        environment["runs"][-1]["outputs"]["utility"] = utility
+        environment["runs"][-1]["outputs"]["utility"] = environment["runs"][-1]["outputs"].get("utility", {})
+        environment["runs"][-1]["outputs"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
 
@@ -160,6 +161,8 @@ class SellerAgent(UtilityAgent):
             final_price = float(most_recent_run["outputs"]["final_price"])
             target      = float(self.strategy["target_price"])
             utility = min(final_price / target, 1.0)
-        environment["runs"][-1]["outputs"]["utility"] = utility
+        
+        environment["runs"][-1]["outputs"]["utility"] = environment["runs"][-1]["outputs"].get("utility", {})
+        environment["runs"][-1]["outputs"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
