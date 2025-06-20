@@ -57,8 +57,8 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
             }
         })
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        sim_history_dir = "sim_history"
-        os.mkdir(sim_history_dir, exist_ok=True)
+        sim_history_dir = f"simulations/{simulation_id}/history"
+        os.makedirs(sim_history_dir, exist_ok=True)
         env_path = f"{sim_history_dir}/simulation_{simulation_id}_env_run_{i+1}_{timestamp}.json"
         with open(env_path, "w") as f:
             json.dump(env, f, indent=2)
