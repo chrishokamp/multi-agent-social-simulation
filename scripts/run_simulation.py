@@ -95,7 +95,8 @@ def main(config_path: Path, max_messages: int, min_messages: int):
         json.dump(history[-1], f, indent=2)
 
     # Save full history incrementally
-    out_path = config_path.with_name("history.json")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = config_path.with_name(f"history_{timestamp}.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
 
