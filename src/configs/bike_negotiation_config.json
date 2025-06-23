@@ -30,14 +30,14 @@
       {"name": "seller_satisfaction", "type": "Number", "description": "Seller's satisfaction with the outcome (1-10 scale)"}
     ]
   },
-  "num_runs": 5,
+  "num_runs": 2,
   "enhanced_optimization": {
     "enabled": true,
     "algorithm": "ucb",
     "exploration_factor": 1.2,
-    "max_iterations": 15,
-    "convergence_patience": 3,
-    "utility_threshold": 0.85,
+    "max_iterations": 3,
+    "convergence_patience": 2,
+    "utility_threshold": 0.75,
     "enable_meta_learning": true,
     "enable_prompt_templates": true,
     "save_detailed_results": true,
