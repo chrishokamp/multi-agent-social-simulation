@@ -20,6 +20,7 @@ sys.path.append(str(BASE_DIR / "src" / "backend"))
 from engine.logged_simulation import LoggedSelectorGCSimulation
 from logging_framework.reporters import HTMLReporter, PDFReporter
 from logging_framework.visualization import SimulationVisualizer
+from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
 
 dotenv.load_dotenv()
 
@@ -92,12 +93,24 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         )
         
         if not result:
-            print("No result returned\n")
-            continue
-
-        pprint(result)
-
-        outputs = {var["name"]: var["value"] for var in result["output_variables"]}
+            print("No result returned - creating default outputs\n")
+            # Create default outputs for failed negotiations
+            outputs = {
+                "final_price": 0,
+                "deal_reached": False,
+                "negotiation_rounds": len(sim.group_chat.messages) if hasattr(sim, 'group_chat') else 0,
+                "buyer_satisfaction": 1,
+                "seller_satisfaction": 1,
+                "last_offer_made": 0,
+                "last_offer_received": 0
+            }
+            result = {
+                "messages": sim.group_chat.messages if hasattr(sim, 'group_chat') else [],
+                "output_variables": [{"name": k, "value": v} for k, v in outputs.items()]
+            }
+        else:
+            pprint(result)
+            outputs = {var["name"]: var["value"] for var in result["output_variables"]}
         
         # Calculate utilities for each agent
         agent_utilities = {}
@@ -106,7 +119,15 @@ def main(config_path: Path, max_messages: int, min_messages: int,
                 utility = agent.compute_utility({"outputs": outputs})
                 agent_utilities[agent.name] = utility
                 print(f"{agent.name} utility: {utility:.4f}")
+                
+                # Log the final utility to the simulation logger
+                if hasattr(sim, 'logger'):
+                    sim.logger.log_utility_update(agent.name, utility, {"outputs": outputs})
         
+        # Save logs again after updating utilities
+        if hasattr(sim, 'logger'):
+            sim.logger.save_logs()
+            
         history.append({
             "run_id": run_idx, 
             "outputs": outputs,
@@ -129,12 +150,20 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         if not no_visualizations:
             print(f"\n📊 Generating visualizations for run {run_idx}...")
             try:
+                # Generate standard visualizations
                 visualizer = SimulationVisualizer(run_log_dir)
                 viz_dir = visualizer.save_all_visualizations()
-                print(f"   ✅ Visualizations saved to: {viz_dir}")
+                print(f"   ✅ Standard visualizations saved to: {viz_dir}")
+                
+                # Generate enhanced visualizations
+                print(f"   🎨 Generating enhanced visualizations...")
+                enhanced_visualizer = EnhancedSimulationVisualizer(run_log_dir)
+                enhanced_viz_dir = enhanced_visualizer.save_all_enhanced_visualizations()
+                print(f"   ✅ Enhanced visualizations saved to: {enhanced_viz_dir}")
+                
             except ImportError as e:
                 print(f"   ⚠️  Skipping visualizations - missing dependencies: {e}")
-                print(f"   💡 Install with: pip install matplotlib seaborn pandas")
+                print(f"   💡 Install with: pip install matplotlib seaborn pandas scipy")
             except Exception as e:
                 print(f"   ⚠️  Visualization error: {e}")
 

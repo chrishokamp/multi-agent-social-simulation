@@ -181,12 +181,41 @@ class HTMLReporter(SimulationReporter):
         }
         .visualization {
             text-align: center;
-            margin: 20px 0;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .visualization h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
         .visualization img {
             max-width: 100%;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        .visualization img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        details {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: #007bff;
+            padding: 10px;
+        }
+        summary:hover {
+            color: #0056b3;
         }
         table {
             width: 100%;
@@ -291,18 +320,43 @@ class HTMLReporter(SimulationReporter):
     </div>
     
     <div class="visualization">
-        <h2>Utility Heatmap</h2>
-        <img src="visualizations/utility_heatmap.png" alt="Utility Heatmap">
+        <h2>Enhanced Utility Evolution</h2>
+        <img src="enhanced_visualizations/enhanced_utility_trends.png" alt="Enhanced Utility Trends">
     </div>
     
     <div class="visualization">
-        <h2>Message Flow</h2>
-        <img src="visualizations/message_flow.png" alt="Message Flow">
+        <h2>Conversation Flow Diagram</h2>
+        <img src="enhanced_visualizations/sankey_message_flow.png" alt="Conversation Flow">
     </div>
     
     <div class="visualization">
-        <h2>Action Distribution</h2>
-        <img src="visualizations/action_distribution.png" alt="Action Distribution">
+        <h2>Utility Journey Map</h2>
+        <img src="enhanced_visualizations/utility_journey_map.png" alt="Utility Journey Map">
+    </div>
+    
+    <div class="visualization">
+        <h2>Negotiation Dynamics Heatmap</h2>
+        <img src="enhanced_visualizations/negotiation_dynamics.png" alt="Negotiation Dynamics">
+    </div>
+    
+    <div class="visualization">
+        <h2>Agent Strategy Radar</h2>
+        <img src="enhanced_visualizations/strategy_radar.png" alt="Strategy Radar">
+    </div>
+    
+    <div class="visualization">
+        <h2>Enhanced Dashboard</h2>
+        <img src="enhanced_visualizations/enhanced_dashboard.png" alt="Enhanced Dashboard">
+    </div>
+    
+    <div class="visualization">
+        <h2>Standard Visualizations</h2>
+        <details>
+            <summary>Click to view standard charts</summary>
+            <img src="visualizations/utility_heatmap.png" alt="Utility Heatmap">
+            <img src="visualizations/message_flow.png" alt="Message Flow">
+            <img src="visualizations/action_distribution.png" alt="Action Distribution">
+        </details>
     </div>
     
     <h2>Metrics Summary</h2>

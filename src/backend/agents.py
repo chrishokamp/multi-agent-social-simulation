@@ -66,11 +66,22 @@ class UtilityAgent(AssistantAgent, ABC):
         if environment is None or "runs" not in environment:
             return  # no environment to learn from
 
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return  # no previous runs
+            
         history_lines = []
         for run_id, run in environment["runs"]:
             history_lines.append(f"#### RUN {run_id} ####")
-            for m in run["messages"]:
-                history_lines.append(f"{m['agent']}: {m['message']}")
+            if "messages" in run and run["messages"]:
+                for m in run["messages"]:
+                    # Handle different message formats
+                    if isinstance(m, dict):
+                        agent_name = m.get('agent', m.get('name', 'Unknown'))
+                        message_content = m.get('message', m.get('content', ''))
+                        history_lines.append(f"{agent_name}: {message_content}")
+                    else:
+                        history_lines.append(str(m))
             history_lines.append("")
         history = "\n".join(history_lines)
 
@@ -142,7 +153,7 @@ class BuyerAgent(UtilityAgent):
         max_price   = self.strategy["max_price"]
 
         if outputs["deal_reached"] is False:
-            # No deal reached, so no utility
+            # No deal reached - return 0 for neutral outcome
             return 0.0
 
         # Convert final_price to float if it's a string
@@ -175,7 +186,7 @@ class SellerAgent(UtilityAgent):
         target      = self.strategy["target_price"]
 
         if outputs["deal_reached"] is False:
-            # No deal reached, so no utility
+            # No deal reached - return 0 for neutral outcome
             return 0.0
 
         # Convert final_price to float if it's a string

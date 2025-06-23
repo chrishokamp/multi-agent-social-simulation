@@ -52,7 +52,7 @@ class SelectorGCSimulation:
                             for v in self.config["output_variables"]
                         ]) + '\n}'
                     ),
-                    termination_condition=self.config["termination_condition"]
+                    termination_condition=self.config.get("termination_condition", "TERMINATE")
                 )
                 self.config["agents"].append(information_return_agent)
 

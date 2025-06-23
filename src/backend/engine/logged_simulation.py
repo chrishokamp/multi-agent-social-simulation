@@ -71,6 +71,8 @@ class LoggedSelectorGCSimulation(SelectorGCSimulation):
         
         if len(chat_result.chat_history) < self.min_messages:
             self.logger.logger.warning(f"Chat history too short: {len(chat_result.chat_history)} < {self.min_messages}")
+            # Still save logs even if returning None
+            self.logger.save_logs()
             return None
         
         messages = []
@@ -102,7 +104,19 @@ class LoggedSelectorGCSimulation(SelectorGCSimulation):
         
         # Process output variables
         output_variables = []
-        information_return_agent_message = messages[-1]["message"]
+        information_return_agent_message = None
+        
+        # Find the last message from the InformationReturnAgent
+        for m in reversed(messages):
+            if m["agent"] == "InformationReturnAgent":
+                information_return_agent_message = m["message"]
+                break
+        
+        if information_return_agent_message is None:
+            self.logger.logger.error("No InformationReturnAgent message found in history")
+            self.logger.save_logs()
+            return None
+            
         json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
         if json_match:
             try:
@@ -120,9 +134,13 @@ class LoggedSelectorGCSimulation(SelectorGCSimulation):
                         
             except json.JSONDecodeError:
                 self.logger.logger.error("Failed to parse output variables JSON")
+                # Still save logs even if returning None
+                self.logger.save_logs()
                 return None
         else:
             self.logger.logger.error("No JSON found in information return agent message")
+            # Still save logs even if returning None
+            self.logger.save_logs()
             return None
         
         # Compute and log final utilities
@@ -167,7 +185,14 @@ class LoggedSelectorGCSimulation(SelectorGCSimulation):
             silent=True,
         )
         
-        result = self._process_result(chat_result)
+        # Use the group chat messages instead of the starter-manager conversation
+        # Create a chat result-like object with the group chat messages
+        class GroupChatResult:
+            def __init__(self, messages):
+                self.chat_history = messages
+        
+        group_chat_result = GroupChatResult(self.group_chat.messages)
+        result = self._process_result(group_chat_result)
         
         # Log completion
         self.logger.logger.info(f"Simulation {self.run_id} completed")

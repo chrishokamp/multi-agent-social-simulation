@@ -180,9 +180,26 @@ class SimulationVisualizer:
                 utility_data[agent_name] = utilities
                 max_rounds = max(max_rounds, max(utilities.keys()))
         
+        # Handle case with no utility data
+        if not utility_data:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            ax.text(0.5, 0.5, 'No utility data available', 
+                   transform=ax.transAxes, ha='center', va='center',
+                   fontsize=16, color='gray')
+            ax.set_title('Utility Values Heatmap', fontsize=14, fontweight='bold')
+            ax.axis('off')
+            if save_path:
+                fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            self.figures.append(fig)
+            return fig
+            
         # Create matrix
         agents = sorted(utility_data.keys())
-        rounds = list(range(1, max_rounds + 1))
+        if max_rounds == 0:
+            # If all utilities are at round 0, include round 0
+            rounds = [0]
+        else:
+            rounds = list(range(0, max_rounds + 1))
         
         matrix = np.zeros((len(agents), len(rounds)))
         for i, agent in enumerate(agents):
@@ -192,11 +209,27 @@ class SimulationVisualizer:
         # Create heatmap
         fig, ax = plt.subplots(figsize=(12, 6))
         
+        # Determine if we have negative values
+        if matrix.size == 0 or np.all(np.isnan(matrix)):
+            # Handle empty or all-NaN matrix
+            vmin, vmax = -1, 1
+        else:
+            vmin = np.nanmin(matrix)
+            vmax = np.nanmax(matrix)
+        
+        # Use appropriate colormap and center
+        if vmin < 0:
+            cmap = 'RdBu_r'  # Red for negative, Blue for positive
+            center = 0
+        else:
+            cmap = 'coolwarm'
+            center = (vmin + vmax) / 2
+        
         sns.heatmap(matrix, 
                     xticklabels=rounds,
                     yticklabels=agents,
-                    cmap='coolwarm',
-                    center=0.5,
+                    cmap=cmap,
+                    center=center,
                     annot=True,
                     fmt='.3f',
                     cbar_kws={'label': 'Utility Value'},

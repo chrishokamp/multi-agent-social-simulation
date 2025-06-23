@@ -255,13 +255,33 @@ print('Result:', json.dumps(result, indent=2) if result else 'No result')"
 	@echo "$(GREEN)Example simulation completed!$(NC)"
 
 .PHONY: run-simulation
-run-simulation: ## Run simulation with self-optimising agents
-	@echo "$(YELLOW)Running simulation...$(NC)"
+run-simulation: ## Run simulation with enhanced self-optimization and rich visualizations
+	@echo "$(YELLOW)🚀 Running enhanced simulation with rich logging...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+	echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+	exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/self_optimize_negotiation_with_logging.py --config $(SIMULATION_CONFIG)
+	@echo "$(GREEN)✨ Simulation completed with rich visualizations!$(NC)"
+
+.PHONY: run-simulation-simple
+run-simulation-simple: ## Run basic simulation without enhanced logging
+	@echo "$(YELLOW)Running basic simulation...$(NC)"
 	@if [ ! -f $(UV_VENV)/bin/python ]; then \
 	echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
 	exit 1; \
 	fi
 	$(UV_VENV)/bin/python scripts/run_simulation.py --config $(SIMULATION_CONFIG)
+	@echo "$(GREEN)Basic simulation completed!$(NC)"
+
+.PHONY: run-simulation-no-optimization
+run-simulation-no-optimization: ## Run simulation with rich logging but without optimization
+	@echo "$(YELLOW)Running simulation with logging only (no optimization)...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+	echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+	exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/self_optimize_negotiation_with_logging.py --config $(SIMULATION_CONFIG) --no-pdf
 	@echo "$(GREEN)Simulation completed!$(NC)"
 
 

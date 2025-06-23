@@ -354,6 +354,57 @@ class TestSelectorGCSimulation:
             assert output_dict["deal_reached"] is True
             assert output_dict["negotiation_rounds"] == 3
 
+    @patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "Format: {output_variables_str} when {termination_condition}"}')
+    @patch('engine.simulation.UtilityAgent')
+    def test_termination_condition_from_config(self, mock_utility_agent, mock_file):
+        """Test that termination_condition is correctly read from config."""
+        from engine.simulation import SelectorGCSimulation
+        
+        mock_agent_instance = Mock()
+        mock_agent_instance.compute_utility.return_value = 0.5
+        mock_agent_instance.system_prompt = "Test prompt"
+        mock_utility_agent.return_value = mock_agent_instance
+        
+        # Test with termination_condition in config
+        config_with_termination = {
+            "agents": [
+                {"name": "TestAgent", "description": "Test", "prompt": "Test agent"}
+            ],
+            "termination_condition": "CUSTOM_TERMINATION",
+            "output_variables": [{"name": "result", "type": "String"}]
+        }
+        
+        sim = SelectorGCSimulation(config_with_termination, environment={})
+        
+        # Check that the InformationReturnAgent was added with the correct termination condition
+        assert sim.config["agents"][-1]["name"] == "InformationReturnAgent"
+        assert "CUSTOM_TERMINATION" in sim.config["agents"][-1]["prompt"]
+        
+    @patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "Format: {output_variables_str} when {termination_condition}"}')
+    @patch('engine.simulation.UtilityAgent')
+    def test_termination_condition_default(self, mock_utility_agent, mock_file):
+        """Test that termination_condition defaults to TERMINATE when not in config."""
+        from engine.simulation import SelectorGCSimulation
+        
+        mock_agent_instance = Mock()
+        mock_agent_instance.compute_utility.return_value = 0.5
+        mock_agent_instance.system_prompt = "Test prompt"
+        mock_utility_agent.return_value = mock_agent_instance
+        
+        # Test without termination_condition in config
+        config_without_termination = {
+            "agents": [
+                {"name": "TestAgent", "description": "Test", "prompt": "Test agent"}
+            ],
+            "output_variables": [{"name": "result", "type": "String"}]
+        }
+        
+        sim = SelectorGCSimulation(config_without_termination, environment={})
+        
+        # Check that the InformationReturnAgent was added with the default termination condition
+        assert sim.config["agents"][-1]["name"] == "InformationReturnAgent"
+        assert "TERMINATE" in sim.config["agents"][-1]["prompt"]
+
 
 class TestUtilityClassRegistry:
     """Test the utility class registry."""
