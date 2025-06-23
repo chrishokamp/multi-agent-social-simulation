@@ -1,42 +1,6 @@
 # Multi-Agent Social Simulation Framework
 
-A comprehensive framework for creating and running multi-agent social simulations powered by Large Language Models (LLMs). This system enables researchers and developers to create sophisticated agent-based simulations for studying social dynamics, negotiations, and complex interactions.
-
-## Features
-
-### 🧠 **Enhanced Self-Optimization**
-- **Multi-Armed Bandit Algorithms**: UCB and Thompson Sampling for intelligent exploration/exploitation
-- **Structured Prompt Templates**: Composable prompt components with systematic mutations
-- **Meta-Learning**: Cross-simulation knowledge transfer and pattern recognition
-- **Convergence Detection**: Automatic stopping when optimal performance is reached
-- **Advanced Analytics**: Comprehensive tracking, visualization, and performance analysis
-
-### 🚀 **Core Simulation Engine**
-- **LLM-Powered Agents**: Support for OpenAI GPT, Azure OpenAI, and Ollama models
-- **Flexible Agent Types**: Utility-aware agents with customizable behavior and learning capabilities
-- **Real-time Simulation**: Live execution and monitoring of multi-agent conversations
-- **Statistical Analysis**: Monte Carlo simulation support for robust statistical insights
-- **Rich Visualization**: 2D/3D rendering of agent interactions and behaviors
-
-### 🔧 **Infrastructure & APIs**
-- **REST API**: Complete API for programmatic simulation management
-- **Persistent Storage**: MongoDB integration for simulation history and results
-- **Rich Logging Framework**: Beautiful visualizations, HTML/PDF reports, and comprehensive analytics
-- **Self-Improvement**: Agents can learn and adapt their strategies over time
-
-## Architecture
-
-### Backend (Python)
-- **API Layer**: Flask REST endpoints for simulation management
-- **Simulation Engine**: Autogen-based conversation orchestration
-- **Database**: MongoDB for persistent storage
-- **Orchestrator**: Concurrent simulation execution with Prefect workflows
-
-### Frontend (React)
-- **Configurator**: Interactive simulation setup and agent configuration
-- **Renderer**: Real-time 2D/3D visualization using Three.js and Pixi.js
-- **Dashboard**: Analytics and performance metrics with ECharts
-- **Catalog**: Browse and manage simulation history
+A framework for creating and running multi-agent social simulations powered by Large Language Models (LLMs). This system enables researchers and developers to create sophisticated agent-based simulations for studying social dynamics, negotiations, and complex interactions.
 
 ## Prerequisites
 
