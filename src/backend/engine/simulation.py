@@ -119,21 +119,39 @@ class SelectorGCSimulation:
             messages.append({"agent": agent_name, "message": content})
 
         output_variables = []
-        information_return_agent_message = messages[-1]["message"]
-        json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
-        if json_match:
-            try:
-                parsed_json = json.loads(json_match.group(0))
-                for variable in parsed_json:
-                    # Handle both None and "Unspecified" values
-                    value = parsed_json[variable]
-                    if value is None or value == "Unspecified":
-                        value = "Unspecified"
-                    output_variables.append({"name": variable, "value": value})
-            except json.JSONDecodeError:
-                return None
-        else:
+        information_return_agent_message = None
+
+        # Find the last message from the InformationReturnAgent
+        for m in reversed(messages):
+            if m["agent"] == "InformationReturnAgent":
+                information_return_agent_message = m["message"]
+                break
+
+        if information_return_agent_message is None:
+            logger.info("No InformationReturnAgent message found in history")
             return None
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", information_return_agent_message, re.DOTALL)
+        if not json_match:
+            json_match = re.search(r"\{.*?\}\s*", information_return_agent_message, re.DOTALL)
+
+        if not json_match:
+            logger.info("No JSON found in InformationReturnAgent message: %s", information_return_agent_message)
+            return None
+
+        json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+        json_str = json_str.strip()
+
+        try:
+            parsed_json = json.loads(json_str)
+        except json.JSONDecodeError:
+            logger.info("Failed to decode JSON: %s", json_str)
+            return None
+
+        for variable in parsed_json:
+            value = parsed_json[variable]
+            if value is None or value == "Unspecified":
+                value = "Unspecified"
+            output_variables.append({"name": variable, "value": value})
 
         return {"messages": messages, "output_variables": output_variables}
 
@@ -148,4 +166,11 @@ class SelectorGCSimulation:
             max_turns=1,
             silent=True,
         )
-        return self._process_result(chat_result)
+        # Use the group chat messages instead of the starter-manager conversation
+        # Create a chat result-like object with the group chat messages
+        class GroupChatResult:
+            def __init__(self, messages):
+                self.chat_history = messages
+        
+        group_chat_result = GroupChatResult(self.group_chat.messages)
+        return self._process_result(group_chat_result)

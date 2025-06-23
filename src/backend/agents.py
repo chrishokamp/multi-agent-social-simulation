@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any, Mapping
+import json
 
 from autogen.agentchat import AssistantAgent
 
@@ -63,30 +64,30 @@ class UtilityAgent(AssistantAgent, ABC):
         if environment is None or "runs" not in environment:
             return  # no environment to learn from
 
-        history = []
+        history_lines = []
         for run_id, run in environment["runs"]:
-            history.append(f"###########\nRUN {run_id}:")
+            history_lines.append(f"#### RUN {run_id} ####")
             for m in run["messages"]:
-                msg = f"{m['agent']}: {m['message']}"
-                history.append(msg)
-            history.append("###########\n")
-
-        # history = "\n".join(history[-10:])  # truncate to last 10 messages
+                history_lines.append(f"{m['agent']}: {m['message']}")
+            history_lines.append("")
+        history = "\n".join(history_lines)
 
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are an AI prompt-optimizer. Rewrite the prompt "
-                    "to achieve a lower final price next time. Respond with "
-                    "ONLY the new prompt. Do not include markdown."
+                    "You rewrite system prompts for future simulations."
+                    "Use the agent's private strategy and full conversation "
+                    "history to craft a much better prompt. Respond only "
+                    "with the new prompt text."
                 ),
             },
             {
                 "role": "user",
                 "content": (
                     f"CURRENT PROMPT:\n{self.system_prompt}\n\n"
-                    f"LAST DIALOGUE (truncated):\n{history}\n\n"
+                    f"STRATEGY:\n{json.dumps(self.strategy)}\n\n"
+                    f"FULL HISTORY:\n{history}\n\n"
                     f"UTILITY ACHIEVED: {utility:.3f}\n\n"
                     "Rewrite now:"
                 ),

@@ -31,77 +31,22 @@ export OPENAI_API_KEY="your-api-key"
 export DB_CONNECTION_STRING="mongodb://localhost:27017"
 ```
 
-### 3. Run Enhanced Simulation
+### 3. Run the Simulation
 
-The main command runs the full enhanced optimization framework:
+The main command runs a self-optimising simulation:
 
 ```bash
 make run-simulation
 ```
 
-**What this does:**
-- 🧠 **Optimizes agent prompts** using multi-armed bandit algorithms (UCB/Thompson Sampling)
-- 📝 **Applies structured prompt templates** with systematic mutations and crossover
-- 🎯 **Uses meta-learning** to transfer knowledge from previous simulations  
-- 📊 **Generates rich analytics** with convergence detection and progress tracking
-- 📈 **Creates beautiful visualizations** showing optimization progress and agent performance
-- 💾 **Saves comprehensive results** including learned patterns and optimized configurations
-
-**Output includes:**
-- `optimization_results/` - Optimization analytics, plots, and learned patterns
-- `simulation_logs/` - Rich logging reports with HTML visualizations
-- `*_optimized.json` - Updated configuration with optimized prompts
-
-### Alternative Modes
-
-```bash
-# Basic simulation without optimization
-make run-simulation-simple
-
-# Rich logging without optimization
-make run-simulation-no-optimization
-
-# Legacy optimization (original framework)
-make run-enhanced-optimization
-```
+The system runs a sequence of episodes. After each episode each agent
+evaluates its own utility and, if ``self_improve`` is enabled for that
+agent, rewrites its system prompt using the full conversation history.
+The updated prompts are saved back to a ``*_optimized.json`` file
+alongside ``history.json`` containing run results.
 
 ## Configuration
 
-### Enhanced Optimization Configuration
-
-The configuration file now supports enhanced optimization settings:
-
-```json
-{
-  "model": "gpt-4o",
-  "config": {
-    "agents": [
-      {
-        "name": "Buyer",
-        "prompt": "Your negotiation prompt...",
-        "utility_class": "BuyerAgent",
-        "strategy": {"max_price": 400},
-        "optimization_target": true  // Mark for optimization
-      }
-    ],
-    "output_variables": [...]
-  },
-  "enhanced_optimization": {
-    "enabled": true,
-    "algorithm": "ucb",              // "ucb" or "thompson_sampling"
-    "exploration_factor": 1.2,       // Exploration vs exploitation
-    "max_iterations": 15,            // Maximum optimization steps
-    "utility_threshold": 0.85,       // Stop when this utility reached
-    "enable_meta_learning": true,    // Cross-simulation learning
-    "enable_prompt_templates": true  // Structured templates
-  },
-  "simulation_context": {
-    "type": "negotiation",
-    "domain": "consumer_goods",
-    "objectives": ["maximize_utility", "reach_agreement"]
-  }
-}
-```
 
 ### Environment Setup
 
@@ -250,7 +195,8 @@ Makefile             # Build and development commands
 - **min_messages**: Minimum messages for valid results
 - **termination_condition**: When to end the simulation
 - **output_variables**: Structured data to extract
-- **self_improve**: Enable agent learning between runs
+ - **self_improve**: Set this flag on an agent to allow it to rewrite its
+   own prompt between runs using the information it observed.
 
 ### Supported Models
 

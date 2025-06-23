@@ -1,5 +1,7 @@
 import asyncio
+import asyncio
 import json
+import logging
 from pathlib import Path
 from pprint import pprint
 
@@ -8,11 +10,13 @@ import dotenv
 
 import sys
 
-# Allow running without installation by adjusting PYTHONPATH
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR / "src" / "backend"))
 
 from engine.simulation import SelectorGCSimulation
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 dotenv.load_dotenv()
 
@@ -40,7 +44,7 @@ async def run_once(config: dict, environment: dict, max_messages: int, min_messa
 @click.option("--max-messages", default=10, show_default=True, help="Maximum conversation length")
 @click.option("--min-messages", default=1, show_default=True, help="Minimum messages for valid result")
 def main(config_path: Path, max_messages: int, min_messages: int):
-    """Run a self-optimising negotiation simulation."""
+    """Run repeated simulations with self-improving agents."""
     with open(config_path, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
@@ -54,7 +58,7 @@ def main(config_path: Path, max_messages: int, min_messages: int):
     for run_idx in range(1, num_runs + 1):
         print(f"=== Run {run_idx}/{num_runs} ===")
         result, sim = asyncio.run(run_once(config, environment, max_messages, min_messages, model))
-        if not result:
+        if result is None:
             print("No result returned\n")
             continue
 
@@ -66,16 +70,34 @@ def main(config_path: Path, max_messages: int, min_messages: int):
         environment["runs"].append((run_idx, {"messages": result["messages"]}))
         environment["outputs"] = outputs
 
-        # persist improved prompts for next run
+        # agents learn from this run before next round
         for agent in sim.agents:
+            utility = 0.0
+            if hasattr(agent, "compute_utility"):
+                utility = agent.compute_utility({"outputs": outputs})
             for cfg in config["agents"]:
-                if cfg["name"] == agent.name:
+                if cfg["name"] == agent.name and cfg.get("self_improve", False):
+                    old_prompt = cfg.get("prompt", "")
+                    agent.learn_from_feedback(utility, environment)
                     cfg["prompt"] = getattr(agent, "system_prompt", cfg.get("prompt"))
+                    logger.info(
+                        "Agent: %s -- optimising prompt for round %s, previous prompt: %s new prompt after optimisation: %s",
+                        agent.name,
+                        run_idx,
+                        old_prompt,
+                        cfg["prompt"],
+                    )
 
     out_path = config_path.with_name("history.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
     print(f"History written to {out_path}")
+
+    # Persist updated prompts so future runs start with improved agents
+    optimized_path = config_path.with_name(f"{config_path.stem}_optimized.json")
+    with open(optimized_path, "w", encoding="utf-8") as f:
+        json.dump({"config": config, "num_runs": num_runs, "model": model}, f, indent=2)
+    print(f"Updated config written to {optimized_path}")
 
 
 if __name__ == "__main__":
