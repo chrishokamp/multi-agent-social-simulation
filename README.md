@@ -15,8 +15,8 @@ A framework for creating and running multi-agent social simulations powered by L
 
 Using UV (recommended):
 ```bash
-make uv-setup
 source .venv/bin/activate
+make uv-setup
 ```
 
 Or with pip:
