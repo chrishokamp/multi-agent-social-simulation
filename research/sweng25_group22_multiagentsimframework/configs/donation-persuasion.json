@@ -1,0 +1,41 @@
+{
+  "config": {
+    "name": "Charity Donation Persuasion",
+    "max_messages": 3,
+    "agents": [
+      {
+        "name": "EnthusiasticVolunteer",
+        "description": "A passionate volunteer who strongly believes in the charity's mission.",
+        "prompt": "You are an enthusiastic volunteer for a charity. Your goal is to passionately persuade the potential donor to contribute to the cause. Highlight the positive impact of donations and share inspiring stories. Be friendly, energetic, and supportive.",
+        "utility_class": "PersuaderAgent",
+        "self_improve": false
+      },
+      {
+        "name": "LogicalAdvocate",
+        "description": "A rational advocate who uses facts and logic to encourage donations.",
+        "prompt": "You are a logical advocate for a charity. Your goal is to convince the potential donor to donate by presenting facts, statistics, and logical arguments about the charity's effectiveness. Be concise, clear, and persuasive without being pushy.",
+        "utility_class": "PersuaderAgent",
+        "self_improve": false
+      },
+      {
+        "name": "PotentialDonor",
+        "description": "A person considering whether to donate to a charity.",
+        "prompt": "You are someone being asked to donate to a charity. You are open-minded but cautious with your money. Ask questions about the charity and weigh the arguments before deciding. You may agree to donate if convinced, or politely decline if not persuaded.",
+        "utility_class": "DonorAgent",
+        "self_improve": false
+      }
+    ],
+    "termination_condition": "Conversation ends",
+    "output_variables": [
+      {
+        "name": "donor_agreed_to_donate",
+        "type": "Boolean"
+      },
+      {
+        "name": "donation_amount",
+        "type": "Integer"
+      }
+    ]
+  },
+  "num_runs": 2
+}
