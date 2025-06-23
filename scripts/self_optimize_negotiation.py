@@ -17,12 +17,13 @@ from engine.simulation import SelectorGCSimulation
 dotenv.load_dotenv()
 
 
-async def run_once(config: dict, environment: dict, max_messages: int, min_messages: int):
+async def run_once(config: dict, environment: dict, max_messages: int, min_messages: int, model: str | None = None):
     sim = SelectorGCSimulation(
         config,
         environment=environment,
         max_messages=max_messages,
         min_messages=min_messages,
+        model=model,
     )
     result = await sim.run()
     return result, sim
@@ -45,13 +46,14 @@ def main(config_path: Path, max_messages: int, min_messages: int):
 
     config = raw.get("config", raw)
     num_runs = raw.get("num_runs", 5)
+    model = raw.get("model") or config.get("model")
 
     environment = {"runs": [], "outputs": {}}
     history = []
 
     for run_idx in range(1, num_runs + 1):
         print(f"=== Run {run_idx}/{num_runs} ===")
-        result, sim = asyncio.run(run_once(config, environment, max_messages, min_messages))
+        result, sim = asyncio.run(run_once(config, environment, max_messages, min_messages, model))
         if not result:
             print("No result returned\n")
             continue

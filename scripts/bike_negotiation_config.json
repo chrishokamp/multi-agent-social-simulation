@@ -1,4 +1,5 @@
 {
+  "model": "gpt-4o",
   "config": {
     "name": "Bike Price Negotiation",
     "agents": [
