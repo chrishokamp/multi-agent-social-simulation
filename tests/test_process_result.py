@@ -36,3 +36,18 @@ def test_process_result_extracts_json():
     result = sim._process_result(chat_result)
     assert result is not None
     assert result["output_variables"][0]["name"] == "final_price"
+
+
+def test_process_result_handles_trailing_messages():
+    sim = SelectorGCSimulation.__new__(SelectorGCSimulation)
+    sim.min_messages = 1
+    chat_history = [
+        types.SimpleNamespace(source="Seller", content="hello"),
+        types.SimpleNamespace(source="InformationReturnAgent", content='{"final_price": 10, "deal_reached": true}\nTERMINATE'),
+        types.SimpleNamespace(source="starter", content="Begin"),
+    ]
+    chat_result = types.SimpleNamespace(chat_history=chat_history)
+
+    result = sim._process_result(chat_result)
+    assert result is not None
+    assert any(v["value"] == 10 for v in result["output_variables"])

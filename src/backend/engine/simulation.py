@@ -119,7 +119,17 @@ class SelectorGCSimulation:
             messages.append({"agent": agent_name, "message": content})
 
         output_variables = []
-        information_return_agent_message = messages[-1]["message"]
+        information_return_agent_message = None
+
+        # Find the last message from the InformationReturnAgent
+        for m in reversed(messages):
+            if m["agent"] == "InformationReturnAgent":
+                information_return_agent_message = m["message"]
+                break
+
+        if information_return_agent_message is None:
+            logger.info("No InformationReturnAgent message found in history")
+            return None
         json_match = re.search(r"```json\s*(\{.*?\})\s*```", information_return_agent_message, re.DOTALL)
         if not json_match:
             json_match = re.search(r"\{.*?\}\s*", information_return_agent_message, re.DOTALL)
