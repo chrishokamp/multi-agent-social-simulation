@@ -96,6 +96,8 @@ class SelectorGCSimulation:
             logger.warning(f"Simulation result has too few messages: {len(simulation_result.messages)} < {self.min_messages}")
             return None
 
+        systems_prompts = {ag.name: ag.system_prompt for ag in self.agents}
+
         messages = []
         for message in simulation_result.messages:
             messages.append({"agent": message.source, "message": message.content})
@@ -118,8 +120,18 @@ class SelectorGCSimulation:
         else:
             logger.error(f"No JSON found in message: {information_return_agent_message}")
             return None
+        
+        processed = {
+            "run_id": self.run_id,
+            "system_prompts": systems_prompts,
+            "messages": messages,
+            "output_variables": {
+                v["name"]: v["value"] 
+                for v in output_variables
+            }
+        }
 
-        return {"messages": messages, "output_variables": output_variables}
+        return processed
 
     def calculate_utility(self) -> None:
         for ag in self.agents:
@@ -154,14 +166,7 @@ class SelectorGCSimulation:
 
         processed = self._process_result(task_result)
         
-        self.environment["runs"].append({
-            "run_id": self.run_id,
-            "messages": processed["messages"],
-            "output_variables": {
-                v["name"]: v["value"] 
-                for v in processed["output_variables"]
-            }
-        })
+        self.environment["runs"].append(processed)
         self.calculate_utility()
 
         if processed:
