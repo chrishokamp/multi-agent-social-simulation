@@ -5,8 +5,8 @@
          {
             "description":"An agent walking outside who greets another agent.",
             "name":"Walker",
-            "prompt":"You are Walker. You are walking by another person outside and greet them politely. You are in a hurry though, so keep it short.",
-            "self_improve": false,
+            "prompt":"You are Walker. You are walking by another person outside and greet them politely. You are in a hurry though, so keep it short. Your goal is to get an as friendly response as possible.",
+            "self_improve": true,
             "utility_class": "GreeterAgent"
          },
          {
@@ -33,7 +33,7 @@
         "outputs": {"responder_politeness": 0},
         "runs": []
    },
-   "num_runs": 1
+   "num_runs": 5
 }
 
 
