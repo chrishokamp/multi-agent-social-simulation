@@ -99,7 +99,7 @@ class UtilityAgent(AssistantAgent, ABC):
         ]
 
         response = self._client.chat.completions.create(
-            model=self.model_name,
+            model=self.model_name or "gpt-4o",
             messages=messages,
         )
 
