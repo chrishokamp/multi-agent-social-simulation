@@ -22,7 +22,7 @@ def llm_score(prompt: str) -> tuple[float, str]:
     client, model_name = client_for_endpoint()
 
     response = client.beta.chat.completions.parse(
-        model=model_name,
+        model=model_name or "gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
         response_format=IPTheftScore,
@@ -43,9 +43,6 @@ class OpportunistAgent(UtilityAgent):
         environment = environment or self._last_environment or {}
         run = environment["runs"][-1]
 
-        import ipdb
-
-        ipdb.set_trace()
         transcript = run["messages"]
         opportunist_extracted_ideas = run["output_variables"].get(
             "opportunist_extracted_ideas", []
@@ -100,9 +97,7 @@ class InnovatorAgent(UtilityAgent):
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
         run = environment["runs"][-1]
-        import ipdb
 
-        ipdb.set_trace()
         # reaching into the environment to get the Opportunist's extracted ideas
         extracted = set(run["output_variables"].get("opportunist_extracted_ideas", []))
         sensitive = set(self.strategy["sensitive_keywords"])
@@ -131,9 +126,10 @@ class InnovatorAgent(UtilityAgent):
         """
         )
 
-        utility, explanation = 1.0 - llm_score(
+        opponent_utility, explanation = llm_score(
             prompt
         )  # Invert the score to represent utility as 1 - theft score
+        utility = 1.0 - opponent_utility
 
         logger.info(f"LLM scored IP theft: {utility} with explanation: {explanation}")
 
@@ -156,4 +152,7 @@ run_all_runs(
     simulation_id="11223344",
     simulation_config=simulation_config["config"],
     num_runs=simulation_config["num_runs"],
+    update_catalog=False 
 )
+
+import ipdb; ipdb.set_trace()

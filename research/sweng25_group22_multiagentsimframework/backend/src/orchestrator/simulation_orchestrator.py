@@ -23,7 +23,7 @@ def signal_handler(_sig, _frame):
         executor.shutdown(wait=False, cancel_futures=True)
     sys.exit(0)
 
-def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
+def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, update_catalog=True):
     """
         Run a simulation `num_runs` times synchronously, 
         passing the growing `env` into each new run so 
@@ -45,8 +45,9 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int):
             print(f"Run {i} failed; retrying...")
             continue
 
-        results_store.insert(simulation_id, simulation_result)
-        catalog_store.update_progress(simulation_id)
+        if update_catalog:
+            results_store.insert(simulation_id, simulation_result)
+            catalog_store.update_progress(simulation_id)
 
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         sim_history_dir = f"simulations/{simulation_id}/history"
