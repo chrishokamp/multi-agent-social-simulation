@@ -10,6 +10,7 @@ UV_VENV := .venv
 BACKEND_DIR := src/backend
 FRONTEND_DIR := src/frontend
 DB_CONNECTION_STRING ?= mongodb://localhost:27017
+SIMULATION_CONFIG ?= scripts/bike_negotiation_config.json
 
 # Colors for output
 GREEN := \033[0;32m
@@ -251,7 +252,17 @@ sim = SelectorGCSimulation(config['config'], environment=None); \
 result = asyncio.run(sim.run()); \
 print('Simulation completed!'); \
 print('Result:', json.dumps(result, indent=2) if result else 'No result')"
-	@echo "$(GREEN)Example simulation completed!$(NC)"
+        @echo "$(GREEN)Example simulation completed!$(NC)"
+
+.PHONY: run-negotiation
+run-negotiation: ## Run the self-optimising bike negotiation simulation
+       @echo "$(YELLOW)Running bike negotiation simulation...$(NC)"
+       @if [ ! -f $(UV_VENV)/bin/python ]; then \
+               echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+               exit 1; \
+       fi
+       $(UV_VENV)/bin/python scripts/self_optimize_negotiation.py --config $(SIMULATION_CONFIG)
+       @echo "$(GREEN)Bike negotiation simulation completed!$(NC)"
 
 # Docker support (future)
 .PHONY: docker-build
