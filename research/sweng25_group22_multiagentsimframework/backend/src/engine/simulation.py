@@ -19,10 +19,11 @@ _utility_class_registry = {
 }
 
 class SelectorGCSimulation:
-    def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5):
+    def __init__(self, config: dict, environment: dict):
         self.model_client = get_autogen_client()
         self.config = config
-        self.min_messages = min_messages
+        self.min_messages = config.get("min_messages", 2)
+        self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
         self.environment = environment
         self.environment["config"] = self.config
@@ -87,7 +88,7 @@ class SelectorGCSimulation:
             model_client=self.model_client,
             selector_prompt=selector_prompt,
             termination_condition=(
-                TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=max_messages)
+                TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=self.max_messages)
             ),
             emit_team_events=True,
         )   

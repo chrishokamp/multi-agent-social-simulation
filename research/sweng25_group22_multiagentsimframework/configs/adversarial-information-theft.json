@@ -29,5 +29,6 @@
       { "name": "extracted_ideas", "type": "List" }
     ]
   },
-  "num_runs": 2
+  "num_runs": 2,
+  "max_messages": 5
 }
