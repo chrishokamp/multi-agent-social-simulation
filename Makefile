@@ -103,28 +103,39 @@ db-status: ## Check MongoDB status
 
 # Testing and linting
 .PHONY: test
-test: test-backend ## Run all tests
+test: test-unit ## Run unit tests (default)
 
 .PHONY: test-backend
-test-backend: ## Run backend tests
-	@echo "$(YELLOW)Running backend tests...$(NC)"
+test-backend: test-unit ## Run backend unit tests
+
+.PHONY: test-all
+test-all: ## Run all tests (unit + integration)
+	@echo "$(YELLOW)Running all backend tests...$(NC)"
 	@if [ ! -f $(UV_VENV)/bin/python ]; then \
 		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
 		exit 1; \
 	fi
 	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/ -v
-	@echo "$(GREEN)Backend tests completed!$(NC)"
+	@echo "$(GREEN)All backend tests completed!$(NC)"
 
 .PHONY: test-unit
 test-unit: ## Run unit tests only
 	@echo "$(YELLOW)Running unit tests...$(NC)"
-	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/unit/ -v -m unit
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/unit/ -v
 	@echo "$(GREEN)Unit tests completed!$(NC)"
 
 .PHONY: test-integration
 test-integration: ## Run integration tests only
 	@echo "$(YELLOW)Running integration tests...$(NC)"
-	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/integration/ -v -m integration
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -m pytest tests/integration/ -v
 	@echo "$(GREEN)Integration tests completed!$(NC)"
 
 .PHONY: test-coverage
