@@ -10,7 +10,7 @@ UV_VENV := .venv
 BACKEND_DIR := src/backend
 FRONTEND_DIR := src/frontend
 DB_CONNECTION_STRING ?= mongodb://localhost:27017
-SIMULATION_CONFIG ?= scripts/bike_negotiation_config.json
+SIMULATION_CONFIG ?= src/configs/bike_negotiation_config.json
 
 # Colors for output
 GREEN := \033[0;32m
