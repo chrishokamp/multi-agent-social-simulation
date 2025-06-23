@@ -49,10 +49,8 @@ class DonorAgent(UtilityAgent):
             environment = self._last_environment or {}
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["output_variables"]["donor_agreed_to_donate"] is True:
-            utility = 0.0
-        else:
-            utility = 1.0
+        # static utility for the donor agent
+        utility = 1.0
 
         environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
         environment["runs"][-1]["output_variables"]["utility"][self.name] = utility

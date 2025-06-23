@@ -66,4 +66,5 @@ run_all_runs(
     simulation_id="11223344",
     simulation_config=simulation_config["config"],
     num_runs=simulation_config["num_runs"],
+    update_catalog=False
 )
