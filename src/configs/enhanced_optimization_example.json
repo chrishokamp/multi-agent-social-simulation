@@ -1,0 +1,85 @@
+{
+  "model": "gpt-4o",
+  "config": {
+    "agents": [
+      {
+        "name": "Buyer",
+        "utility_class": "BuyerAgent",
+        "strategy": {
+          "max_price": 800
+        },
+        "prompt": "You are an experienced buyer negotiating for a high-quality mountain bike. Your budget is $800 and you want to get the best possible deal. Be strategic but fair in your negotiations. Focus on finding a mutually beneficial outcome while staying within your budget constraints.",
+        "self_improve": true
+      },
+      {
+        "name": "Seller", 
+        "utility_class": "SellerAgent",
+        "strategy": {
+          "target_price": 600
+        },
+        "prompt": "You are a bike shop owner selling a premium mountain bike. Your minimum acceptable price is $600, but you'd like to get as much as possible. Be persuasive about the bike's quality and value, but be willing to negotiate to close the deal. Emphasize the bike's features and benefits.",
+        "self_improve": false
+      }
+    ],
+    "output_variables": [
+      {
+        "name": "final_price",
+        "type": "Number",
+        "description": "The agreed-upon final price for the bike"
+      },
+      {
+        "name": "deal_reached", 
+        "type": "Boolean",
+        "description": "Whether the buyer and seller reached an agreement"
+      },
+      {
+        "name": "negotiation_rounds",
+        "type": "Number", 
+        "description": "Number of back-and-forth exchanges in the negotiation"
+      },
+      {
+        "name": "buyer_satisfaction",
+        "type": "Number",
+        "description": "Buyer's satisfaction with the outcome (1-10 scale)"
+      },
+      {
+        "name": "seller_satisfaction",
+        "type": "Number",
+        "description": "Seller's satisfaction with the outcome (1-10 scale)"
+      }
+    ],
+    "termination_condition": {
+      "type": "or",
+      "conditions": [
+        {
+          "type": "max_messages",
+          "value": 15
+        },
+        {
+          "type": "keyword_detection",
+          "keywords": ["deal", "agreed", "accept", "final price"]
+        }
+      ]
+    }
+  },
+  "num_runs": 3,
+  "optimization_config": {
+    "algorithm": "ucb",
+    "exploration_factor": 1.2,
+    "mutation_rate": 0.15,
+    "crossover_rate": 0.25,
+    "max_iterations": 30,
+    "convergence_patience": 5,
+    "utility_threshold": 0.9,
+    "enable_meta_learning": true,
+    "enable_prompt_templates": true,
+    "save_results": true
+  },
+  "meta_learning_context": {
+    "simulation_type": "negotiation",
+    "domain": "e-commerce",
+    "objectives": ["maximize_utility", "reach_agreement", "maintain_relationship"],
+    "constraints": ["budget_limit", "time_limit", "fairness"],
+    "tags": ["buyer-seller", "price-negotiation", "consumer-goods"]
+  }
+}

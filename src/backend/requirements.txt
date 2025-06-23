@@ -13,3 +13,12 @@ pytest-mock
 pytest-asyncio
 pytest-flask
 pytest-cov
+matplotlib
+seaborn
+pandas
+jinja2
+markdown
+scikit-learn
+scipy
+click
+pdfkit

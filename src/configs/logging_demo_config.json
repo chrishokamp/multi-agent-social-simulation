@@ -1,0 +1,48 @@
+{
+  "config": {
+    "model": "gpt-4o",
+    "agents": [
+      {
+        "name": "BuyerAlice",
+        "utility_class": "BuyerAgent",
+        "description": "An experienced buyer who knows the market well",
+        "prompt": "You are Alice, an experienced bike buyer. You're looking for a quality bike but want to get a good deal. Your maximum budget is $1200, but you'd prefer to pay around $800-900. Be polite but firm in negotiations. Ask about the bike's condition, age, and any maintenance history.",
+        "strategy": {
+          "max_price": 1200
+        },
+        "self_improve": true
+      },
+      {
+        "name": "SellerBob", 
+        "utility_class": "SellerAgent",
+        "description": "A seller trying to get a fair price for their bike",
+        "prompt": "You are Bob, selling your 2-year-old mountain bike. You bought it for $1000 and think $900 is a fair asking price, but you're willing to negotiate down to $750 if needed. The bike is in good condition with regular maintenance. Be friendly and highlight the bike's positive features.",
+        "strategy": {
+          "target_price": 850
+        },
+        "self_improve": true
+      }
+    ],
+    "output_variables": [
+      {
+        "name": "final_price",
+        "type": "Number"
+      },
+      {
+        "name": "deal_reached", 
+        "type": "Boolean"
+      },
+      {
+        "name": "buyer_satisfaction",
+        "type": "Number"
+      },
+      {
+        "name": "negotiation_rounds",
+        "type": "Number"
+      }
+    ],
+    "termination_condition": "Both parties agree on a price, or one party walks away from the negotiation."
+  },
+  "num_runs": 3,
+  "model": "gpt-4o"
+}
