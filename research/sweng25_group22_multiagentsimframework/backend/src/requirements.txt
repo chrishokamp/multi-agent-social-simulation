@@ -2,10 +2,7 @@ python-dotenv
 ipdb
 numpy
 openai
-autogen
-autogen_ext
-autogen_core
-autogen_agentchat
+ag2
 pymongo
 flask
 flask-cors

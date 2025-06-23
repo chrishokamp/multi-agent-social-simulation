@@ -22,10 +22,13 @@ promptlayer.api_key = os.getenv("PROMPTLAYER_API_KEY")
 
 # Define tasks and flow
 from OLD.util.config import SimConfigLoader
-from autogen_agentchat.agents import AssistantAgent
-from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
-from autogen_agentchat.teams import SelectorGroupChat
-from autogen_agentchat.ui import Console
+from autogen import (
+    AssistantAgent,
+    GroupChat,
+    GroupChatManager,
+    ConversableAgent,
+    LLMConfig,
+)
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 # Custom subclass to inject PromptLayer tags

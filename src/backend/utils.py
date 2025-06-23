@@ -3,8 +3,18 @@ import logging
 import sys
 import os
 from openai import OpenAI, AzureOpenAI
-from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
-from autogen_ext.models.ollama import OllamaChatCompletionClient
+try:
+    from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
+    from autogen_ext.models.ollama import OllamaChatCompletionClient
+except Exception:  # pragma: no cover - optional dependency
+    class OpenAIChatCompletionClient:  # type: ignore
+        pass
+
+    class AzureOpenAIChatCompletionClient:  # type: ignore
+        pass
+
+    class OllamaChatCompletionClient:  # type: ignore
+        pass
 
 
 def create_logger(name: str) -> logging.Logger:

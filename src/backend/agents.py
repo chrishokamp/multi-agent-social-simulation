@@ -11,7 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Mapping
 
-from autogen_agentchat.agents import AssistantAgent
+from autogen.agentchat import AssistantAgent
 
 from utils import client_for_endpoint
 
@@ -26,10 +26,11 @@ class UtilityAgent(AssistantAgent, ABC):
         system_prompt: str,
         *args,
         strategy: Mapping[str, Any] | None = None,
+        llm_config=None,
         model: str | None = None,
         **kwargs,
     ):
-        super().__init__(*args, system_message=system_prompt, **kwargs)
+        super().__init__(*args, system_message=system_prompt, llm_config=llm_config, **kwargs)
         self.system_prompt: str = system_prompt
         self.strategy: dict[str, Any] = dict(strategy or {})
         # Let the agent remember the environment it saw last time
