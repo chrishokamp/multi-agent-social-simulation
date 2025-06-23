@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
+from datetime import datetime
 from pprint import pprint
 
 import click
@@ -41,9 +42,15 @@ async def run_once(config: dict, environment: dict, max_messages: int, min_messa
     required=True,
     help="Path to simulation configuration JSON",
 )
+@click.option(
+    "--output-dir",
+    "output_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=BASE_DIR / "outputs",
+)
 @click.option("--max-messages", default=10, show_default=True, help="Maximum conversation length")
 @click.option("--min-messages", default=1, show_default=True, help="Minimum messages for valid result")
-def main(config_path: Path, max_messages: int, min_messages: int):
+def main(config_path: Path, output_dir: Path, max_messages: int, min_messages: int):
     """Run repeated simulations with self-improving agents."""
     with open(config_path, "r", encoding="utf-8") as f:
         raw = json.load(f)
@@ -65,7 +72,16 @@ def main(config_path: Path, max_messages: int, min_messages: int):
         pprint(result)
 
         outputs = {var["name"]: var["value"] for var in result["output_variables"]}
-        history.append({"run_id": run_idx, "outputs": outputs})
+        history.append(
+            {
+                "run_id": run_idx,
+                "result": result,
+                "agent_prompts": [
+                    {"name": agent.name, "prompt": agent.system_prompt}
+                    for agent in sim.agents
+                ]
+            }
+        )
 
         environment["runs"].append((run_idx, {"messages": result["messages"]}))
         environment["outputs"] = outputs
@@ -88,7 +104,10 @@ def main(config_path: Path, max_messages: int, min_messages: int):
                         cfg["prompt"],
                     )
 
-    out_path = config_path.with_name("history.json")
+    print(f"=== Completed {num_runs} runs ===")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = output_dir / f"results_{config_path.stem}_{timestamp}.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
     print(f"History written to {out_path}")
