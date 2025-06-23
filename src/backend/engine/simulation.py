@@ -22,7 +22,8 @@ _utility_class_registry = {
 
 class SelectorGCSimulation:
     def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5, model: str | None = None):
-        self.llm_config = LLMConfig(api_type="openai", model=model or config.get("model"))
+        model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
+        self.llm_config = LLMConfig(api_type="openai", model=model_name)
         self.config = config
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
@@ -109,7 +110,13 @@ class SelectorGCSimulation:
 
         messages = []
         for message in chat_result.chat_history:
-            messages.append({"agent": message.get("name", message.get("role")), "message": message.get("content", "")})
+            if isinstance(message, dict):
+                agent_name = message.get("name", message.get("role"))
+                content = message.get("content", "")
+            else:
+                agent_name = getattr(message, "source", getattr(message, "name", getattr(message, "role", "")))
+                content = getattr(message, "content", "")
+            messages.append({"agent": agent_name, "message": content})
 
         output_variables = []
         information_return_agent_message = messages[-1]["message"]
