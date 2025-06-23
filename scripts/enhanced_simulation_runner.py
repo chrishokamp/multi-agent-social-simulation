@@ -240,9 +240,8 @@ class EnhancedSimulationRunner:
         log_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize logging components
-        sim_logger = SimulationLogger(str(log_dir))
-        action_logger = AgentActionLogger(str(log_dir))
-        utility_tracker = UtilityTracker(str(log_dir))
+        sim_logger = SimulationLogger(simulation_id=f"enhanced_sim_{timestamp}", log_dir=log_dir)
+        metrics_collector = MetricsCollector()
         
         # Log optimization results if available
         if "optimization_result" in results:
@@ -250,21 +249,20 @@ class EnhancedSimulationRunner:
             
             # Log optimization progress
             for step in opt_result.optimization_history:
-                action_logger.log_agent_action(
-                    agent_name=results["target_agent"],
+                agent_logger = sim_logger.get_agent_logger(results["target_agent"])
+                agent_logger.log_action(
                     action_type="prompt_optimization",
-                    details={
+                    content={
                         "step": step["step"],
                         "utility": step["utility"],
                         "prompt_length": len(step["prompt"])
-                    },
-                    timestamp=datetime.now().isoformat()
+                    }
                 )
                 
-                utility_tracker.track_utility(
+                sim_logger.log_utility_update(
                     agent_name=results["target_agent"],
                     utility_value=step["utility"],
-                    context={"optimization_step": step["step"]}
+                    environment={"optimization_step": step["step"]}
                 )
         
         # Log validation results
@@ -278,20 +276,22 @@ class EnhancedSimulationRunner:
                 
                 # Log conversation
                 for msg in result.get("messages", []):
-                    action_logger.log_agent_action(
+                    sim_logger.log_message(
                         agent_name=msg.get("name", "Unknown"),
-                        action_type="message",
-                        details={"content": msg.get("content", "")},
-                        timestamp=datetime.now().isoformat()
+                        message=msg.get("content", ""),
+                        metadata={"run_id": run_id}
                     )
                 
                 # Log utilities if agents have compute_utility method
                 for agent_name in [agent["name"] for agent in self.config["config"]["agents"]]:
-                    utility_tracker.track_utility(
+                    sim_logger.log_utility_update(
                         agent_name=agent_name,
                         utility_value=outputs.get(f"{agent_name.lower()}_satisfaction", 0.5),
-                        context={"run_id": run_id, "outputs": outputs}
+                        environment={"run_id": run_id, "outputs": outputs}
                     )
+        
+        # Save logs
+        sim_logger.save_logs()
         
         # Generate visualizations and reports
         report_generator = HTMLReporter(log_dir)
