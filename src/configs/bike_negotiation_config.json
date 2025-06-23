@@ -31,18 +31,6 @@
     ]
   },
   "num_runs": 2,
-  "enhanced_optimization": {
-    "enabled": true,
-    "algorithm": "ucb",
-    "exploration_factor": 1.2,
-    "max_iterations": 3,
-    "convergence_patience": 2,
-    "utility_threshold": 0.75,
-    "enable_meta_learning": true,
-    "enable_prompt_templates": true,
-    "save_detailed_results": true,
-    "results_dir": "optimization_results"
-  },
   "simulation_context": {
     "type": "negotiation",
     "domain": "consumer_goods",
