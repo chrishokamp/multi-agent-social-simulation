@@ -25,6 +25,7 @@ class SelectorGCSimulation:
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
         self.environment = environment
+        self.environment["config"] = self.config
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
 
