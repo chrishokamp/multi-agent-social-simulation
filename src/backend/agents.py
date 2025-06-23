@@ -29,6 +29,7 @@ class UtilityAgent(AssistantAgent, ABC):
         strategy: Mapping[str, Any] | None = None,
         llm_config=None,
         model: str | None = None,
+        optimization_prompt: str | None = None,
         **kwargs,
     ):
         super().__init__(*args, system_message=system_prompt, llm_config=llm_config, **kwargs)
@@ -38,6 +39,7 @@ class UtilityAgent(AssistantAgent, ABC):
         self._last_environment: Mapping[str, Any] | None = None
         self._client, self.model_name = client_for_endpoint(model=model)
         self._utility_history: list[float] = []
+        self.optimization_prompt: str | None = optimization_prompt
 
     def compute_utility(
         self,
@@ -72,15 +74,20 @@ class UtilityAgent(AssistantAgent, ABC):
             history_lines.append("")
         history = "\n".join(history_lines)
 
+        # Use custom optimization prompt if provided, otherwise use default
+        optimization_content = self.optimization_prompt or (
+            "You are an expert prompt engineer tasked with maximizing agent utility. "
+            "Your goal is to rewrite the agent's prompt to achieve the HIGHEST POSSIBLE UTILITY SCORE. "
+            "Focus on aggressive negotiation tactics, protecting private information, and walking away from bad deals. "
+            "Use the agent's strategy, conversation history, and utility score to identify what worked and what didn't. "
+            "The new prompt should be more assertive, business-like, and utility-maximizing than the current one. "
+            "Remember: Higher utility = Better performance. Respond ONLY with the new prompt text."
+        )
+        
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You rewrite system prompts for future simulations."
-                    "Use the agent's private strategy and full conversation "
-                    "history to craft a much better prompt. Respond only "
-                    "with the new prompt text."
-                ),
+                "content": optimization_content,
             },
             {
                 "role": "user",

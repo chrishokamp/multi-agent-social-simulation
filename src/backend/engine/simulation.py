@@ -68,7 +68,8 @@ class SelectorGCSimulation:
                 description=agent_config["description"],
                 llm_config=self.llm_config,
                 strategy=agent_config.get("strategy"),
-                model=model or self.config.get("model")
+                model=model or self.config.get("model"),
+                optimization_prompt=config.get("optimization_prompt")
             )
 
             # (+ self-improvement)
@@ -83,7 +84,8 @@ class SelectorGCSimulation:
                 description=agent_config["description"],
                 llm_config=self.llm_config,
                 strategy=agent_config.get("strategy"),
-                model=model or self.config.get("model")
+                model=model or self.config.get("model"),
+                optimization_prompt=config.get("optimization_prompt")
             )
 
             self.agents.append(ag)

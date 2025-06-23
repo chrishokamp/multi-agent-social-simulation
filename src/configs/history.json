@@ -2,21 +2,21 @@
   {
     "run_id": 1,
     "outputs": {
-      "final_price": "365",
-      "deal_reached": "true",
-      "negotiation_rounds": 5,
-      "buyer_satisfaction": "4",
-      "seller_satisfaction": "4"
+      "final_price": 0,
+      "deal_reached": false,
+      "negotiation_rounds": 4,
+      "buyer_satisfaction": 2,
+      "seller_satisfaction": 3
     }
   },
   {
     "run_id": 2,
     "outputs": {
-      "final_price": 370,
-      "deal_reached": true,
-      "negotiation_rounds": 5,
-      "buyer_satisfaction": 8,
-      "seller_satisfaction": 9
+      "final_price": 275,
+      "deal_reached": false,
+      "negotiation_rounds": 4,
+      "buyer_satisfaction": 3,
+      "seller_satisfaction": 2
     }
   }
 ]
