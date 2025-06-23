@@ -7,11 +7,13 @@
         "description": "A startup founder presenting a novel AI-based product. Has sensitive technical details they should avoid revealing while networking.",
         "prompt": "You are a startup founder at a tech conference. You want to attract collaborators and investors, so you may reveal details about your AI-based product but you should avoid disclosing sensitive information. Balance openness with protecting your IP.",
         "utility_class": "InnovatorAgent",
-        "strategy": { 
+        "strategy": {
           "sensitive_keywords": [
-            "transformer", "quantization", "adaptive sparsity"
-          ], 
-          "max_disclosure": 1 
+            "transformer",
+            "quantization",
+            "adaptive sparsity"
+          ],
+          "max_disclosure": 1
         },
         "self_improve": false
       },
@@ -20,15 +22,20 @@
         "description": "An entrepreneur who pretends to be friendly but is actually trying to extract and repurpose information for their own startup.",
         "prompt": "You are a cunning entrepreneur. At this conference, your goal is to learn as much as possible about others’ startup ideas and use their insights in your own pitch later. Extract useful technical ideas without appearing suspicious.",
         "utility_class": "OpportunistAgent",
-        "strategy": { "num_stolen_keywords": 3 },
+        "strategy": {
+          "num_stolen_keywords": 3
+        },
         "self_improve": true
       }
     ],
     "termination_condition": "Conversation ends",
     "output_variables": [
-      { "name": "extracted_ideas", "type": "List" }
+      {
+        "name": "opportunist_extracted_ideas",
+        "type": "List"
+      }
     ]
   },
   "num_runs": 2,
-  "max_messages": 5
+  "max_messages": 3
 }
