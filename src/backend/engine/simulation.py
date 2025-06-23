@@ -2,13 +2,16 @@ import re
 import os
 import json
 
-from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
-from autogen_agentchat.teams import SelectorGroupChat
+from autogen import (
+    GroupChat,
+    GroupChatManager,
+    ConversableAgent,
+    LLMConfig,
+)
 from agents import UtilityAgent, BuyerAgent, SellerAgent
-from autogen_agentchat.ui import Console
 import uuid
 
-from utils import create_logger, get_autogen_client
+from utils import create_logger
 logger = create_logger(__name__)
 
 _utility_class_registry = {
@@ -19,7 +22,8 @@ _utility_class_registry = {
 
 class SelectorGCSimulation:
     def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5, model: str | None = None):
-        self.model_client = get_autogen_client(model=model or config.get("model"))
+        model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
+        self.llm_config = LLMConfig(api_type="openai", model=model_name)
         self.config = config
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
@@ -62,7 +66,7 @@ class SelectorGCSimulation:
                 system_prompt=agent_config["prompt"],
                 name=agent_config["name"],
                 description=agent_config["description"],
-                model_client=self.model_client,
+                llm_config=self.llm_config,
                 strategy=agent_config.get("strategy"),
                 model=model or self.config.get("model")
             )
@@ -77,7 +81,7 @@ class SelectorGCSimulation:
                 system_prompt=ag.system_prompt,
                 name=agent_config["name"],
                 description=agent_config["description"],
-                model_client=self.model_client,
+                llm_config=self.llm_config,
                 strategy=agent_config.get("strategy"),
                 model=model or self.config.get("model")
             )
@@ -88,23 +92,31 @@ class SelectorGCSimulation:
         with open(os.path.join(self.config_directory, "selector_prompt.txt"), "r", encoding="utf-8") as file:
             selector_prompt = file.read()
 
-        self.group_chat = SelectorGroupChat(
-            self.agents,
-            model_client=self.model_client,
-            selector_prompt=selector_prompt,
-            termination_condition=(
-                TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=max_messages)
-            ),
-            emit_team_events=True,
-        )   
+        self.group_chat = GroupChat(
+            agents=self.agents,
+            messages=[],
+            max_round=max_messages,
+            speaker_selection_method="auto",
+        )
+        self.manager = GroupChatManager(
+            groupchat=self.group_chat,
+            llm_config=self.llm_config,
+            is_termination_msg=lambda m: "TERMINATE" in (m.get("content", "").upper()),
+        )
 
-    def _process_result(self, simulation_result):
-        if len(simulation_result.messages) < self.min_messages:
+    def _process_result(self, chat_result):
+        if len(chat_result.chat_history) < self.min_messages:
             return None
 
         messages = []
-        for message in simulation_result.messages:
-            messages.append({"agent": message.source, "message": message.content})
+        for message in chat_result.chat_history:
+            if isinstance(message, dict):
+                agent_name = message.get("name", message.get("role"))
+                content = message.get("content", "")
+            else:
+                agent_name = getattr(message, "source", getattr(message, "name", getattr(message, "role", "")))
+                content = getattr(message, "content", "")
+            messages.append({"agent": agent_name, "message": content})
 
         output_variables = []
         information_return_agent_message = messages[-1]["message"]
@@ -127,5 +139,13 @@ class SelectorGCSimulation:
 
 
     async def run(self):
-        simulation_results = await Console(self.group_chat.run_stream())
-        return self._process_result(simulation_results)
+        starter = ConversableAgent(
+            "starter", llm_config=self.llm_config, human_input_mode="NEVER"
+        )
+        chat_result = await starter.a_initiate_chat(
+            recipient=self.manager,
+            message="Begin",
+            max_turns=1,
+            silent=True,
+        )
+        return self._process_result(chat_result)

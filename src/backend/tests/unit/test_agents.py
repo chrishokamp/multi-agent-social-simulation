@@ -21,7 +21,6 @@ class TestUtilityAgent:
             system_prompt="You are a test agent",
             name="TestAgent",
             description="Test agent",
-            model_client=mock_client,
             strategy={"test_param": 100}
         )
         
@@ -39,8 +38,7 @@ class TestUtilityAgent:
             agent = UtilityAgent(
                 system_prompt="Test prompt",
                 name="TestAgent",
-                description="Test agent",
-                model_client=mock_client
+                description="Test agent"
             )
             
             utility = agent.compute_utility()
@@ -55,8 +53,7 @@ class TestUtilityAgent:
         agent = UtilityAgent(
             system_prompt="Original prompt",
             name="TestAgent",
-            description="Test agent",
-            model_client=mock_client
+            description="Test agent"
         )
         
         # Should return early with no environment
@@ -77,7 +74,6 @@ class TestBuyerAgent:
             system_prompt="You are a buyer",
             name="Buyer",
             description="Car buyer",
-            model_client=mock_client,
             strategy={"max_price": 50000}
         )
         
@@ -102,7 +98,6 @@ class TestBuyerAgent:
             system_prompt="You are a buyer",
             name="Buyer",
             description="Car buyer",
-            model_client=mock_client,
             strategy={"max_price": 50000}
         )
         
@@ -130,7 +125,6 @@ class TestSellerAgent:
             system_prompt="You are a seller",
             name="Seller",
             description="Car seller",
-            model_client=mock_client,
             strategy={"target_price": 45000}
         )
         
@@ -155,7 +149,6 @@ class TestSellerAgent:
             system_prompt="You are a seller",
             name="Seller",
             description="Car seller",
-            model_client=mock_client,
             strategy={"target_price": 45000}
         )
         
@@ -180,7 +173,6 @@ class TestSellerAgent:
             system_prompt="You are a seller",
             name="Seller",
             description="Car seller",
-            model_client=mock_client,
             strategy={"target_price": 45000}
         )
         
@@ -211,7 +203,6 @@ class TestAgentSystemMessage:
                 system_prompt=system_prompt,
                 name="TestAgent",
                 description="Test agent",
-                model_client=mock_client
             )
             
             # Verify parent __init__ was called with system_message
@@ -234,7 +225,6 @@ class TestUtilityWithStringPrices:
             system_prompt="Test buyer",
             name="Buyer",
             description="Test",
-            model_client=mock_client,
             strategy={"max_price": 400}
         )
         
@@ -260,7 +250,6 @@ class TestUtilityWithStringPrices:
             system_prompt="Test seller",
             name="Seller",
             description="Test",
-            model_client=mock_client,
             strategy={"target_price": 400}
         )
         

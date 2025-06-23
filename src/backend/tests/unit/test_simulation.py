@@ -50,15 +50,13 @@ class TestSelectorGCSimulation:
             "prompt": "Return output in format: {output_variables_str} when {termination_condition}"
         }
     
-    @patch('engine.simulation.get_autogen_client')
     @patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "Format: {output_variables_str} when {termination_condition}"}')
     @patch('engine.simulation.UtilityAgent')
     @patch('engine.simulation.BuyerAgent')
-    def test_simulation_initialization(self, mock_buyer_agent, mock_utility_agent, mock_file, mock_client, sample_config):
+    def test_simulation_initialization(self, mock_buyer_agent, mock_utility_agent, mock_file, sample_config):
         """Test simulation initialization."""
         from engine.simulation import SelectorGCSimulation
         
-        mock_client.return_value = Mock()
         mock_agent_instance = Mock()
         mock_agent_instance.compute_utility.return_value = 0.5
         mock_agent_instance.system_prompt = "Updated prompt"
@@ -79,7 +77,7 @@ class TestSelectorGCSimulation:
         
         # Mock simulation result
         mock_result = Mock()
-        mock_result.messages = [
+        mock_result.chat_history = [
             Mock(source="Agent1", content="Hello"),
             Mock(source="Agent2", content="Hi there"),
             Mock(source="Agent1", content="How are you?"),
@@ -87,8 +85,7 @@ class TestSelectorGCSimulation:
             Mock(source="InformationReturnAgent", content='Final result: {"result": "success", "score": 85}')
         ]
         
-        with patch('engine.simulation.get_autogen_client'), \
-             patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'):
             
             sim = SelectorGCSimulation({
@@ -114,12 +111,11 @@ class TestSelectorGCSimulation:
         from engine.simulation import SelectorGCSimulation
         
         mock_result = Mock()
-        mock_result.messages = [
+        mock_result.chat_history = [
             Mock(source="Agent1", content="Hello")
         ]
         
-        with patch('engine.simulation.get_autogen_client'), \
-             patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'):
             
             sim = SelectorGCSimulation({
@@ -140,16 +136,15 @@ class TestSelectorGCSimulation:
         from engine.simulation import SelectorGCSimulation
         
         mock_result = Mock()
-        mock_result.messages = [
+        mock_result.chat_history = [
             Mock(source="Agent1", content="Hello"),
             Mock(source="Agent2", content="Hi"),
-            Mock(source="Agent3", content="More chat"), 
+            Mock(source="Agent3", content="More chat"),
             Mock(source="Agent4", content="Even more"),
             Mock(source="InformationReturnAgent", content="Invalid JSON: {result: incomplete")
         ]
         
-        with patch('engine.simulation.get_autogen_client'), \
-             patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'):
             
             sim = SelectorGCSimulation({
@@ -169,7 +164,7 @@ class TestSelectorGCSimulation:
         from engine.simulation import SelectorGCSimulation
         
         mock_result = Mock()
-        mock_result.messages = [
+        mock_result.chat_history = [
             Mock(source="Agent1", content="Hello"),
             Mock(source="Agent2", content="Hi"),
             Mock(source="Agent3", content="More"),
@@ -177,8 +172,7 @@ class TestSelectorGCSimulation:
             Mock(source="InformationReturnAgent", content='{"result": null, "score": "Unspecified", "final": "done"}')
         ]
         
-        with patch('engine.simulation.get_autogen_client'), \
-             patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'):
             
             sim = SelectorGCSimulation({
@@ -199,27 +193,26 @@ class TestSelectorGCSimulation:
         assert None not in values
     
     @pytest.mark.asyncio
-    @patch('engine.simulation.Console')
-    async def test_run_simulation(self, mock_console):
+    @patch('engine.simulation.ConversableAgent.a_initiate_chat')
+    async def test_run_simulation(self, mock_initiate):
         """Test running a simulation."""
         from engine.simulation import SelectorGCSimulation
         
         # Mock the console and simulation result
         mock_simulation_result = Mock()
-        mock_simulation_result.messages = [
+        mock_simulation_result.chat_history = [
             Mock(source="Agent1", content="Hello"),
             Mock(source="Agent2", content="Hi"),
             Mock(source="Agent3", content="More"),
             Mock(source="Agent4", content="Even more"),
             Mock(source="InformationReturnAgent", content='{"result": "success"}')
         ]
+        mock_initiate.return_value = mock_simulation_result
         
-        mock_console.return_value = mock_simulation_result
-        
-        with patch('engine.simulation.get_autogen_client'), \
-             patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'), \
-             patch('engine.simulation.SelectorGroupChat'):
+             patch('engine.simulation.GroupChat'), \
+             patch('engine.simulation.GroupChatManager'):
             
             sim = SelectorGCSimulation({"agents": [], "output_variables": [], "termination_condition": "done"}, {})
             result = await sim.run()
