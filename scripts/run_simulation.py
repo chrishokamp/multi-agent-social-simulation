@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 from pprint import pprint
+from datetime import datetime
 
 import click
 import dotenv
@@ -88,10 +89,16 @@ def main(config_path: Path, max_messages: int, min_messages: int):
                         cfg["prompt"],
                     )
 
+    # Save individual run immediately
+    run_output_path = config_path.with_name(f"run_{run_idx}_results.json")
+    with open(run_output_path, "w", encoding="utf-8") as f:
+        json.dump(history[-1], f, indent=2)
+
+    # Save full history incrementally
     out_path = config_path.with_name("history.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
-    print(f"History written to {out_path}")
+
 
     # Persist updated prompts so future runs start with improved agents
     optimized_path = config_path.with_name(f"{config_path.stem}_optimized.json")
