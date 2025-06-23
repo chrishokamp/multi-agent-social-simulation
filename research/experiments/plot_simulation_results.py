@@ -4,9 +4,9 @@ from pathlib import Path
 from pprint import pprint
 from collections import defaultdict
 
+
 @click.command()
 @click.option('--results', 'result_dir', required=True, type=click.Path(exists=True), help='Path to config JSON file')
-
 def main(result_dir):
 
     simulations = []
@@ -16,8 +16,9 @@ def main(result_dir):
             result = json.load(f)
             simulations.append(result)
 
-    
     agent_names = list(simulations[0]['runs'][-1]['output_variables']['utility'].keys())
+
+    simulations.sort(key=lambda x: len(x['runs']), reverse=True)
 
     agent_to_utilities = defaultdict(list)
     for sim in simulations:
@@ -31,6 +32,10 @@ def main(result_dir):
     for agent_name, utilities in agent_to_utilities.items():
         print(f"Agent: {agent_name}")
         print(f"Utilities: {utilities}")
+
+    # plot results over runs (time) using matplotlib
+
+    import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
