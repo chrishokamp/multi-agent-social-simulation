@@ -8,7 +8,13 @@ class DummyAssistantAgent:
     def __init__(self, *a, **k):
         pass
 
-autogen_stub = types.SimpleNamespace(agentchat=types.SimpleNamespace(AssistantAgent=DummyAssistantAgent))
+autogen_stub = types.SimpleNamespace(
+    agentchat=types.SimpleNamespace(AssistantAgent=DummyAssistantAgent),
+    GroupChat=DummyAssistantAgent,
+    GroupChatManager=DummyAssistantAgent,
+    ConversableAgent=DummyAssistantAgent,
+    LLMConfig=DummyAssistantAgent,
+)
 sys.modules.setdefault("autogen", autogen_stub)
 sys.modules.setdefault("autogen.agentchat", autogen_stub.agentchat)
 class DummyOpenAIClient:

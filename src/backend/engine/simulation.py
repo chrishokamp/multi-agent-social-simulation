@@ -122,14 +122,19 @@ class SelectorGCSimulation:
         information_return_agent_message = messages[-1]["message"]
         json_match = re.search(r"```json\s*(\{.*?\})\s*```", information_return_agent_message, re.DOTALL)
         if not json_match:
-            json_match = re.search(r"\{.*\}", information_return_agent_message, re.DOTALL)
+            json_match = re.search(r"\{.*?\}\s*", information_return_agent_message, re.DOTALL)
 
         if not json_match:
+            logger.info("No JSON found in InformationReturnAgent message: %s", information_return_agent_message)
             return None
 
+        json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+        json_str = json_str.strip()
+
         try:
-            parsed_json = json.loads(json_match.group(1) if json_match.lastindex else json_match.group(0))
+            parsed_json = json.loads(json_str)
         except json.JSONDecodeError:
+            logger.info("Failed to decode JSON: %s", json_str)
             return None
 
         for variable in parsed_json:
