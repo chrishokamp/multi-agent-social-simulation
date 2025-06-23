@@ -29,7 +29,7 @@ class UtilityAgent(AssistantAgent, ABC):
         model: str | None = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, system_message=system_prompt, **kwargs)
         self.system_prompt: str = system_prompt
         self.strategy: dict[str, Any] = dict(strategy or {})
         # Let the agent remember the environment it saw last time
@@ -136,6 +136,10 @@ class BuyerAgent(UtilityAgent):
             # No deal reached, so no utility
             return 0.0
 
+        # Convert final_price to float if it's a string
+        if isinstance(final_price, str):
+            final_price = float(final_price)
+
         # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
         utility = 1.0 - (final_price / max_price)
         return utility
@@ -164,6 +168,10 @@ class SellerAgent(UtilityAgent):
         if outputs["deal_reached"] is False:
             # No deal reached, so no utility
             return 0.0
+
+        # Convert final_price to float if it's a string
+        if isinstance(final_price, str):
+            final_price = float(final_price)
 
         utility = min(final_price / target, 1.0)
         return utility

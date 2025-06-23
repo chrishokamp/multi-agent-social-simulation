@@ -193,3 +193,85 @@ class TestSellerAgent:
         
         utility = agent.compute_utility(environment)
         assert utility == 0.0
+
+
+class TestAgentSystemMessage:
+    """Test that agent system prompts are properly passed to the underlying LLM."""
+    
+    @patch('agents.client_for_endpoint')
+    def test_system_message_passed_to_parent(self, mock_client_func):
+        """Test that system_prompt is passed as system_message to parent AssistantAgent."""
+        mock_client = Mock()
+        mock_client_func.return_value = (mock_client, "gpt-4o")
+        
+        with patch('agents.AssistantAgent.__init__') as mock_parent_init:
+            # Create the agent
+            system_prompt = "You are a test agent"
+            agent = UtilityAgent(
+                system_prompt=system_prompt,
+                name="TestAgent",
+                description="Test agent",
+                model_client=mock_client
+            )
+            
+            # Verify parent __init__ was called with system_message
+            mock_parent_init.assert_called_once()
+            _, kwargs = mock_parent_init.call_args
+            assert 'system_message' in kwargs
+            assert kwargs['system_message'] == system_prompt
+
+
+class TestUtilityWithStringPrices:
+    """Test utility computation handles string prices correctly."""
+    
+    @patch('agents.client_for_endpoint')
+    def test_buyer_utility_with_string_price(self, mock_client_func):
+        """Test BuyerAgent handles string final_price correctly."""
+        mock_client = Mock()
+        mock_client_func.return_value = (mock_client, "gpt-4o")
+        
+        agent = BuyerAgent(
+            system_prompt="Test buyer",
+            name="Buyer",
+            description="Test",
+            model_client=mock_client,
+            strategy={"max_price": 400}
+        )
+        
+        # Test with string price (as returned by InformationReturnAgent)
+        environment = {
+            "outputs": {
+                "final_price": "360",  # String, not number
+                "deal_reached": True
+            }
+        }
+        
+        utility = agent.compute_utility(environment)
+        # Expected: 1.0 - (360/400) = 0.1
+        assert abs(utility - 0.1) < 0.001
+    
+    @patch('agents.client_for_endpoint')
+    def test_seller_utility_with_string_price(self, mock_client_func):
+        """Test SellerAgent handles string final_price correctly."""
+        mock_client = Mock()
+        mock_client_func.return_value = (mock_client, "gpt-4o")
+        
+        agent = SellerAgent(
+            system_prompt="Test seller",
+            name="Seller",
+            description="Test",
+            model_client=mock_client,
+            strategy={"target_price": 400}
+        )
+        
+        # Test with string price
+        environment = {
+            "outputs": {
+                "final_price": "360",  # String
+                "deal_reached": True
+            }
+        }
+        
+        utility = agent.compute_utility(environment)
+        # Expected: min(360/400, 1.0) = 0.9
+        assert abs(utility - 0.9) < 0.001
