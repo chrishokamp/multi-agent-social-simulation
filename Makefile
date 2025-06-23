@@ -256,13 +256,13 @@ print('Result:', json.dumps(result, indent=2) if result else 'No result')"
 
 .PHONY: run-simulation
 run-simulation: ## Run simulation with self-optimising agents
-        @echo "$(YELLOW)Running simulation...$(NC)"
-        @if [ ! -f $(UV_VENV)/bin/python ]; then \
-                echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
-                exit 1; \
-        fi
-        $(UV_VENV)/bin/python scripts/run_simulation.py --config $(SIMULATION_CONFIG)
-        @echo "$(GREEN)Simulation completed!$(NC)"
+	@echo "$(YELLOW)Running simulation...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+	echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+	exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/run_simulation.py --config $(SIMULATION_CONFIG)
+	@echo "$(GREEN)Simulation completed!$(NC)"
 
 
 .PHONY: demo-logging

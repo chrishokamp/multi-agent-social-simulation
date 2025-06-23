@@ -120,20 +120,23 @@ class SelectorGCSimulation:
 
         output_variables = []
         information_return_agent_message = messages[-1]["message"]
-        json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
-        if json_match:
-            try:
-                parsed_json = json.loads(json_match.group(0))
-                for variable in parsed_json:
-                    # Handle both None and "Unspecified" values
-                    value = parsed_json[variable]
-                    if value is None or value == "Unspecified":
-                        value = "Unspecified"
-                    output_variables.append({"name": variable, "value": value})
-            except json.JSONDecodeError:
-                return None
-        else:
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", information_return_agent_message, re.DOTALL)
+        if not json_match:
+            json_match = re.search(r"\{.*\}", information_return_agent_message, re.DOTALL)
+
+        if not json_match:
             return None
+
+        try:
+            parsed_json = json.loads(json_match.group(1) if json_match.lastindex else json_match.group(0))
+        except json.JSONDecodeError:
+            return None
+
+        for variable in parsed_json:
+            value = parsed_json[variable]
+            if value is None or value == "Unspecified":
+                value = "Unspecified"
+            output_variables.append({"name": variable, "value": value})
 
         return {"messages": messages, "output_variables": output_variables}
 

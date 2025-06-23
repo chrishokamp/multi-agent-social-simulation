@@ -58,7 +58,7 @@ def main(config_path: Path, max_messages: int, min_messages: int):
     for run_idx in range(1, num_runs + 1):
         print(f"=== Run {run_idx}/{num_runs} ===")
         result, sim = asyncio.run(run_once(config, environment, max_messages, min_messages, model))
-        if not result:
+        if result is None:
             print("No result returned\n")
             continue
 
