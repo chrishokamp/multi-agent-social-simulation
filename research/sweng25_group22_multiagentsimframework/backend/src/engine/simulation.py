@@ -6,6 +6,7 @@ from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermi
 from autogen_agentchat.teams import SelectorGroupChat
 from agents import UtilityAgent, BuyerAgent, SellerAgent
 from autogen_agentchat.ui import Console
+import autogen_agentchat
 import uuid
 
 from utils import create_logger, get_autogen_client
@@ -132,6 +133,9 @@ class SelectorGCSimulation:
 
         async for event in self.group_chat.run_stream():
 
+            if type(event) == autogen_agentchat.base._task.TaskResult:
+                task_result = event
+                continue
 
             if event.type == "message":
                 print(f"{event.source}: {event.content}", flush=True)
@@ -140,6 +144,7 @@ class SelectorGCSimulation:
 
             running_history.append({"agent": event.source, "msg": event.content})
 
+
             for ag in self.agents:
                 if ag.name == event.source:
                     # Skip reflection
@@ -147,7 +152,7 @@ class SelectorGCSimulation:
                         await ag.think_and_print(running_history)
                     break
 
-        processed = self._process_result(self.group_chat.result)
+        processed = self._process_result(task_result)
         
         self.environment["runs"].append({
             "run_id": self.run_id,
