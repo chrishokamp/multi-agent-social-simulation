@@ -34,7 +34,14 @@ class TestClientForEndpoint:
         """Test OpenAI client creation when no other env vars set."""
         client, model_name = client_for_endpoint()
         assert isinstance(client, OpenAI)
-        assert model_name is None
+        assert model_name == "gpt-4o"
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"})
+    def test_openai_client_with_model_override(self):
+        """Model parameter overrides default model name."""
+        client, model_name = client_for_endpoint(model="gpt-3.5-turbo")
+        assert isinstance(client, OpenAI)
+        assert model_name == "gpt-3.5-turbo"
     
     @patch.dict(os.environ, {"OLLAMA_MODEL": "qwen3:4b"}, clear=True)
     def test_ollama_client_creation(self):

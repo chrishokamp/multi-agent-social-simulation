@@ -20,8 +20,14 @@ def create_logger(name: str) -> logging.Logger:
 
 logger = create_logger(__name__)
 
-def client_for_endpoint(endpoint: str = None, api_key: str = None):
-    """Create client for endpoint. Returns (client, model_name) if no args, otherwise just client."""
+def client_for_endpoint(endpoint: str = None, api_key: str = None, model: str | None = None):
+    """Create client for endpoint.
+
+    If ``endpoint`` is ``None`` this function inspects the environment and
+    returns a tuple ``(client, model_name)`` suitable for immediate use.
+    When ``endpoint`` is provided the legacy behaviour of returning just the
+    configured client is kept.
+    """
     CLIENT_TIMEOUT = 6000
     
     # If no arguments, use environment-based selection (returns tuple)
@@ -47,10 +53,10 @@ def client_for_endpoint(endpoint: str = None, api_key: str = None):
         else:
             logger.info("Using OpenAI client.")
             client = OpenAI(
-                api_key=os.environ["OPENAI_API_KEY"], 
+                api_key=os.environ["OPENAI_API_KEY"],
                 timeout=CLIENT_TIMEOUT
             )
-            model_name = None
+            model_name = model or os.environ.get("OPENAI_MODEL", "gpt-4o")
         return client, model_name
     
     # If endpoint provided, use legacy behavior (returns just client)
@@ -74,17 +80,18 @@ def client_for_endpoint(endpoint: str = None, api_key: str = None):
             api_key=api_key or os.environ["OPENAI_API_KEY"], timeout=CLIENT_TIMEOUT
         )
     
-def get_autogen_client():
+def get_autogen_client(model: str | None = None):
+        """Return a chat completion client for the current environment."""
         if os.environ.get("OLLAMA_MODEL"):
             logger.info("Using Ollama client for simulation.")
             return OllamaChatCompletionClient(
                 model=os.environ.get("OLLAMA_MODEL"),
-                options={} # TODO: make configurable
+                options={}  # TODO: make configurable
             )
         elif os.environ.get("AZURE_OPENAI_API_KEY"):
             logger.info("Using Azure OpenAI client for simulation.")
             return AzureOpenAIChatCompletionClient(
-                model="gpt-4o", # NOTE: this is unused, but it needs to be a valid model for Azure OpenAI
+                model=model or os.environ.get("AZURE_OPENAI_MODEL", "gpt-4o"),
                 azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
                 api_key=os.environ["AZURE_OPENAI_API_KEY"],
                 api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
@@ -92,6 +99,6 @@ def get_autogen_client():
         else:
             logger.info("Using OpenAI client for simulation.")
             return OpenAIChatCompletionClient(
-                model="gpt-4o", 
+                model=model or os.environ.get("OPENAI_MODEL", "gpt-4o"),
                 api_key=os.environ["OPENAI_API_KEY"]
             )

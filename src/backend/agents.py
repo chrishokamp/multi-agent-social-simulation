@@ -26,6 +26,7 @@ class UtilityAgent(AssistantAgent, ABC):
         system_prompt: str,
         *args,
         strategy: Mapping[str, Any] | None = None,
+        model: str | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -33,7 +34,7 @@ class UtilityAgent(AssistantAgent, ABC):
         self.strategy: dict[str, Any] = dict(strategy or {})
         # Let the agent remember the environment it saw last time
         self._last_environment: Mapping[str, Any] | None = None
-        self._client, self.model_name = client_for_endpoint()
+        self._client, self.model_name = client_for_endpoint(model=model)
         self._utility_history: list[float] = []
 
     def compute_utility(

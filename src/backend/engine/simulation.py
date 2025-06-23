@@ -18,8 +18,8 @@ _utility_class_registry = {
 }
 
 class SelectorGCSimulation:
-    def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5):
-        self.model_client = get_autogen_client()
+    def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5, model: str | None = None):
+        self.model_client = get_autogen_client(model=model or config.get("model"))
         self.config = config
         self.min_messages = min_messages
         self.run_id = str(uuid.uuid4())
@@ -63,7 +63,8 @@ class SelectorGCSimulation:
                 name=agent_config["name"],
                 description=agent_config["description"],
                 model_client=self.model_client,
-                strategy=agent_config.get("strategy")
+                strategy=agent_config.get("strategy"),
+                model=model or self.config.get("model")
             )
 
             # (+ self-improvement)
@@ -77,7 +78,8 @@ class SelectorGCSimulation:
                 name=agent_config["name"],
                 description=agent_config["description"],
                 model_client=self.model_client,
-                strategy=agent_config.get("strategy")
+                strategy=agent_config.get("strategy"),
+                model=model or self.config.get("model")
             )
 
             self.agents.append(ag)

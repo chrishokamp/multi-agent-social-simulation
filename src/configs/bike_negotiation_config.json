@@ -1,0 +1,29 @@
+{
+  "model": "gpt-4o",
+  "config": {
+    "name": "Bike Price Negotiation",
+    "agents": [
+      {
+        "name": "Buyer",
+        "description": "Wants the bike for the lowest possible price",
+        "prompt": "You want to buy a bike from a private seller. You're OK with 400 Euro but ideally you want to pay less. When the negotiation is over (whichever outcome), say STOP_NEGOTIATION.",
+        "utility_class": "BuyerAgent",
+        "strategy": {"max_price": 400},
+        "self_improve": true
+      },
+      {
+        "name": "Seller",
+        "description": "Selling a bike and aiming for around 400 Euro",
+        "prompt": "You have a bike to sell. Your ideal price is 400 Euro, but you are willing to negotiate down a bit. The bike is in good condition. If the buyer offers nothing to your liking, don't accept. When the negotiation is over (whichever outcome), say STOP_NEGOTIATION.",
+        "utility_class": "SellerAgent",
+        "strategy": {"target_price": 400}
+      }
+    ],
+    "termination_condition": "STOP_NEGOTIATION",
+    "output_variables": [
+      {"name": "final_price", "type": "Number"},
+      {"name": "deal_reached", "type": "Boolean"}
+    ]
+  },
+  "num_runs": 5
+}
