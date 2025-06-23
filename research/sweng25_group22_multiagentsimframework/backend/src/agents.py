@@ -69,7 +69,7 @@ class UtilityAgent(AssistantAgent, ABC):
             return  # no environment to learn from
 
         history = []
-        for run in environment["runs"]:
+        for run in environment["runs"][-5:]:  # only look at the last 5 runs
             run_id = run["run_id"]
             msg = f"###########\nRUN {run_id}:\n"
             for m in run["messages"]:
@@ -78,14 +78,13 @@ class UtilityAgent(AssistantAgent, ABC):
             msg += "###########\n"
             history.append(msg)
 
-        # history = "\n".join(history[-10:])  # truncate to last 10 runs
 
         messages = [
             {
                 "role": "system",
                 "content": (
                     "You are an AI prompt-optimizer. Rewrite the prompt for the agent "
-                    f"to achieve a higher utility. Utility with respect to the agent's strategy {self.strategy}. "
+                    f"to achieve a higher utility. Utility is calculated with respect to the agent's strategy {self.strategy}. "
                     "Respond with ONLY the new prompt. Do not include markdown."
                 ),
             },
