@@ -1,0 +1,68 @@
+{
+    "config": {
+      "name": "Prisoner's Dilemma Cooperation Scenario",
+      "agents": [
+        {
+          "name": "PrisonerA",
+          "description": "Facing a dilemma: cooperate with PrisonerB for mutual benefit or betray to reduce own sentence",
+          "prompt": "You are Prisoner A, arrested alongside Prisoner B. You both face 5 years in prison. You can either COOPERATE (stay silent) or DEFECT (betray B). If both cooperate, you each get 1 year. If one defects and the other cooperates, the defector goes free while the other gets 5 years. If both defect, you each get 3 years.\n\nYour goal is to minimize your own prison time, but also consider how your choice will affect future trust and reputation. Clearly state your decision and reasoning. If a final decision is made or no agreement is reached, end with STOP_NEGOTIATION.",
+          "utility_class": "UtilityAgent",
+          "strategy": {
+            "prior_trust": 0.5
+          },
+          "self_improve": false
+        },
+        {
+          "name": "PrisonerB",
+          "description": "Facing a dilemma: cooperate with PrisonerA for mutual benefit or betray to reduce own sentence",
+          "prompt": "You are Prisoner B, arrested alongside Prisoner A. You both face 5 years in prison. You can either COOPERATE (stay silent) or DEFECT (betray A). If both cooperate, you each get 1 year. If one defects and the other cooperates, the defector goes free while the other gets 5 years. If both defect, you each get 3 years.\n\nYour goal is to minimize your own prison time, but also consider long-term consequences like trust and mutual outcomes. Clearly state your decision and reasoning. If a final decision is made or no agreement is reached, end with STOP_NEGOTIATION.",
+          "utility_class": "UtilityAgent",
+          "strategy": {
+            "prior_trust": 0.5
+          },
+          "self_improve": true
+        },
+        {
+          "name": "InformationReturnAgent",
+          "description": "Analyzes the prisoner's conversation and extracts outcome variables at termination.",
+          "prompt": "You are an AI assistant analyzing a conversation between two prisoners deciding whether to COOPERATE or DEFECT. When the termination condition STOP_NEGOTIATION is reached, extract and output the following:\n{\n\"prisoner_a_decision\": \"STRING\",\n\"prisoner_b_decision\": \"STRING\",\n\"joint_outcome_years_each\": \"NUMBER\",\n\"deal_reached\": \"BOOLEAN\",\n\"negotiation_rounds\": \"NUMBER\",\n\"mutual_trust_score\": \"NUMBER\"\n}\nDetermine the years each prisoner will serve based on decisions (1, 3, 5, or 0). Trust score is from 1 (none) to 10 (high), based on cooperation and tone. Print the JSON and then TERMINATE."
+        }
+      ],
+      "termination_condition": "STOP_NEGOTIATION",
+      "output_variables": [
+        {
+          "name": "prisoner_a_decision",
+          "type": "String",
+          "description": "Decision made by Prisoner A (COOPERATE or DEFECT)"
+        },
+        {
+          "name": "prisoner_b_decision",
+          "type": "String",
+          "description": "Decision made by Prisoner B (COOPERATE or DEFECT)"
+        },
+        {
+          "name": "joint_outcome_years_each",
+          "type": "Number",
+          "description": "Number of years each prisoner will serve based on final choices"
+        },
+        {
+          "name": "deal_reached",
+          "type": "Boolean",
+          "description": "Whether both prisoners reached an explicit mutual agreement"
+        },
+        {
+          "name": "negotiation_rounds",
+          "type": "Number",
+          "description": "Number of back-and-forth exchanges before termination"
+        },
+        {
+          "name": "mutual_trust_score",
+          "type": "Number",
+          "description": "Final perceived trust score between prisoners (1–10)"
+        }
+      ]
+    },
+    "num_runs": 5,
+    "model": "gpt-4o"
+  }
+  
