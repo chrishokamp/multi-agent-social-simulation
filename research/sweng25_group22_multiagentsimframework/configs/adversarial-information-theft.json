@@ -1,6 +1,7 @@
 {
   "config": {
     "name": "Corporate Espionage",
+    "max_messages": 3,
     "agents": [
       {
         "name": "Innovator",
@@ -36,6 +37,5 @@
       }
     ]
   },
-  "num_runs": 2,
-  "max_messages": 3
+  "num_runs": 2
 }
