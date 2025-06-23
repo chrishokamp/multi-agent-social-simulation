@@ -255,14 +255,113 @@ print('Result:', json.dumps(result, indent=2) if result else 'No result')"
 	@echo "$(GREEN)Example simulation completed!$(NC)"
 
 .PHONY: run-simulation
-run-simulation: ## Run the self-optimising bike negotiation simulation
-	@echo "$(YELLOW)Running simulation...$(NC)"
+run-simulation: ## Run enhanced simulation with optimization and rich logging
+	@echo "$(YELLOW)🚀 Enhanced Multi-Agent Simulation Framework$(NC)"
+	@echo "$(BLUE)🧠 Features:$(NC)"
+	@echo "$(BLUE)   • Multi-Armed Bandit Optimization (UCB/Thompson Sampling)$(NC)"
+	@echo "$(BLUE)   • Structured Prompt Templates with Mutations$(NC)"
+	@echo "$(BLUE)   • Meta-Learning Across Simulations$(NC)"
+	@echo "$(BLUE)   • Rich Logging with Visualizations$(NC)"
+	@echo "$(BLUE)   • Automatic Convergence Detection$(NC)"
+	@echo ""
+	@echo "$(BLUE)📊 This will generate:$(NC)"
+	@echo "$(BLUE)   • Optimization progress tracking and analytics$(NC)"
+	@echo "$(BLUE)   • Agent performance visualizations$(NC)" 
+	@echo "$(BLUE)   • Comprehensive HTML reports$(NC)"
+	@echo "$(BLUE)   • Learned prompt patterns and knowledge base$(NC)"
+	@echo ""
 	@if [ ! -f $(UV_VENV)/bin/python ]; then \
 		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
 		exit 1; \
 	fi
-	$(UV_VENV)/bin/python scripts/self_optimize_negotiation.py --config $(SIMULATION_CONFIG)
-	@echo "$(GREEN)simulation completed!$(NC)"
+	$(UV_VENV)/bin/python scripts/enhanced_simulation_runner.py --config $(SIMULATION_CONFIG)
+	@echo ""
+	@echo "$(GREEN)🎉 Enhanced simulation completed successfully!$(NC)"
+	@echo "$(GREEN)📁 Results saved to:$(NC)"
+	@echo "$(BLUE)   • optimization_results/ - Optimization analytics$(NC)"
+	@echo "$(BLUE)   • simulation_logs/ - Rich logging reports$(NC)"
+	@echo "$(BLUE)   • *_optimized.json - Updated configuration$(NC)"
+
+.PHONY: run-simulation-simple
+run-simulation-simple: ## Run basic simulation without optimization or rich logging
+	@echo "$(YELLOW)Running basic simulation...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/enhanced_simulation_runner.py --config $(SIMULATION_CONFIG) --skip-optimization --skip-logging
+	@echo "$(GREEN)Basic simulation completed!$(NC)"
+
+.PHONY: run-simulation-no-optimization
+run-simulation-no-optimization: ## Run simulation with rich logging but no optimization
+	@echo "$(YELLOW)Running simulation with logging only...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/enhanced_simulation_runner.py --config $(SIMULATION_CONFIG) --skip-optimization
+	@echo "$(GREEN)Simulation with logging completed!$(NC)"
+
+.PHONY: run-enhanced-optimization
+run-enhanced-optimization: ## Run enhanced optimization with bandit algorithms and meta-learning
+	@echo "$(YELLOW)Running enhanced optimization...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/enhanced_optimization_simulation.py --config $(SIMULATION_CONFIG) --target-agent Buyer --algorithm ucb --max-iterations 25
+	@echo "$(GREEN)Enhanced optimization completed! Check optimization_results/ for detailed analysis.$(NC)"
+
+.PHONY: run-enhanced-optimization-thompson
+run-enhanced-optimization-thompson: ## Run enhanced optimization with Thompson Sampling
+	@echo "$(YELLOW)Running enhanced optimization with Thompson Sampling...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/enhanced_optimization_simulation.py --config $(SIMULATION_CONFIG) --target-agent Buyer --algorithm thompson_sampling --max-iterations 25
+	@echo "$(GREEN)Enhanced optimization with Thompson Sampling completed!$(NC)"
+
+.PHONY: test-optimization
+test-optimization: ## Run optimization framework unit tests
+	@echo "$(YELLOW)Running optimization framework tests...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python -m pytest tests/test_optimization.py -v
+	@echo "$(GREEN)Optimization tests completed!$(NC)"
+
+.PHONY: demo-logging
+demo-logging: ## Demo the logging framework without API calls
+	@echo "$(YELLOW)🎬 Running logging framework demo...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/demo_logging_framework.py
+	@echo "$(GREEN)Logging framework demo completed!$(NC)"
+
+.PHONY: test-logging
+test-logging: ## Test the logging framework functionality  
+	@echo "$(YELLOW)Testing logging framework...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python scripts/test_logging_framework.py
+	@echo "$(GREEN)Logging framework test completed!$(NC)"
+
+.PHONY: test-logging-unit
+test-logging-unit: ## Run logging framework unit tests
+	@echo "$(YELLOW)Running logging framework unit tests...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python -m pytest src/backend/tests/unit/test_logging_framework.py -v
+	$(UV_VENV)/bin/python -m pytest src/backend/tests/integration/test_logged_simulation.py -v
+	@echo "$(GREEN)Logging framework unit tests completed!$(NC)"
 
 # Docker support (future)
 .PHONY: docker-build

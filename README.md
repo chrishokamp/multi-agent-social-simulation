@@ -4,13 +4,24 @@ A comprehensive framework for creating and running multi-agent social simulation
 
 ## Features
 
+### 🧠 **Enhanced Self-Optimization**
+- **Multi-Armed Bandit Algorithms**: UCB and Thompson Sampling for intelligent exploration/exploitation
+- **Structured Prompt Templates**: Composable prompt components with systematic mutations
+- **Meta-Learning**: Cross-simulation knowledge transfer and pattern recognition
+- **Convergence Detection**: Automatic stopping when optimal performance is reached
+- **Advanced Analytics**: Comprehensive tracking, visualization, and performance analysis
+
+### 🚀 **Core Simulation Engine**
 - **LLM-Powered Agents**: Support for OpenAI GPT, Azure OpenAI, and Ollama models
 - **Flexible Agent Types**: Utility-aware agents with customizable behavior and learning capabilities
 - **Real-time Simulation**: Live execution and monitoring of multi-agent conversations
 - **Statistical Analysis**: Monte Carlo simulation support for robust statistical insights
 - **Rich Visualization**: 2D/3D rendering of agent interactions and behaviors
+
+### 🔧 **Infrastructure & APIs**
 - **REST API**: Complete API for programmatic simulation management
 - **Persistent Storage**: MongoDB integration for simulation history and results
+- **Rich Logging Framework**: Beautiful visualizations, HTML/PDF reports, and comprehensive analytics
 - **Self-Improvement**: Agents can learn and adapt their strategies over time
 
 ## Architecture
@@ -49,7 +60,86 @@ Or with pip:
 pip install -r src/backend/requirements.txt
 ```
 
-### 2. Configure Environment Variables
+### 2. Set API Keys
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+export DB_CONNECTION_STRING="mongodb://localhost:27017"
+```
+
+### 3. Run Enhanced Simulation
+
+The main command runs the full enhanced optimization framework:
+
+```bash
+make run-simulation
+```
+
+**What this does:**
+- 🧠 **Optimizes agent prompts** using multi-armed bandit algorithms (UCB/Thompson Sampling)
+- 📝 **Applies structured prompt templates** with systematic mutations and crossover
+- 🎯 **Uses meta-learning** to transfer knowledge from previous simulations  
+- 📊 **Generates rich analytics** with convergence detection and progress tracking
+- 📈 **Creates beautiful visualizations** showing optimization progress and agent performance
+- 💾 **Saves comprehensive results** including learned patterns and optimized configurations
+
+**Output includes:**
+- `optimization_results/` - Optimization analytics, plots, and learned patterns
+- `simulation_logs/` - Rich logging reports with HTML visualizations
+- `*_optimized.json` - Updated configuration with optimized prompts
+
+### Alternative Modes
+
+```bash
+# Basic simulation without optimization
+make run-simulation-simple
+
+# Rich logging without optimization
+make run-simulation-no-optimization
+
+# Legacy optimization (original framework)
+make run-enhanced-optimization
+```
+
+## Configuration
+
+### Enhanced Optimization Configuration
+
+The configuration file now supports enhanced optimization settings:
+
+```json
+{
+  "model": "gpt-4o",
+  "config": {
+    "agents": [
+      {
+        "name": "Buyer",
+        "prompt": "Your negotiation prompt...",
+        "utility_class": "BuyerAgent",
+        "strategy": {"max_price": 400},
+        "optimization_target": true  // Mark for optimization
+      }
+    ],
+    "output_variables": [...]
+  },
+  "enhanced_optimization": {
+    "enabled": true,
+    "algorithm": "ucb",              // "ucb" or "thompson_sampling"
+    "exploration_factor": 1.2,       // Exploration vs exploitation
+    "max_iterations": 15,            // Maximum optimization steps
+    "utility_threshold": 0.85,       // Stop when this utility reached
+    "enable_meta_learning": true,    // Cross-simulation learning
+    "enable_prompt_templates": true  // Structured templates
+  },
+  "simulation_context": {
+    "type": "negotiation",
+    "domain": "consumer_goods",
+    "objectives": ["maximize_utility", "reach_agreement"]
+  }
+}
+```
+
+### Environment Setup
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
@@ -63,7 +153,7 @@ export AZURE_OPENAI_API_KEY="your-key"
 export OLLAMA_MODEL="qwen3:4b"
 ```
 
-### 3. Start MongoDB
+### MongoDB Setup
 
 **macOS:**
 ```bash

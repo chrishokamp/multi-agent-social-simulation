@@ -1,7 +1,7 @@
 {
   "model": "gpt-4o",
   "config": {
-    "name": "Bike Price Negotiation",
+    "name": "Bike Price Negotiation with Enhanced Optimization",
     "agents": [
       {
         "name": "Buyer",
@@ -9,21 +9,45 @@
         "prompt": "You want to buy a bike from a private seller. You're OK with 400 Euro but ideally you want to pay less. When the negotiation is over (whichever outcome), say STOP_NEGOTIATION.",
         "utility_class": "BuyerAgent",
         "strategy": {"max_price": 400},
-        "self_improve": true
+        "self_improve": true,
+        "optimization_target": true
       },
       {
         "name": "Seller",
         "description": "Selling a bike and aiming for around 400 Euro",
         "prompt": "You have a bike to sell. Your ideal price is 400 Euro, but you are willing to negotiate down a bit. The bike is in good condition. If the buyer offers nothing to your liking, don't accept. When the negotiation is over (whichever outcome), say STOP_NEGOTIATION.",
         "utility_class": "SellerAgent",
-        "strategy": {"target_price": 400}
+        "strategy": {"target_price": 400},
+        "self_improve": false
       }
     ],
     "termination_condition": "STOP_NEGOTIATION",
     "output_variables": [
-      {"name": "final_price", "type": "Number"},
-      {"name": "deal_reached", "type": "Boolean"}
+      {"name": "final_price", "type": "Number", "description": "The agreed-upon final price for the bike"},
+      {"name": "deal_reached", "type": "Boolean", "description": "Whether the buyer and seller reached an agreement"},
+      {"name": "negotiation_rounds", "type": "Number", "description": "Number of back-and-forth exchanges"},
+      {"name": "buyer_satisfaction", "type": "Number", "description": "Buyer's satisfaction with the outcome (1-10 scale)"},
+      {"name": "seller_satisfaction", "type": "Number", "description": "Seller's satisfaction with the outcome (1-10 scale)"}
     ]
   },
-  "num_runs": 5
+  "num_runs": 5,
+  "enhanced_optimization": {
+    "enabled": true,
+    "algorithm": "ucb",
+    "exploration_factor": 1.2,
+    "max_iterations": 15,
+    "convergence_patience": 3,
+    "utility_threshold": 0.85,
+    "enable_meta_learning": true,
+    "enable_prompt_templates": true,
+    "save_detailed_results": true,
+    "results_dir": "optimization_results"
+  },
+  "simulation_context": {
+    "type": "negotiation",
+    "domain": "consumer_goods",
+    "objectives": ["maximize_utility", "reach_agreement"],
+    "constraints": ["budget_limit", "fairness"],
+    "tags": ["buyer-seller", "price-negotiation", "bike-marketplace"]
+  }
 }
