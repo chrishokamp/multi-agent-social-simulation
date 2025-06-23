@@ -79,7 +79,9 @@ def parse_config_str(s):
 
 @gen_config_bp.route("/gen_config", methods=["POST"])
 def generate_config():
-    request_json = request.get_json()
+    request_json = request.get_json(silent=True)
+    if request_json is None:
+        return jsonify({"message": "invalid JSON"}), 400
     temperature = float(request_json.get("temperature", 1.0))
     top_p       = float(request_json.get("top_p", 1.0))
 

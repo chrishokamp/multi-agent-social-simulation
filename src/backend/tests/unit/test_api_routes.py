@@ -77,10 +77,18 @@ class TestGenConfigRoute:
     def test_generate_config_missing_desc(self, client):
         """Test config generation with missing description."""
         response = client.post('/sim/gen_config', json={})
-        
+
         assert response.status_code == 400
         data = response.get_json()
         assert "desc not given" in data["message"]
+
+    def test_generate_config_invalid_json(self, client):
+        """Test config generation with malformed JSON body."""
+        response = client.post('/sim/gen_config', data='{"desc":', content_type='application/json')
+
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "invalid JSON" in data["message"]
     
     @patch('api.routes.gen_config.client_for_endpoint')
     def test_generate_config_client_failure(self, mock_client_func, client):
