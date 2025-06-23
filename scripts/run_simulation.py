@@ -1,6 +1,7 @@
 import asyncio
 import asyncio
 import json
+import logging
 from pathlib import Path
 from pprint import pprint
 
@@ -13,6 +14,9 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR / "src" / "backend"))
 
 from engine.simulation import SelectorGCSimulation
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 dotenv.load_dotenv()
 
@@ -73,8 +77,16 @@ def main(config_path: Path, max_messages: int, min_messages: int):
                 utility = agent.compute_utility({"outputs": outputs})
             for cfg in config["agents"]:
                 if cfg["name"] == agent.name and cfg.get("self_improve", False):
+                    old_prompt = cfg.get("prompt", "")
                     agent.learn_from_feedback(utility, environment)
                     cfg["prompt"] = getattr(agent, "system_prompt", cfg.get("prompt"))
+                    logger.info(
+                        "Agent: %s -- optimising prompt for round %s, previous prompt: %s new prompt after optimisation: %s",
+                        agent.name,
+                        run_idx,
+                        old_prompt,
+                        cfg["prompt"],
+                    )
 
     out_path = config_path.with_name("history.json")
     with open(out_path, "w", encoding="utf-8") as f:
