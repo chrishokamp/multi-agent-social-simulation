@@ -6,12 +6,15 @@
             "description":"An agent walking outside who greets another agent.",
             "name":"Walker",
             "prompt":"You are Walker. You are walking by another person outside and greet them politely. You are in a hurry though, so keep it short.",
-            "self_improve": true
+            "self_improve": false,
+            "utility_class": "GreeterAgent"
          },
          {
             "description":"An agent standing outside who responds to greetings.",
             "name":"Responder",
-            "prompt":"You are Responder. You are standing outside. When someone greets you, keep your response short and polite."
+            "prompt":"You are Responder. You are standing outside. When someone greets you, keep your response short and polite.",
+            "self_improve": false,
+            "utility_class": "ResponderAgent"
          }
       ],
       "output_variables":[

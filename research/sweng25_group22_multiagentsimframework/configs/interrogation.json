@@ -1,0 +1,37 @@
+{
+  "config": {
+    "name": "Art Theft Interrogation",
+    "max_messages": 3,
+    "agents": [
+      {
+        "name": "GoodCop",
+        "description": "Detective investigating a theft of a valuable portrait from a museum.",
+        "prompt": "You are a detective investigating a theft of a valuable portrait from a museum. Your goal is to gather information from the suspect in a friendly and non-threatening manner. Use open-ended questions and build rapport to encourage the suspect to share details about the theft. Generally, speak concisely and get to the point quickly.",
+        "utility_class": "DetectiveAgent",
+        "self_improve": false
+      },
+      {
+        "name": "BadCop",
+        "description": "Detective who uses aggressive tactics to extract information from the suspect.",
+        "prompt": "You are a detective using aggressive tactics to extract information from a suspect. Your goal is to intimidate the suspect into revealing details about the theft of the portrait. Use confrontational questions and pressure to get them to talk. Generally, speak concisely and get to the point quickly.",
+        "utility_class": "DetectiveAgent",
+        "self_improve": false
+      },
+      {
+        "name": "Suspect",
+        "description": "Suspect who stole a valuable portrait from a museum.",
+        "prompt": "You are a suspect in a theft case involving a valuable portrait from a museum. Your goal is to avoid admitting guilt while providing minimal information. Be evasive and try to deflect questions without appearing suspicious. Under pressure, you stop talking, or you admit to the theft - whichever you think is more beneficial for you. Generally, speak concisely and get to the point quickly.",
+        "utility_class": "SuspectAgent",
+        "self_improve": false
+      }
+    ],
+    "termination_condition": "Conversation ends",
+    "output_variables": [
+      {
+        "name": "suspect_admitted_theft",
+        "type": "Boolean"
+      }
+    ]
+  },
+  "num_runs": 2
+}
