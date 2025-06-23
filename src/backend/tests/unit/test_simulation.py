@@ -211,15 +211,148 @@ class TestSelectorGCSimulation:
         
         with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
              patch('engine.simulation.UtilityAgent'), \
-             patch('engine.simulation.GroupChat'), \
+             patch('engine.simulation.GroupChat') as mock_group_chat, \
              patch('engine.simulation.GroupChatManager'):
             
             sim = SelectorGCSimulation({"agents": [], "output_variables": [], "termination_condition": "done"}, {})
+            
+            # Mock the group chat messages to match the mocked chat history
+            sim.group_chat.messages = [
+                {"name": "Agent1", "content": "Hello"},
+                {"name": "Agent2", "content": "Hi"},
+                {"name": "Agent3", "content": "More"},
+                {"name": "Agent4", "content": "Even more"},
+                {"name": "InformationReturnAgent", "content": '{"result": "success"}'}
+            ]
+            
             result = await sim.run()
         
         assert result is not None
         assert "messages" in result
         assert "output_variables" in result
+
+    @pytest.mark.asyncio  
+    @patch('engine.simulation.ConversableAgent')
+    async def test_run_uses_group_chat_messages(self, mock_conversable_agent):
+        """Test that run() uses group chat messages instead of starter-manager conversation."""
+        from engine.simulation import SelectorGCSimulation
+        
+        # Mock the starter agent
+        mock_starter_instance = Mock()
+        mock_conversable_agent.return_value = mock_starter_instance
+        
+        # Mock the initiate_chat result (this would only have starter-manager conversation)
+        mock_chat_result = Mock()
+        mock_chat_result.chat_history = [
+            {"name": "starter", "content": "Begin"}
+        ]
+        # Make a_initiate_chat return an async mock
+        async def mock_initiate_chat(*args, **kwargs):
+            return mock_chat_result
+        mock_starter_instance.a_initiate_chat = mock_initiate_chat
+        
+        # Create simulation with mocked components
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+             patch('engine.simulation.UtilityAgent') as mock_utility_agent, \
+             patch('engine.simulation.GroupChat') as mock_group_chat, \
+             patch('engine.simulation.GroupChatManager'):
+            
+            # Mock agent instances
+            mock_agent = Mock()
+            mock_agent.compute_utility.return_value = 0.5
+            mock_agent.system_prompt = "Test prompt"
+            mock_utility_agent.return_value = mock_agent
+            
+            # Create simulation
+            sim = SelectorGCSimulation({
+                "agents": [
+                    {"name": "Buyer", "description": "Test buyer", "prompt": "Buy something"},
+                    {"name": "Seller", "description": "Test seller", "prompt": "Sell something"}
+                ],
+                "output_variables": [{"name": "price", "type": "Number"}],
+                "termination_condition": "DONE"
+            }, {})
+            
+            # Mock the group chat messages (this contains the full conversation)
+            sim.group_chat.messages = [
+                {"name": "starter", "content": "Begin"},
+                {"name": "Buyer", "content": "I want to buy"},
+                {"name": "Seller", "content": "I have something to sell"},
+                {"name": "Buyer", "content": "Deal at 100"},
+                {"name": "InformationReturnAgent", "content": '{"price": 100}\nTERMINATE'}
+            ]
+            
+            # Run simulation
+            result = await sim.run()
+            
+            # Verify that the result contains all group chat messages
+            assert result is not None
+            assert len(result["messages"]) == 5
+            assert result["messages"][0]["agent"] == "starter"
+            assert result["messages"][1]["agent"] == "Buyer"
+            assert result["messages"][2]["agent"] == "Seller"
+            assert result["messages"][3]["agent"] == "Buyer"
+            assert result["messages"][4]["agent"] == "InformationReturnAgent"
+            
+            # Verify output variables were extracted correctly
+            assert len(result["output_variables"]) == 1
+            assert result["output_variables"][0]["name"] == "price"
+            assert result["output_variables"][0]["value"] == 100
+
+    def test_process_result_with_group_chat_result(self):
+        """Test that _process_result works with GroupChatResult (the fix for the bug)."""
+        from engine.simulation import SelectorGCSimulation
+        
+        # Create a GroupChatResult-like object (as created in the fixed run() method)
+        class GroupChatResult:
+            def __init__(self, messages):
+                self.chat_history = messages
+        
+        # Mock group chat messages including InformationReturnAgent
+        group_messages = [
+            {"name": "starter", "content": "Begin"},
+            {"name": "Buyer", "content": "I want to buy a bike"},
+            {"name": "Seller", "content": "I have one for 400"},
+            {"name": "Buyer", "content": "How about 350?"},
+            {"name": "Seller", "content": "Let's meet at 375"},
+            {"name": "Buyer", "content": "Deal! STOP_NEGOTIATION"},
+            {"name": "InformationReturnAgent", "content": '{\n"final_price": 375,\n"deal_reached": true,\n"negotiation_rounds": 3\n}\nTERMINATE'}
+        ]
+        
+        mock_result = GroupChatResult(group_messages)
+        
+        with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
+             patch('engine.simulation.UtilityAgent'):
+            
+            sim = SelectorGCSimulation({
+                "agents": [
+                    {"name": "Buyer", "description": "Test buyer", "prompt": "Buy something"},
+                    {"name": "Seller", "description": "Test seller", "prompt": "Sell something"}
+                ],
+                "output_variables": [
+                    {"name": "final_price", "type": "Number"},
+                    {"name": "deal_reached", "type": "Boolean"},
+                    {"name": "negotiation_rounds", "type": "Number"}
+                ],
+                "termination_condition": "STOP_NEGOTIATION"
+            }, {})
+            
+            result = sim._process_result(mock_result)
+            
+            # Verify the result is processed correctly
+            assert result is not None
+            assert len(result["messages"]) == 7
+            
+            # Verify InformationReturnAgent message was found and processed
+            assert result["messages"][-1]["agent"] == "InformationReturnAgent"
+            assert "TERMINATE" in result["messages"][-1]["message"]
+            
+            # Verify output variables were extracted
+            assert len(result["output_variables"]) == 3
+            output_dict = {var["name"]: var["value"] for var in result["output_variables"]}
+            assert output_dict["final_price"] == 375
+            assert output_dict["deal_reached"] is True
+            assert output_dict["negotiation_rounds"] == 3
 
 
 class TestUtilityClassRegistry:

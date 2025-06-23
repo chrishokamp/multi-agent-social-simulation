@@ -166,4 +166,11 @@ class SelectorGCSimulation:
             max_turns=1,
             silent=True,
         )
-        return self._process_result(chat_result)
+        # Use the group chat messages instead of the starter-manager conversation
+        # Create a chat result-like object with the group chat messages
+        class GroupChatResult:
+            def __init__(self, messages):
+                self.chat_history = messages
+        
+        group_chat_result = GroupChatResult(self.group_chat.messages)
+        return self._process_result(group_chat_result)
