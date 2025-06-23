@@ -139,11 +139,13 @@ class SelectorGCSimulation:
 
 
     async def run(self):
-        starter = ConversableAgent("starter", llm_config=self.llm_config)
+        starter = ConversableAgent(
+            "starter", llm_config=self.llm_config, human_input_mode="NEVER"
+        )
         chat_result = await starter.a_initiate_chat(
             recipient=self.manager,
             message="Begin",
-            max_turns=self.group_chat.max_round,
+            max_turns=1,
             silent=True,
         )
         return self._process_result(chat_result)
