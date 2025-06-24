@@ -12,6 +12,7 @@ from db.simulation_catalog import SimulationCatalog
 from engine.simulation import SelectorGCSimulation
 
 from utils import create_logger
+import json
 logger = create_logger(__name__)
 
 executor = None
@@ -50,23 +51,50 @@ def orchestrator(max_threads=4):
     simulation_queue = SimulationQueue(mongo_client)
 
     print("Listening for simulations...")
-
-    global executor
-    signal.signal(signal.SIGINT, signal_handler)
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_threads)
-    future_to_id = {}
-    try:
-        while True:
-            next_simulation = simulation_queue.retrieve_next()
-            
-            if next_simulation:
-                future = executor.submit(start_simulation, next_simulation[0], next_simulation[1])
-                future_to_id[future] = next_simulation[0]
-            
-            done_futures = [f for f in future_to_id if f.done()]
-            for f in done_futures:
-                del future_to_id[f]
-            
+    while True:
+        job = simulation_queue.retrieve_full_job()
+        if job is None:
             time.sleep(5)
-    except SystemExit:
-        pass
+            logger.info("No jobs in queue, sleeping for 5 seconds...")
+            continue
+
+        sim_id, config, num_runs = job
+        print(f"→ running simulation {sim_id} synchronously for {num_runs} runs…")
+        run_all_runs(sim_id, config, num_runs)
+
+
+def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, update_catalog=True):
+    """
+        Run a simulation `num_runs` times synchronously, 
+        passing the growing `env` into each new run so 
+        self-improvment can happen
+    """
+    mongo_client = MongoClient(os.environ["DB_CONNECTION_STRING"])
+    results_store  = SimulationResults(mongo_client)
+    catalog_store  = SimulationCatalog(mongo_client)
+
+    env = {"runs": []}
+
+    for i in range(num_runs):
+        # each SelectorGCSimulation will call learn_from_feedback()
+        # on the previous `env` and then replay with the updated prompt
+        sim = SelectorGCSimulation(simulation_config, environment=env)
+        simulation_result = asyncio.run(sim.run())
+
+        if not simulation_result:
+            print(f"Run {i} failed; retrying...")
+            continue
+
+        if update_catalog:
+            results_store.insert(simulation_id, simulation_result)
+            catalog_store.update_progress(simulation_id)
+
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        sim_history_dir = f"simulations/{simulation_id}/history"
+        os.makedirs(sim_history_dir, exist_ok=True)
+        env_path = f"{sim_history_dir}/simulation_{simulation_id}_env_run_{i+1}_{timestamp}.json"
+        with open(env_path, "w") as f:
+            json.dump(env, f, indent=2)
+        logger.info(f"Saved environment to {env_path}")
+
+    print(f"All {num_runs} runs of simulation {simulation_id} complete.")

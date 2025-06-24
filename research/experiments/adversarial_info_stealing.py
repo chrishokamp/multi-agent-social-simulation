@@ -1,7 +1,10 @@
 import sys
 import json
 
-sys.path.append("../sweng25_group22_multiagentsimframework/backend/src")
+import pathlib, sys, types, os
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT))
+sys.path.append(str(ROOT / "src" / "backend"))
 from agents import UtilityAgent
 from orchestrator.simulation_orchestrator import run_all_runs
 from engine.simulation import _utility_class_registry
