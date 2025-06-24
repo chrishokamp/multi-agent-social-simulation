@@ -75,11 +75,13 @@ def main(config_path: Path, output_dir: Path, max_messages: int, min_messages: i
         history.append(
             {
                 "run_id": run_idx,
-                "result": result,
+                "messages": result['messages'],
+                "output_variables": result["output_variables"],
                 "agent_prompts": [
                     {"name": agent.name, "prompt": agent.system_prompt}
                     for agent in sim.agents
-                ]
+                ],
+                "agent_utilities": {}
             }
         )
 
@@ -91,6 +93,7 @@ def main(config_path: Path, output_dir: Path, max_messages: int, min_messages: i
             utility = 0.0
             if hasattr(agent, "compute_utility"):
                 utility = agent.compute_utility({"outputs": outputs})
+            history[-1]["agent_utilities"][agent.name] = utility
             for cfg in config["agents"]:
                 if cfg["name"] == agent.name and cfg.get("self_improve", False):
                     old_prompt = cfg.get("prompt", "")
@@ -107,7 +110,7 @@ def main(config_path: Path, output_dir: Path, max_messages: int, min_messages: i
     print(f"=== Completed {num_runs} runs ===")
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_path = output_dir / f"results_{config_path.stem}_{timestamp}.json"
+    out_path = output_dir / f"output_{config_path.stem}_{timestamp}.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
     print(f"History written to {out_path}")
