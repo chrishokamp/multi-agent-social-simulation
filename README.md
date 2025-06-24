@@ -24,6 +24,11 @@ Or with pip:
 pip install -r src/backend/requirements.txt
 ```
 
+Run unittests
+```
+make test
+```
+
 ### 2. Set API Keys
 
 ```bash
