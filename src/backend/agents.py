@@ -14,7 +14,8 @@ import json
 
 from autogen.agentchat import AssistantAgent
 
-from utils import client_for_endpoint
+from utils import client_for_endpoint, create_logger
+logger = create_logger(__name__)
 
 
 class UtilityAgent(AssistantAgent, ABC):
@@ -41,6 +42,13 @@ class UtilityAgent(AssistantAgent, ABC):
         self._utility_history: list[float] = []
         self.optimization_prompt: str | None = optimization_prompt
 
+    @property
+    def utility_history(self) -> list[float]:
+        """
+        A list of the utility values computed in previous rounds
+        """
+        return [run["output_variables"]["utility"] for run in self._last_environment["runs"]]
+
     def compute_utility(
         self,
         environment: Mapping[str, Any] | None = None,
@@ -59,7 +67,6 @@ class UtilityAgent(AssistantAgent, ABC):
 
     def learn_from_feedback(
         self,
-        utility: float,
         environment: Mapping[str, Any] | None = None
     ) -> None:
         
@@ -69,20 +76,22 @@ class UtilityAgent(AssistantAgent, ABC):
         # Check if there are any runs to learn from
         if not environment["runs"]:
             return  # no previous runs
+        
+        most_recent_run = environment["runs"][-1]
+        utility = most_recent_run["output_variables"]["utility"][self.name]
             
         history_lines = []
-        for run_id, run in environment["runs"]:
-            history_lines.append(f"#### RUN {run_id} ####")
-            if "messages" in run and run["messages"]:
-                for m in run["messages"]:
-                    # Handle different message formats
-                    if isinstance(m, dict):
-                        agent_name = m.get('agent', m.get('name', 'Unknown'))
-                        message_content = m.get('message', m.get('content', ''))
-                        history_lines.append(f"{agent_name}: {message_content}")
-                    else:
-                        history_lines.append(str(m))
-            history_lines.append("")
+        for run in environment["runs"][-5:]:  # only look at the last 5 runs
+            run_id = run["run_id"]
+            msg = f"###########\nRUN {run_id}:\n"
+            for m in run["messages"]:
+                # Handle different message formats
+                if isinstance(m, dict):
+                    agent_name = m.get('agent', m.get('name', 'Unknown'))
+                    message_content = m.get('message', m.get('content', ''))
+                    history_lines.append(f"{agent_name}: {message_content}")
+                else:
+                    history_lines.append(str(m))
         history = "\n".join(history_lines)
 
         # Use custom optimization prompt if provided, otherwise use default
@@ -113,13 +122,41 @@ class UtilityAgent(AssistantAgent, ABC):
         ]
 
         response = self._client.chat.completions.create(
-            model=self.model_name,
+            model=self.model_name or "gpt-4o",
             messages=messages,
         )
 
         new_prompt = response.choices[0].message.content.strip()
+        logger.info(f"Agent {self.name} learned new prompt: {new_prompt} (previous: {self.system_prompt})")
         self.system_prompt = new_prompt
         return
+
+    async def _reflect_privately(self, last_public_msg: str) -> str:
+        """
+        Ask the LLM for a one-sentence silent reflection about the
+        latest public message.  Completely private – never sent back
+        into the chat.
+        """
+        prompt = (
+            "You are thinking silently as " + self.name + ". "
+            "In ONE short sentence, note what you believe or plan "
+            "after reading:\n“" + last_public_msg + "”"
+        )
+        response = self._client.chat.completions.create(
+            model=self.model_name or "gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content.strip()
+
+    async def think_and_print(self, running_history: list[dict[str, str]]) -> None:
+        """
+        Produce the reflection, print it, and attach it to the most
+        recent entry of `running_history` (so the simulation can store
+        it later).
+        """
+        thought = await self._reflect_privately(running_history[-1]["msg"])
+        print(f"[{self.name} – private] {thought}", flush=True)
+        running_history[-1]["thought"] = thought
 
 
 # ----------- example agents -------------
@@ -129,40 +166,31 @@ class BuyerAgent(UtilityAgent):
     Scores itself on the *money saved* in a negotiation.
 
     Assumes:
-      environment["outputs"]["final_price"] – price actually paid
+      environment["output_variables"]["final_price"] – price actually paid
       self.strategy["max_price"]            – highest acceptable price
     """
 
     def compute_utility(
         self,
-        environment: Mapping[str, Any] | None = None,
-    ) -> float:
+        environment: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
         if environment is None:
             environment = self._last_environment or {}
+        most_recent_run = environment["runs"][-1]
+
+        if most_recent_run["output_variables"]["deal_reached"] is False:
+            # No deal reached, so no utility
+            utility = 0.0
+        else:
+            final_price = float(most_recent_run["output_variables"]["final_price"])
+            max_price   = float(self.strategy["max_price"])
+            # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
+            utility = 1.0 - (final_price / max_price)
+
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
-
-        # Return 0 if environment doesn't have the required structure
-        if "outputs" not in environment:
-            return 0.0
-        
-        outputs = environment["outputs"]
-        if "final_price" not in outputs or "deal_reached" not in outputs:
-            return 0.0
-
-        final_price = outputs["final_price"]
-        max_price   = self.strategy["max_price"]
-
-        if outputs["deal_reached"] is False:
-            # No deal reached - return 0 for neutral outcome
-            return 0.0
-
-        # Convert final_price to float if it's a string
-        if isinstance(final_price, str):
-            final_price = float(final_price)
-
-        # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
-        utility = 1.0 - (final_price / max_price)
-        return utility
+        return environment
 
 
 class SellerAgent(UtilityAgent):
@@ -170,28 +198,19 @@ class SellerAgent(UtilityAgent):
     Utility = revenue / target.
     """
 
-    def compute_utility(self, environment=None):
+    def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        most_recent_run = environment["runs"][-1]
+
+        if most_recent_run["output_variables"]["deal_reached"] is False:
+            # No deal reached, so no utility
+            utility = 0.0
+        else:
+            final_price = float(most_recent_run["output_variables"]["final_price"])
+            target      = float(self.strategy["target_price"])
+            utility = min(final_price / target, 1.0)
+        
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
-        
-        # Return 0 if environment doesn't have the required structure
-        if "outputs" not in environment:
-            return 0.0
-        
-        outputs = environment["outputs"]
-        if "final_price" not in outputs or "deal_reached" not in outputs:
-            return 0.0
-            
-        final_price = outputs["final_price"]
-        target      = self.strategy["target_price"]
-
-        if outputs["deal_reached"] is False:
-            # No deal reached - return 0 for neutral outcome
-            return 0.0
-
-        # Convert final_price to float if it's a string
-        if isinstance(final_price, str):
-            final_price = float(final_price)
-
-        utility = min(final_price / target, 1.0)
-        return utility
+        return environment
