@@ -107,8 +107,10 @@ class SelectorGCSimulation:
         full_transcript = "\n".join(f"{m['agent']}: {m['message']}" for m in messages)
         
         prompt = textwrap.dedent(f"""
-        You are the Information Return Agent for a simulation. The conversation below ended prematurely.
-        Your job is to extract structured information from the dialogue.
+        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents. 
+        Your goal is to extract specific variables from the conversation and output them in JSON format when a specific termination condition is met.
+        Monitor the conversation and track relevant details as messages are exchanged between the agents.
+        Incase of output variables like string variables, comprehensively look at the conversation and output concise and objective information, i.e in case of a court case simulation demanding verdict as a str, output the verdict as the length of prison sentence etc, do not simply state that the verdict was reached
 
         --- Conversation Transcript ---
         {full_transcript}
