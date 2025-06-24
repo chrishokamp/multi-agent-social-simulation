@@ -9,6 +9,10 @@ from utils import client_for_endpoint, create_logger
 from typing import Mapping, Any
 from pydantic import BaseModel
 import textwrap
+import os
+import glob
+import random
+import matplotlib.pyplot as plt
 
 logger = create_logger(__name__)
 
@@ -148,11 +152,63 @@ simulation_config = json.load(
         "../sweng25_group22_multiagentsimframework/configs/adversarial-information-theft.json"
     )
 )
+simulation_id = f"sim_{random.randint(100000, 999999)}"
 run_all_runs(
-    simulation_id="11223344",
+    simulation_id=simulation_id,
     simulation_config=simulation_config["config"],
     num_runs=simulation_config["num_runs"],
     update_catalog=False 
 )
 
-import ipdb; ipdb.set_trace()
+
+# plotting and analysis
+
+def get_most_recent_json_file(directory: str) -> str | None:
+    json_files = glob.glob(os.path.join(directory, "*.json"))
+    if not json_files:
+        return None
+    most_recent = max(json_files, key=os.path.getctime)
+    return most_recent
+
+simulation_output_dir = f"./simulations/{simulation_id}"
+simulation_file = get_most_recent_json_file(f"{simulation_output_dir}/history")
+
+with open(simulation_file) as f:
+    simulation_data = json.load(f)
+
+run_ids = []
+innovator_utils = []
+opportunist_utils = []
+extracted_ideas_per_run = []
+
+for run in simulation_data["runs"]:
+    run_id = run["run_id"]
+    run_ids.append(run_id)
+
+    utility = run["output_variables"]["utility"]
+    innovator_utils.append(utility["Innovator"])
+    opportunist_utils.append(utility["Opportunist"])
+
+    ideas = run["output_variables"]["opportunist_extracted_ideas"]
+    extracted_ideas_per_run.append(ideas)
+
+for i, run_id in enumerate(run_ids):
+    print(f"\n=== Run {i + 1} ({run_id}) ===")
+    print(f"Innovator Utility:   {innovator_utils[i]}")
+    print(f"Opportunist Utility: {opportunist_utils[i]}")
+    print("Extracted Ideas:")
+    for idea in extracted_ideas_per_run[i]:
+        print(f"  - {idea}")
+
+plt.figure()
+plt.plot(range(1, len(run_ids) + 1), innovator_utils, label="Innovator", marker='o')
+plt.plot(range(1, len(run_ids) + 1), opportunist_utils, label="Opportunist", marker='x')
+plt.title("Utility Over Simulation Runs")
+plt.xlabel("Run Number")
+plt.ylabel("Utility Score")
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.savefig(f"{simulation_output_dir}/utility_over_runs.png")
+print(f"\nSaved plot as 'utility_over_runs.png' in {simulation_output_dir}")
+
