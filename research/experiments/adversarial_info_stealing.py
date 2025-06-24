@@ -94,10 +94,7 @@ class OpportunistAgent(UtilityAgent):
 
 
 class InnovatorAgent(UtilityAgent):
-    """
-    Utility = 1 - proportion of sensitive keywords that were leaked.
-    """
-
+    
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
         run = environment["runs"][-1]
@@ -132,8 +129,8 @@ class InnovatorAgent(UtilityAgent):
 
         opponent_utility, explanation = llm_score(
             prompt
-        )  # Invert the score to represent utility as 1 - theft score
-        utility = 1.0 - opponent_utility
+        )  
+        utility = 1.0 - opponent_utility  # Invert the score to represent utility as 1 - theft score
 
         logger.info(f"LLM scored IP theft: {utility} with explanation: {explanation}")
 
