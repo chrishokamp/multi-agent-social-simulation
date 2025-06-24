@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import textwrap
 
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
 from autogen_agentchat.teams import SelectorGroupChat
@@ -9,7 +10,7 @@ from autogen_agentchat.ui import Console
 import autogen_agentchat
 import uuid
 
-from utils import create_logger, get_autogen_client
+from utils import create_logger, get_autogen_client, client_for_endpoint
 logger = create_logger(__name__)
 
 _utility_class_registry = {
@@ -19,12 +20,14 @@ _utility_class_registry = {
 }
 
 class SelectorGCSimulation:
-    def __init__(self, config: dict, environment: dict, max_messages=25, min_messages=5):
+    def __init__(self, config: dict, environment: dict):
         self.model_client = get_autogen_client()
         self.config = config
-        self.min_messages = min_messages
+        self.min_messages = config.get("min_messages", 2)
+        self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
         self.environment = environment
+        self.environment["config"] = self.config
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
 
@@ -36,6 +39,8 @@ class SelectorGCSimulation:
             "Boolean": "BOOLEAN",
             "Float": "FLOAT",
             "Date": "DATE",
+            "List": "LIST",
+            "Dict": "DICT",
         }
 
         # inject InformationReturnAgent into config
@@ -86,10 +91,59 @@ class SelectorGCSimulation:
             model_client=self.model_client,
             selector_prompt=selector_prompt,
             termination_condition=(
-                TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=max_messages)
+                TextMentionTermination("TERMINATE") | MaxMessageTermination(max_messages=self.max_messages)
             ),
             emit_team_events=True,
         )   
+
+    def force_info_return(
+        self,
+        messages: dict,
+        output_variables: list[str],
+    ) -> dict:
+        """Call the InfoReturn agent post-hoc to populate missing output variables."""
+        client, model_name = client_for_endpoint()
+
+        full_transcript = "\n".join(f"{m['agent']}: {m['message']}" for m in messages)
+        
+        prompt = textwrap.dedent(f"""
+        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents. 
+        Your goal is to extract specific variables from the conversation and output them in JSON format when a specific termination condition is met.
+        Monitor the conversation and track relevant details as messages are exchanged between the agents.
+        Incase of output variables like string variables, comprehensively look at the conversation and output concise and objective information, i.e in case of a court case simulation demanding verdict as a str, output the verdict as the length of prison sentence etc, do not simply state that the verdict was reached
+
+        --- Conversation Transcript ---
+        {full_transcript}
+        -------------------------------
+
+        Please output the following output_variables
+        {output_variables}
+
+        Return only a valid JSON object, using the "name" fields as keys in your output.
+        """)
+
+        response = client.chat.completions.create(
+            model=model_name or "gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+        )
+
+        parsed = json.loads(response.choices[0].message.content.replace("```json", "").replace("```", "").strip())
+        output_variables = [{"name": k, "value": v if v is not None else "Unspecified"} for k, v in parsed.items()]
+
+        return output_variables
+
+    def parse_ira_message(self, information_return_agent_message: str, output_variables: list[dict[str, str]]) -> None:
+        json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
+        parsed_json = json.loads(json_match.group(0))
+        for variable in parsed_json:
+            # Handle both None and "Unspecified" values
+            value = parsed_json[variable]
+            if value is None or value == "Unspecified":
+                value = "Unspecified"
+            output_variables.append({"name": variable, "value": value})
+        return output_variables
+
 
     def _process_result(self, simulation_result):
         if len(simulation_result.messages) < self.min_messages:
@@ -103,23 +157,17 @@ class SelectorGCSimulation:
             messages.append({"agent": message.source, "message": message.content})
 
         output_variables = []
-        information_return_agent_message = messages[-1]["message"]
-        json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
-        if json_match:
-            try:
-                parsed_json = json.loads(json_match.group(0))
-                for variable in parsed_json:
-                    # Handle both None and "Unspecified" values
-                    value = parsed_json[variable]
-                    if value is None or value == "Unspecified":
-                        value = "Unspecified"
-                    output_variables.append({"name": variable, "value": value})
-            except json.JSONDecodeError:
-                logger.error(f"Failed to parse JSON from message: {information_return_agent_message}")
-                return None
+        last_message = messages[-1]
+        if last_message["agent"] == "InformationReturnAgent":
+            output_variables = self.parse_ira_message(last_message["message"], output_variables)
         else:
-            logger.error(f"No JSON found in message: {information_return_agent_message}")
-            return None
+            logger.warning("Last message is not from InformationReturnAgent, forcing information return.")
+            output_variables = self.force_info_return(
+                messages=messages,
+                output_variables=self.config["output_variables"]
+            )
+
+        logger.info(f"Processed output variables: {output_variables}")
         
         processed = {
             "run_id": self.run_id,
