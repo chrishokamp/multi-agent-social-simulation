@@ -57,9 +57,8 @@ class UtilityAgent(AssistantAgent, ABC):
         Return a scalar utility measuring *this* agent’s satisfaction.
 
         Concrete subclasses may use anything they find in `environment`
-        (for example `environment["outputs"]` or the full chat history).
+        (for example `environment["output_variables"]` or the full chat history).
 
-        The default simply returns 0 – override me!
         """
         # Keep a reference so the agent can see its previous round later on
         self._last_environment = environment
@@ -78,7 +77,7 @@ class UtilityAgent(AssistantAgent, ABC):
             return  # no previous runs
         
         most_recent_run = environment["runs"][-1]
-        utility = most_recent_run["output_variables"]["utility"][self.name]
+        utility = most_recent_run["output_variables"].get("utility", {})[self.name]
             
         history_lines = []
         for run in environment["runs"][-5:]:  # only look at the last 5 runs
