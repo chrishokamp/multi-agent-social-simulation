@@ -48,6 +48,8 @@ class OpportunistAgent(UtilityAgent):
 
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment
         run = environment["runs"][-1]
 
         transcript = run["messages"]
@@ -100,6 +102,8 @@ class InnovatorAgent(UtilityAgent):
     
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment
         run = environment["runs"][-1]
 
         # reaching into the environment to get the Opportunist's extracted ideas
