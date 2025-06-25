@@ -1,246 +1,279 @@
 from __future__ import annotations
-import json, os, random, sys
+import json, os, random, sys, re
 from pathlib import Path
 from typing import Dict, List, Tuple
-import re
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from autogen import LLMConfig, ConversableAgent, GroupChat, GroupChatManager
-import matplotlib.ticker as mticker
-from seaborn.utils import move_legend       
 from matplotlib.lines import Line2D
+import matplotlib.ticker as mticker
+from autogen import LLMConfig, ConversableAgent, GroupChat, GroupChatManager
 
-# ── llm cfg ─────────────────────────────────────────────────────
-def get_llm_cfg() -> LLMConfig:
+# ── LLM config (OpenAI or Azure) ────────────────────────────────────────────
+def llm_cfg() -> LLMConfig:
     if os.getenv("OPENAI_API_KEY"):
         return LLMConfig(model="gpt-4o-mini", temperature=0.7)
-
     need = ("AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT")
     if not all(os.getenv(k) for k in need):
-        sys.exit("Set OPENAI_API_KEY or the three AZURE_ variables.")
+        sys.exit("Set OPENAI_API_KEY or the three AZURE_* variables.")
     return LLMConfig(
         config_list=[{
-            "api_type"   : "azure",
-            "api_key"    : os.getenv("AZURE_OPENAI_API_KEY"),
-            "base_url"   : os.getenv("AZURE_OPENAI_ENDPOINT"),
+            "api_type": "azure",
+            "api_key":  os.getenv("AZURE_OPENAI_API_KEY"),
+            "base_url": os.getenv("AZURE_OPENAI_ENDPOINT"),
             "api_version": "2024-02-15-preview",
-            "model"      : os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+            "model": os.getenv("AZURE_OPENAI_DEPLOYMENT")
         }],
         temperature=0.7,
     )
+LLM = llm_cfg()
 
-LLM = get_llm_cfg()
-
-# ── 10 configs (create once then reuse) ──────────────────────────────────────
+# ── scenario configs (20 “interesting” haggles) ─────────────────────────────
 CFG_PATH = Path("configs.json")
 if not CFG_PATH.exists():
-    cfgs = []
+    cfgs: List[Dict] = []
     for i in range(20):
-        start = random.randrange(900, 1400, 50)                 # seller asks
-        floor = start - random.randint(100, 300)                # seller min
-        budget = random.randint(floor + 25, start - 25)         # buyer budget
-        cfgs.append(dict(
-            id=i,
-            item=f"Laptop-{i}",
-            seller_start=start,
-            seller_min=floor,
-            buyer_budget=budget,
-        ))
+        ask   = random.randrange(900, 1400, 50)
+        floor = ask - random.randint(100, 300)
+        budget_low  = floor + 25
+        budget_high = max(floor + 50, ask - random.randint(100, 200))
+        budget = random.randint(budget_low, budget_high)
+        cfgs.append(dict(id=i, item=f"Laptop-{i}",
+                         seller_start=ask, seller_min=floor,
+                         buyer_budget=budget))
     CFG_PATH.write_text(json.dumps(cfgs, indent=2))
 CONFIGS: List[Dict] = json.loads(CFG_PATH.read_text())
 
-# ── simple utility (one-shot) ────────────────────────────────────────────────
-def util(cfg: dict, price: int) -> Tuple[float, float]:
-    span = cfg["seller_start"] - cfg["seller_min"]         # same denom for both
-    buyer_u  = (cfg["seller_start"] - price) / span
-    seller_u = (price - cfg["seller_min"])   / span
-    return buyer_u, seller_u
+# ── utility helpers ─────────────────────────────────────────────────────────
+def surplus_share(cfg: dict, price: int) -> Tuple[float, float]:
+    span = cfg["seller_start"] - cfg["seller_min"]
+    return (cfg["seller_start"] - price) / span, (price - cfg["seller_min"]) / span
 
-# ── price extraction regex (one-shot) ────────────────────────────────────────
-PRICE_RE = re.compile(r"\$\s*([0-9][0-9,]*)")     
+def buyer_priv_util(cfg: dict, price: int) -> float:
+    return (cfg["buyer_budget"] - price) / cfg["buyer_budget"]
 
+def seller_priv_util(cfg: dict, price: int) -> float:
+    span = cfg["seller_start"] - cfg["seller_min"]
+    return (price - cfg["seller_min"]) / span
+
+PRICE_RE = re.compile(r"\$\s*([0-9][0-9,]*)")
 def extract_last_price(text: str, fallback: int | None) -> int | None:
-    matches = PRICE_RE.findall(text)
-    if not matches:
-        return fallback
-    # keep only digits
-    price_str = re.sub(r"[^\d]", "", matches[-1])
-    return int(price_str) if price_str else fallback
+    hit = PRICE_RE.findall(text)
+    return int(re.sub(r"[^\d]", "", hit[-1])) if hit else fallback
 
-# ── reflection helper (one sentence) ────────────────────────────────────────
-def reflect(role: str, transcript: str, cfg, prev_strategies: list[str], util) -> str:
-    if util > 0.8:      tag = "great"
-    elif util > 0.4:    tag = "okay"
-    elif util > 0:      tag = "poor"
-    else:               tag = "loss"
+# ── reflection helper ───────────────────────────────────────────────────────
+def reflect(role: str, transcript: str, cfg: dict,
+            prev_strats: list[str], util_priv: float) -> str:
+    tag = "great" if util_priv > .8 else "okay" if util_priv > .4 else "poor" if util_priv > 0 else "loss"
+    brief = f"Buyer budget was ${cfg['buyer_budget']}" if role == "Buyer" \
+            else f"Seller floor was ${cfg['seller_min']}"
 
-    if role == "Buyer":
-        additional_info = (
-            f"Buyer budget: ${cfg['buyer_budget']} "
-        )
-    else:  # Seller
-        additional_info = (
-            f"Seller min price: ${cfg['seller_min']} "
-        )
     critic = ConversableAgent(
-        f"{role}Coach",
-        llm_config=LLM,
+        f"{role}Coach", llm_config=LLM,
         system_message=(
             "You are a seasoned negotiation coach.\n"
-            "Analyse the full transcript below and craft **exactly one** "
-            f"strategy sentence the {role.lower()} could apply in a *future* negotiation. "
-            "• Do NOT quote or summarise the transcript.\n"
-            "• Do NOT mention specific prices, names or budgets from the dialogue.\n"
-            "• Start the sentence with an action verb.\n"
-            "First think step-by-step; then output ONE sentence prefixed by the verb.\n"
-            " Do not repeat previous strategies.\n"
-            f"Previous strategies:\n- " + "\n- ".join(prev_strategies) + "\n"
-            f"\n{additional_info}\n"
-            f"The {role.lower()}'s normalised utility last deal was {util:.2f} ({tag}).\n"
+            f"Previous strategies:\n- " + "\n- ".join(prev_strats) + "\n"
+            "Analyse the transcript and devise exactly ONE new strategy "
+            f"sentence the {role.lower()} could apply in a *future* negotiation.\n"
+            "Start with an action verb and do NOT duplicate prior strategies. "
+            "Do NOT mention specific prices, names or budgets from the dialogue.\n"
+            f"{brief}\n."
+            f"The {role.lower()}'s normalised utility for this deal was {util_priv:.2f} ({tag}).\n"          
             "• If utility was 'loss' or 'poor', focus on improvement. "
             "• If 'great', suggest how to replicate or slightly enhance success. \n"
-            "Include one recognised negotiation tactic (e.g., anchoring, mirroring, time-pressure) that fits what you observed in the transcript."
-        ),
+            "Include one recognised negotiation tactic (e.g., anchoring, mirroring, time-pressure) that fits what you observed in the transcript."              
+            "Think step-by-step and return ONLY that single strategy sentence."
+        )
     )
-    return critic.generate_reply([{"role": "user", "content": transcript}])
+    return critic.generate_reply([{"role":"user", "content": transcript}]).strip()
 
-# ── main simulation ──────────────────────────────────────────────────────────
-final_rows: List[Dict] = []
+# ── main simulation loop ────────────────────────────────────────────────────
 system_messages = {}
 all_transcripts = {}
-
+final_rows: List[Dict] = []
 for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
-    buyer_bank, seller_bank = [], []            # accumulate between games
+    buyer_bank, seller_bank = [], []
 
     for cfg in CONFIGS:
-        # is_termination_msg predicate
-        term = lambda msg: "yes, deal!" in msg["content"].lower()
+        term = lambda m: "yes, deal!" in m["content"].lower()
 
-        buyer_system_msg = (
-                f"You have ${cfg['buyer_budget']} to buy {cfg['item']}. Do not reveal your budget. "
-                "Say 'Yes, deal!' when you accept a price. Do not utter those words anytime before. "
-                + (f"\nNegotiation strategies:\n" + "\n".join(buyer_bank) if mode in ("buyer_reflect", "both_reflect") else "")
-            )
-        buyer = ConversableAgent(
-            "Buyer", llm_config=LLM, is_termination_msg=term,
-            system_message=buyer_system_msg,
-            human_input_mode="NEVER"
-        )
-        seller_system_msg = (
-                f"You sell {cfg['item']}. Start at ${cfg['seller_start']} "
-                f"and never go below ${cfg['seller_min']}. "
-                "Say 'Yes, deal!' when you accept a price. Do not utter those words anytime before. "
-                + (f"\nNegotiation strategies:\n" + "\n".join(seller_bank) if mode=="seller_reflect" or mode=="both_reflect" else "")
-            )
-        seller = ConversableAgent(
-            "Seller", llm_config=LLM, is_termination_msg=term,
-            system_message=seller_system_msg,
-            human_input_mode="NEVER"
-        )
+        buyer_msg = (f"You have ${cfg['buyer_budget']} for {cfg['item']}. Do not reveal your budget. "
+                     "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
+                     + ("\nNegotiation strategies:\n" + "\n".join(buyer_bank)
+                        if mode in ("buyer_reflect","both_reflect") else ""))
+        seller_msg = (f"You sell {cfg['item']}. Start at ${cfg['seller_start']} "
+                      f"and never go below ${cfg['seller_min']}. Do not reveal your floor price. "
+                      "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
+                      + ("\nNegotiation strategies:\n" + "\n".join(seller_bank)
+                         if mode in ("seller_reflect","both_reflect") else ""))
 
+        buyer  = ConversableAgent("Buyer",  llm_config=LLM, is_termination_msg=term,
+                                  system_message=buyer_msg,  human_input_mode="NEVER")
+        seller = ConversableAgent("Seller", llm_config=LLM, is_termination_msg=term,
+                                  system_message=seller_msg, human_input_mode="NEVER")
         chat = GroupChat(
             agents=[seller, buyer],
             speaker_selection_method="round_robin",
             max_round=10,                # hard cap if no deal
         )
         mgr = GroupChatManager(groupchat=chat, llm_config=LLM)
-
-        # seed conversation with seller’s opening ask
         seller.initiate_chat(
             recipient=mgr,
             message=f"My asking price for {cfg['item']} is ${cfg['seller_start']}.",
             # max_turns=1,
         )
-        # mgr.run_chat()      # stops early if 'deal' sent
-        # ---- determine final outcome -------------------------------------
+
         transcript = "\n".join(m["content"] for m in chat.messages)
         if mode not in all_transcripts:
             all_transcripts[mode] = {}
         all_transcripts[mode][cfg["id"]] = transcript
+
         if "yes, deal!" in transcript.lower():
-            final_price = extract_last_price(transcript, fallback=None)
-            buyer_util, seller_util = util(cfg, final_price)
+            price = extract_last_price(transcript, None)
+            b_ss, s_ss = surplus_share(cfg, price)
+            b_priv, s_priv = buyer_priv_util(cfg, price), seller_priv_util(cfg, price)
         else:
-            final_price = None
-            buyer_util = seller_util = 0
+            price = None
+            b_ss = s_ss = b_priv = s_priv = 0.0     # dead-deal
 
+        final_rows.append(dict(id=cfg["id"], mode=mode, price=price,
+                               buyer_ss=b_ss, seller_ss=s_ss,
+                               buyer_priv=b_priv, seller_priv=s_priv))
 
-        final_rows.append(dict(
-            id=cfg["id"], mode=mode, price=final_price,
-            buyer_util=buyer_util, seller_util=seller_util))
-
-        # ---- reflection for next game ------------------------------------
+        # reflection
         if mode in ("buyer_reflect", "both_reflect"):
-            buyer_bank.append(reflect("Buyer", transcript, cfg, buyer_bank, buyer_util))
+            buyer_bank.append(reflect("Buyer", transcript, cfg, buyer_bank, b_priv))
         if mode in ("seller_reflect", "both_reflect"):
-            seller_bank.append(reflect("Seller", transcript, cfg, seller_bank, seller_util))
+            seller_bank.append(reflect("Seller", transcript, cfg, seller_bank, s_priv))
 
     # ── save system messages for this mode (for debugging) ─────────────────
     system_messages[mode] = {
-        "buyer": buyer_system_msg,
-        "seller": seller_system_msg,
+        "buyer": buyer_msg,
+        "seller": seller_msg,
     }
     # -- save reflection bank for this mode
     with open(f"deal_gym_reflect_{mode}.txt", "w") as f:
         f.write("Buyer strategies:\n" + "\n".join(buyer_bank) + "\n\n")
         f.write("Seller strategies:\n" + "\n".join(seller_bank) + "\n")
 
-# ── plotting final (not averaged) utilities ─────────────────────────────────
+# ── results DataFrame ───────────────────────────────────────────────────────
 df = pd.DataFrame(final_rows)
+df["neg"] = df["id"] + 1      # 1-based x-axis
 
+# ---------- PLOT 1: surplus-share per negotiation --------------------------
 sns.set_theme(style="whitegrid", context="talk")
-
-# 1-based negotiation axis
-df["neg"] = df["id"].astype(int) + 1
-
-palette = {"no_reflect": "#4c72b0",
-           "buyer_reflect": "#dd8452",
-           "seller_reflect": "#55a868",
-           "both_reflect": "#c44e52"}
-marker_map = {"no_reflect": "o", "buyer_reflect": "s",
-              "seller_reflect": "^", "both_reflect": "D"}
-dash_map = {"no_reflect": "", "buyer_reflect": (2, 2),
-            "seller_reflect": (4, 2), "both_reflect": (1, 1)}
+palette = {"no_reflect":"#4c72b0","buyer_reflect":"#dd8452",
+           "seller_reflect":"#55a868","both_reflect":"#c44e52"}
+marker_map = {"no_reflect":"o","buyer_reflect":"s",
+              "seller_reflect":"^","both_reflect":"D"}
+dash_map   = {"no_reflect":(1,0),"buyer_reflect":(2,2),
+              "seller_reflect":(4,2),"both_reflect":(1,1)}
 order = list(palette)
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
+fig, axes = plt.subplots(1,2, figsize=(12,4), sharey=True)
 
-for util, ax, title in [
-        ("buyer_util", axes[0], "Buyer utility per negotiation"),
-        ("seller_util", axes[1], "Seller utility per negotiation")]:
-
-    sns.lineplot(
-        data=df, x="neg", y=util,
-        hue="mode", style="mode",
-        hue_order=order, style_order=order,
-        palette=palette, markers=marker_map, dashes=dash_map,
-        lw=2.5, markersize=8, estimator=None, ci=None,
-        ax=ax, legend=False)                         # ← suppress per-plot legends
-
-    ax.set_xticks(range(1, df["neg"].max() + 1))
+for util, ax, ttl in [("buyer_ss",axes[0],"Buyer surplus-share"),
+                      ("seller_ss",axes[1],"Seller surplus-share")]:
+    sns.lineplot(data=df, x="neg", y=util, hue="mode", style="mode",
+                 hue_order=order, style_order=order,
+                 palette=palette, markers=marker_map, dashes=dash_map,
+                 lw=2.5, markersize=8, estimator=None, ci=None,
+                 ax=ax, legend=False)
+    ax.set_xticks(range(1, df["neg"].max()+1))
     ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
     ax.set_xlabel("Negotiation #")
-    ax.set_ylabel("Utility")
-    ax.set_title(title)
+    ax.set_ylabel("Surplus share")
+    ax.set_title(ttl)
     ax.grid(alpha=.25)
 
-# -------- single legend to the right ---------------------------------------
+handles = [Line2D([],[], marker=marker_map[m],
+                  linestyle='-' if dash_map[m]=='' else (0,dash_map[m]),
+                  color=palette[m], lw=2.5, markersize=8,
+                  label=m.replace('_',' '))
+           for m in order]
+fig.legend(handles=handles, title="Mode", loc="center left",
+           bbox_to_anchor=(1.02,0.5), frameon=False)
+plt.subplots_adjust(right=0.82)
+plt.tight_layout()
+plt.savefig("deal_gym_surplus_share.png", dpi=300, bbox_inches="tight")
+
+# ---------- PLOT 2: moving-average private utilities -----------------------
+# ---------- moving-average private utilities (side-by-side) ----------------
+win = 3
+palette = {"no_reflect":"#4c72b0","buyer_reflect":"#dd8452",
+           "seller_reflect":"#55a868","both_reflect":"#c44e52"}
+marker_map = {"no_reflect":"o","buyer_reflect":"s",
+              "seller_reflect":"^","both_reflect":"D"}
+dash_map   = {"no_reflect":(1,0),"buyer_reflect":(2,2),
+              "seller_reflect":(4,2),"both_reflect":(1,1)}
+order = list(palette)
+
+df_ma = (df.sort_values("neg")
+           .groupby("mode", as_index=False)
+           .apply(lambda g: g.assign(
+               buyer_ma=g["buyer_priv"].rolling(win, min_periods=1).mean(),
+               seller_ma=g["seller_priv"].rolling(win, min_periods=1).mean()))
+           .reset_index(drop=True))
+
+df_ma["neg"] = df_ma["neg"].astype(int)        # clean integer x-axis
+
+fig4, (ax_b, ax_s) = plt.subplots(1, 2, figsize=(12, 4), sharey=False)
+for ax, col in [(ax_b, "buyer_ma"), (ax_s, "seller_ma")]:
+    lo, hi = df_ma[col].min(), df_ma[col].max()
+    pad = (hi - lo) * 0.15 if hi > lo else 0.05
+    ax.set_ylim(lo - pad, hi + pad)
+
+# ── buyer (left) ────────────────────────────────────────────────────────────
+sns.lineplot(data=df_ma, x="neg", y="buyer_ma", hue="mode",
+             palette=palette, markers=marker_map,
+             lw=2, markersize=6, estimator=None, ci=None,
+             ax=ax_b, legend=False)
+ax_b.set_xlabel("Negotiation #")
+ax_b.set_ylabel("Private util (MA)")
+ax_b.set_title(f"Buyer — {win}-run moving avg")
+ax_b.grid(alpha=.25)
+ax_b.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+ax_b.set_xticks(range(1, df["neg"].max() + 1))
+
+# ── seller (right) ─────────────────────────────────────────────────────────
+sns.lineplot(data=df_ma, x="neg", y="seller_ma", hue="mode",
+             palette=palette, markers=marker_map,
+             lw=2, markersize=6, estimator=None, ci=None,
+             ax=ax_s, legend=False)
+ax_s.set_xlabel("Negotiation #")
+ax_s.set_ylabel("Private util (MA)")     
+ax_s.set_title(f"Seller — {win}-run moving avg")
+ax_s.grid(alpha=.25)
+ax_s.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+ax_s.set_xticks(range(1, df["neg"].max() + 1))
+
+# ---- single legend to the right ------------------------------------------
 handles = [
-    Line2D([], [], marker=marker_map[m], linestyle='-' if dash_map[m]=='' else (0, dash_map[m]),
-           color=palette[m], markersize=8, lw=2.5, label=m.replace('_', ' '))
+    Line2D([], [], marker=marker_map[m],
+           linestyle=(0, dash_map[m]),          # <- always numeric tuple
+           color=palette[m], lw=2.5, markersize=8,
+           label=m.replace('_', ' '))
     for m in order
 ]
-fig.legend(handles=handles, title="Mode",
-           loc="center left", bbox_to_anchor=(1.02, 0.5),
-           frameon=False)
+fig4.legend(handles=handles, title="Mode",
+            loc="center left", bbox_to_anchor=(1.02, 0.5),
+            frameon=False)
 
-# give the legend room
-plt.subplots_adjust(right=0.82)        # 0.82 leaves ≈18 % width for legend
+plt.subplots_adjust(right=0.82)
 plt.tight_layout()
-plt.savefig("deal_gym_reflect_final.png", dpi=300, bbox_inches="tight")
+plt.savefig("deal_gym_private_utils.png", dpi=300, bbox_inches="tight")
 
-df.to_csv("deal_gym_reflect_final.csv", index=False)
+# ---------- save tables ----------------------------------------------------
+df.to_csv("deal_gym_runs.csv", index=False)
+
+summary = (df.groupby("mode")[["buyer_ss","seller_ss"]]
+           .mean()
+           .assign(total=lambda d: d["buyer_ss"]+d["seller_ss"])
+           .round(3))
+summary.to_csv("surplus_share_summary.csv")
+
+print("✓ Done — plots & CSVs saved.")
 
 # ── save system messages and final results ─────────────────────────────────
 with open("deal_gym_reflect_system_messages.json", "w") as f:
@@ -248,4 +281,3 @@ with open("deal_gym_reflect_system_messages.json", "w") as f:
 with open("deal_gym_reflect_transcripts.json", "w") as f:
     json.dump(all_transcripts, f, indent=2)
 print("✓ Done – results saved.")
-
