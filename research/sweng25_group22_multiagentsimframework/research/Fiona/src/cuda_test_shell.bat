@@ -1,1 +1,0 @@
-python cuda_test.py

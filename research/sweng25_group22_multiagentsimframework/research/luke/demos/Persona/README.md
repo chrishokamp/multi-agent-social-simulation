@@ -1,1 +1,0 @@
-A simple persona chatbot for learning about Ollama.
