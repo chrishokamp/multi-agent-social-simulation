@@ -31,7 +31,6 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center py-6">
           <div className="flex items-center">
             <a href="/">
-              <img src="../assets/quantexa-logo-white.svg" alt="logo" className="w-34 h-6" />
             </a>
           </div>
           <nav className="sm:flex hidden">
