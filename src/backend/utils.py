@@ -89,26 +89,3 @@ def client_for_endpoint(endpoint: str = None, api_key: str = None, model: str | 
         return OpenAI(
             api_key=api_key or os.environ["OPENAI_API_KEY"], timeout=CLIENT_TIMEOUT
         )
-    
-def get_autogen_client(model: str | None = None):
-        """Return a chat completion client for the current environment."""
-        if os.environ.get("OLLAMA_MODEL"):
-            logger.info("Using Ollama client for simulation.")
-            return OllamaChatCompletionClient(
-                model=os.environ.get("OLLAMA_MODEL"),
-                options={}  # TODO: make configurable
-            )
-        elif os.environ.get("AZURE_OPENAI_API_KEY"):
-            logger.info("Using Azure OpenAI client for simulation.")
-            return AzureOpenAIChatCompletionClient(
-                model=model or os.environ.get("AZURE_OPENAI_MODEL", "gpt-4o"),
-                azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-                api_key=os.environ["AZURE_OPENAI_API_KEY"],
-                api_version=os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1]
-            )
-        else:
-            logger.info("Using OpenAI client for simulation.")
-            return OpenAIChatCompletionClient(
-                model=model or os.environ.get("OPENAI_MODEL", "gpt-4o"),
-                api_key=os.environ["OPENAI_API_KEY"]
-            )
