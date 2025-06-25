@@ -11,9 +11,10 @@ import matplotlib.ticker as mticker
 from autogen import LLMConfig, ConversableAgent, GroupChat, GroupChatManager
 
 # ── LLM config (OpenAI or Azure) ────────────────────────────────────────────
+TEMPERATURE = 0.6
 def llm_cfg() -> LLMConfig:
     if os.getenv("OPENAI_API_KEY"):
-        return LLMConfig(model="gpt-4o-mini", temperature=0.7)
+        return LLMConfig(model="gpt-4o-mini", temperature=TEMPERATURE, max_tokens=2048)
     need = ("AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT")
     if not all(os.getenv(k) for k in need):
         sys.exit("Set OPENAI_API_KEY or the three AZURE_* variables.")
@@ -25,7 +26,8 @@ def llm_cfg() -> LLMConfig:
             "api_version": "2024-02-15-preview",
             "model": os.getenv("AZURE_OPENAI_DEPLOYMENT")
         }],
-        temperature=0.7,
+        temperature=TEMPERATURE,
+        max_tokens=2048,
     )
 LLM = llm_cfg()
 
@@ -36,9 +38,9 @@ if not CFG_PATH.exists():
     for i in range(20):
         ask   = random.randrange(900, 1400, 50)
         floor = ask - random.randint(100, 300)
-        budget_low  = floor + 25
-        budget_high = max(floor + 50, ask - random.randint(100, 200))
-        budget = random.randint(budget_low, budget_high)
+        budget_low  = floor + random.randint(25, 75)          
+        budget_high = ask   - random.randint(25, 75)          
+        budget = random.randint(budget_low, min(budget_high, ask - 25))
         cfgs.append(dict(id=i, item=f"Laptop-{i}",
                          seller_start=ask, seller_min=floor,
                          buyer_budget=budget))
@@ -100,11 +102,13 @@ for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
 
         buyer_msg = (f"You have ${cfg['buyer_budget']} for {cfg['item']}. Do not reveal your budget. "
                      "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
+                     "You MUST ALWAYS refuse any offer above your budget. \n"
                      + ("\nNegotiation strategies:\n" + "\n".join(buyer_bank)
                         if mode in ("buyer_reflect","both_reflect") else ""))
-        seller_msg = (f"You sell {cfg['item']}. Start at ${cfg['seller_start']} "
+        seller_msg = (f"You sell {cfg['item']}. ALWAYS start at ${cfg['seller_start']} "
                       f"and never go below ${cfg['seller_min']}. Do not reveal your floor price. "
                       "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
+                      "NEVER accept a price below your floor. \n"
                       + ("\nNegotiation strategies:\n" + "\n".join(seller_bank)
                          if mode in ("seller_reflect","both_reflect") else ""))
 
@@ -124,7 +128,7 @@ for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
             # max_turns=1,
         )
 
-        transcript = "\n".join(m["content"] for m in chat.messages)
+        transcript = "\n".join(m["name"] + ": " + m["content"] for m in chat.messages)
         if mode not in all_transcripts:
             all_transcripts[mode] = {}
         all_transcripts[mode][cfg["id"]] = transcript
@@ -186,6 +190,7 @@ for util, ax, ttl in [("buyer_ss",axes[0],"Buyer surplus-share"),
     ax.set_ylabel("Surplus share")
     ax.set_title(ttl)
     ax.grid(alpha=.25)
+    ax.tick_params(axis="x", rotation=35)
 
 handles = [Line2D([],[], marker=marker_map[m],
                   linestyle='-' if dash_map[m]=='' else (0,dash_map[m]),
@@ -197,6 +202,7 @@ fig.legend(handles=handles, title="Mode", loc="center left",
 plt.subplots_adjust(right=0.82)
 plt.tight_layout()
 plt.savefig("deal_gym_surplus_share.png", dpi=300, bbox_inches="tight")
+fig.savefig("deal_gym_surplus_share.pdf", bbox_inches="tight")  # vector
 
 # ---------- PLOT 2: moving-average private utilities -----------------------
 # ---------- moving-average private utilities (side-by-side) ----------------
@@ -212,8 +218,8 @@ order = list(palette)
 df_ma = (df.sort_values("neg")
            .groupby("mode", as_index=False)
            .apply(lambda g: g.assign(
-               buyer_ma=g["buyer_priv"].rolling(win, min_periods=1).mean(),
-               seller_ma=g["seller_priv"].rolling(win, min_periods=1).mean()))
+               buyer_ma=g["buyer_priv"].expanding().mean(),
+               seller_ma=g["seller_priv"].expanding().mean()))
            .reset_index(drop=True))
 
 df_ma["neg"] = df_ma["neg"].astype(int)        # clean integer x-axis
@@ -223,27 +229,27 @@ for ax, col in [(ax_b, "buyer_ma"), (ax_s, "seller_ma")]:
     lo, hi = df_ma[col].min(), df_ma[col].max()
     pad = (hi - lo) * 0.15 if hi > lo else 0.05
     ax.set_ylim(lo - pad, hi + pad)
-
+    ax.tick_params(axis="x", rotation=35)
 # ── buyer (left) ────────────────────────────────────────────────────────────
 sns.lineplot(data=df_ma, x="neg", y="buyer_ma", hue="mode",
-             palette=palette, markers=marker_map,
+             palette=palette, markers=marker_map, style="mode",
              lw=2, markersize=6, estimator=None, ci=None,
              ax=ax_b, legend=False)
 ax_b.set_xlabel("Negotiation #")
-ax_b.set_ylabel("Private util (MA)")
-ax_b.set_title(f"Buyer — {win}-run moving avg")
+ax_b.set_ylabel("Private util (CA)")
+ax_b.set_title("Buyer — cumulative average")
 ax_b.grid(alpha=.25)
 ax_b.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
 ax_b.set_xticks(range(1, df["neg"].max() + 1))
 
 # ── seller (right) ─────────────────────────────────────────────────────────
 sns.lineplot(data=df_ma, x="neg", y="seller_ma", hue="mode",
-             palette=palette, markers=marker_map,
+             palette=palette, markers=marker_map, style="mode",
              lw=2, markersize=6, estimator=None, ci=None,
              ax=ax_s, legend=False)
 ax_s.set_xlabel("Negotiation #")
-ax_s.set_ylabel("Private util (MA)")     
-ax_s.set_title(f"Seller — {win}-run moving avg")
+ax_s.set_ylabel("Private util (CA)")     
+ax_s.set_title("Seller — cumulative average")
 ax_s.grid(alpha=.25)
 ax_s.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
 ax_s.set_xticks(range(1, df["neg"].max() + 1))
@@ -251,7 +257,7 @@ ax_s.set_xticks(range(1, df["neg"].max() + 1))
 # ---- single legend to the right ------------------------------------------
 handles = [
     Line2D([], [], marker=marker_map[m],
-           linestyle=(0, dash_map[m]),          # <- always numeric tuple
+            #    linestyle=(0, dash_map[m]),          # <- always numeric tuple
            color=palette[m], lw=2.5, markersize=8,
            label=m.replace('_', ' '))
     for m in order
@@ -263,6 +269,7 @@ fig4.legend(handles=handles, title="Mode",
 plt.subplots_adjust(right=0.82)
 plt.tight_layout()
 plt.savefig("deal_gym_private_utils.png", dpi=300, bbox_inches="tight")
+fig4.savefig("deal_gym_private_utils.pdf",  bbox_inches="tight")   # vector
 
 # ---------- save tables ----------------------------------------------------
 df.to_csv("deal_gym_runs.csv", index=False)
