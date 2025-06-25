@@ -49,16 +49,17 @@ def sample_environment():
     """Sample environment data for testing."""
     return {
         "runs": [
-            (1, {
+            {
+                "run_id": 1,
                 "messages": [
                     {"agent": "TestBuyer", "message": "I'd like to buy this car for $40,000"},
                     {"agent": "TestSeller", "message": "I can do $48,000"},
                     {"agent": "TestBuyer", "message": "How about $45,000?"},
                     {"agent": "TestSeller", "message": "Deal!"}
                 ]
-            })
+            }
         ],
-        "outputs": {
+        "output_variables": {
             "final_price": 45000,
             "deal_reached": True
         }
