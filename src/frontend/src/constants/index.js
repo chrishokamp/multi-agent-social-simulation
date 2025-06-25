@@ -34,12 +34,6 @@ export const features = [
         icon: GrConfigure,
     },
     {
-        title: 'Simulation Renderer',
-        description:
-            'Visualize multi-agent interactions, including adversarial or partial-information scenarios.',
-        icon: FaImage,
-    },
-    {
         title: 'Analytics Dashboard',
         description:
             'Track performance metrics, outcome distributions, and refine your approach with continuous feedback.',
