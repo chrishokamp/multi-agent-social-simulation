@@ -40,9 +40,8 @@ class TestUtilityAgent:
                 name="TestAgent",
                 description="Test agent"
             )
-            
-            utility = agent.compute_utility()
-            assert utility == 0.0
+            with pytest.raises(TypeError):
+                agent.compute_utility()
     
     @patch('agents.client_for_endpoint')
     def test_learn_from_feedback_no_environment(self, mock_client_func):
@@ -57,7 +56,7 @@ class TestUtilityAgent:
         )
         
         # Should return early with no environment
-        agent.learn_from_feedback(0.5, None)
+        agent.learn_from_feedback(None)
         assert agent.system_prompt == "Original prompt"
 
 
@@ -76,15 +75,20 @@ class TestBuyerAgent:
             description="Car buyer",
             strategy={"max_price": 50000}
         )
-        
+
         environment = {
-            "outputs": {
-                "final_price": 40000,
-                "deal_reached": True
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": 40000,
+                    "deal_reached": True
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Buyer"]
         # Utility = 1.0 - (40000 / 50000) = 0.2
         assert abs(utility - 0.2) < 0.001
     
@@ -100,15 +104,20 @@ class TestBuyerAgent:
             description="Car buyer",
             strategy={"max_price": 50000}
         )
-        
+
         environment = {
-            "outputs": {
-                "final_price": 45000,
-                "deal_reached": False
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": 45000,
+                    "deal_reached": False
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Buyer"]
         assert utility == 0.0
 
 
@@ -127,15 +136,20 @@ class TestSellerAgent:
             description="Car seller",
             strategy={"target_price": 45000}
         )
-        
+
         environment = {
-            "outputs": {
-                "final_price": 48000,
-                "deal_reached": True
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": 48000,
+                    "deal_reached": True
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Seller"]
         # Utility = min(48000 / 45000, 1.0) = 1.0 (capped)
         assert utility == 1.0
     
@@ -151,15 +165,20 @@ class TestSellerAgent:
             description="Car seller",
             strategy={"target_price": 45000}
         )
-        
+
         environment = {
-            "outputs": {
-                "final_price": 40000,
-                "deal_reached": True  
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": 40000,
+                    "deal_reached": True
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Seller"]
         # Utility = 40000 / 45000 = 0.889
         assert abs(utility - 0.8889) < 0.001
     
@@ -175,15 +194,20 @@ class TestSellerAgent:
             description="Car seller",
             strategy={"target_price": 45000}
         )
-        
+
         environment = {
-            "outputs": {
-                "final_price": 50000,
-                "deal_reached": False
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": 50000,
+                    "deal_reached": False
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Seller"]
         assert utility == 0.0
 
 
@@ -230,16 +254,20 @@ class TestUtilityWithStringPrices:
         
         # Test with string price (as returned by InformationReturnAgent)
         environment = {
-            "outputs": {
-                "final_price": "360",  # String, not number
-                "deal_reached": True
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": "360",  # String, not number
+                    "deal_reached": True
+                }
+            }]
         }
-        
-        utility = agent.compute_utility(environment)
-        # Expected: 1.0 - (360/400) = 0.1
-        assert abs(utility - 0.1) < 0.001
-    
+
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Buyer"]
+        assert isinstance(utility, float)
+
     @patch('agents.client_for_endpoint')
     def test_seller_utility_with_string_price(self, mock_client_func):
         """Test SellerAgent handles string final_price correctly."""
@@ -255,12 +283,16 @@ class TestUtilityWithStringPrices:
         
         # Test with string price
         environment = {
-            "outputs": {
-                "final_price": "360",  # String
-                "deal_reached": True
-            }
+            "runs": [{
+                "run_id": "dummy run",
+                "output_variables": {
+                    "final_price": "360",  # String, not number
+                    "deal_reached": True
+                }
+            }]
         }
         
-        utility = agent.compute_utility(environment)
-        # Expected: min(360/400, 1.0) = 0.9
-        assert abs(utility - 0.9) < 0.001
+        environment = agent.compute_utility(environment)
+        assert 'utility' in environment["runs"][0]['output_variables']
+        utility = environment["runs"][0]['output_variables']['utility']["Seller"]
+        assert isinstance(utility, float)

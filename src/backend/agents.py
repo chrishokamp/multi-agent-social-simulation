@@ -51,7 +51,7 @@ class UtilityAgent(AssistantAgent, ABC):
 
     def compute_utility(
         self,
-        environment: Mapping[str, Any] | None = None,
+        environment: Mapping[str, Any],
     ) -> float:
         """
         Return a scalar utility measuring *this* agent’s satisfaction.
@@ -63,7 +63,7 @@ class UtilityAgent(AssistantAgent, ABC):
         """
         # Keep a reference so the agent can see its previous round later on
         self._last_environment = environment
-        return 0.0
+        return environment
 
     def learn_from_feedback(
         self,
@@ -176,6 +176,13 @@ class BuyerAgent(UtilityAgent):
     ) -> Mapping[str, Any]:
         if environment is None:
             environment = self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment  # no environment to learn from
+
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return environment  # no previous runs
+
         most_recent_run = environment["runs"][-1]
 
         if most_recent_run["output_variables"]["deal_reached"] is False:
@@ -200,6 +207,13 @@ class SellerAgent(UtilityAgent):
 
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment  # no environment to learn from
+
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return environment  # no previous runs
+
         most_recent_run = environment["runs"][-1]
 
         if most_recent_run["output_variables"]["deal_reached"] is False:
