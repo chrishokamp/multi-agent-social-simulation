@@ -2,6 +2,8 @@ import re
 import os
 import json
 import textwrap
+from pydantic import BaseModel, Field, ValidationError
+from typing import List, Dict, Any, Optional
 
 from autogen import (
     GroupChat,
@@ -21,6 +23,27 @@ _utility_class_registry = {
     "SellerAgent":  SellerAgent,
 }
 
+
+class SimulationRun(BaseModel):
+    run_id: str
+    output_variables: Dict[str, Any]
+    system_prompts: Optional[Dict[str, str]] = None
+    messages: Optional[List[Dict[str, str]]] = None
+
+
+class SimulationEnvironment(BaseModel):
+    runs: Optional[List[SimulationRun]] = []
+    config: Optional[dict] = None
+
+
+def validate_environment(env: dict) -> dict:
+    try:
+        SimulationEnvironment(**env)  # just validate
+        return env
+    except ValidationError as e:
+        raise ValueError(f"Invalid environment format: {e}")
+
+
 class SelectorGCSimulation:
     def __init__(self, config: dict, environment: dict, model: str | None = None):
         model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
@@ -29,7 +52,7 @@ class SelectorGCSimulation:
         self.min_messages = config.get("min_messages", 2)
         self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
-        self.environment = environment
+        self.environment = validate_environment(environment)
         self.environment["config"] = self.config
 
         logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
