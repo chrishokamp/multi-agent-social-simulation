@@ -19,12 +19,6 @@ export const navLinks = [
         icon: FaListUl,
     },
     {
-        id: 3,
-        name: 'Renderer',
-        href: '/renderer',
-        icon: FaImage,
-    },
-    {
         id: 4,
         name: 'Dashboard',
         href: '/dashboard',
