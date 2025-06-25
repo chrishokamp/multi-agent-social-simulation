@@ -6,7 +6,7 @@ from openai import OpenAI, AzureOpenAI
 
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
-from utils import create_logger, client_for_endpoint, get_autogen_client
+from utils import create_logger, client_for_endpoint
 
 
 class TestCreateLogger:
@@ -60,38 +60,6 @@ class TestClientForEndpoint:
         client, model_name = client_for_endpoint()
         assert isinstance(client, AzureOpenAI)
         assert model_name == "2024-02-01"
-
-
-class TestGetAutogenClient:
-    """Test autogen client creation."""
-    
-    @patch.dict(os.environ, {}, clear=True)
-    @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"})
-    def test_openai_autogen_client(self):
-        """Test OpenAI autogen client creation."""
-        from autogen_ext.models.openai import OpenAIChatCompletionClient
-        
-        client = get_autogen_client()
-        assert isinstance(client, OpenAIChatCompletionClient)
-    
-    @patch.dict(os.environ, {"OLLAMA_MODEL": "qwen3:4b"}, clear=True)
-    def test_ollama_autogen_client(self):
-        """Test Ollama autogen client creation."""
-        from autogen_ext.models.ollama import OllamaChatCompletionClient
-        
-        client = get_autogen_client()
-        assert isinstance(client, OllamaChatCompletionClient)
-    
-    @patch.dict(os.environ, {
-        "AZURE_OPENAI_API_KEY": "test-azure-key",
-        "AZURE_OPENAI_ENDPOINT": "https://test.openai.azure.com/openai/deployments/gpt-4/chat/completions?api-version=2024-02-01"
-    }, clear=True)
-    def test_azure_autogen_client(self):
-        """Test Azure OpenAI autogen client creation."""
-        from autogen_ext.models.openai import AzureOpenAIChatCompletionClient
-        
-        client = get_autogen_client()
-        assert isinstance(client, AzureOpenAIChatCompletionClient)
 
 
 class TestClientForEndpointLegacy:
