@@ -217,7 +217,7 @@ clean-frontend: ## Clean frontend artifacts
 .PHONY: venv
 venv: ## Create Python virtual environment
 	@echo "$(YELLOW)Creating virtual environment...$(NC)"
-	$(PYTHON) -m venv $(VENV)
+	$(PYTHON) -m venv $(VENV) --python=3.10
 	@echo "$(GREEN)Virtual environment created!$(NC)"
 	@echo "Activate with: source $(VENV)/bin/activate"
 
