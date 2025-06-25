@@ -149,7 +149,7 @@ _utility_class_registry["InnovatorAgent"] = InnovatorAgent
 _utility_class_registry["OpportunistAgent"] = OpportunistAgent
 simulation_config = json.load(
     open(
-        "../sweng25_group22_multiagentsimframework/configs/adversarial-information-theft.json"
+        "../../src/configs/adversarial-information-theft.json"
     )
 )
 simulation_id = f"sim_{random.randint(100000, 999999)}"
