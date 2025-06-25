@@ -235,33 +235,6 @@ class SelectorGCSimulation:
         
         group_chat_result = GroupChatResult(self.group_chat.messages)
         processed = self._process_result(group_chat_result)
-
-        # running_history: list[dict[str, str]] = []
-
-        # # async for event in self.group_chat.run_stream():
-        # async for event in self.manager.a_run_chat():
-        #     import ipdb; ipdb.set_trace()
-
-        #     # if type(event) == autogen_agentchat.base._task.TaskResult:
-        #     #     task_result = event
-        #     #     continue
-
-        #     if event.type == "message":
-        #         print(f"{event.source}: {event.content}", flush=True)
-        #     else:                       # join/leave/system events
-        #         print(event, flush=True)
-
-        #     running_history.append({"agent": event.source, "msg": event.content})
-
-
-        #     for ag in self.agents:
-        #         if ag.name == event.source:
-        #             # Skip reflection
-        #             if ag.name != "InformationReturnAgent":
-        #                 await ag.think_and_print(running_history)
-        #             break
-
-        # processed = self._process_result(task_result)
         
         self.environment.get("runs", []).append(processed)
         self.calculate_utility()
