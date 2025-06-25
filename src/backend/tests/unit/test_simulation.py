@@ -78,11 +78,11 @@ class TestSelectorGCSimulation:
         # Mock simulation result
         mock_result = Mock()
         mock_result.chat_history = [
-            Mock(source="Agent1", content="Hello"),
-            Mock(source="Agent2", content="Hi there"),
-            Mock(source="Agent1", content="How are you?"),
-            Mock(source="Agent2", content="I'm good"),
-            Mock(source="InformationReturnAgent", content='Final result: {"result": "success", "score": 85}')
+            {"name": "Agent1", "content": "Hello"},
+            {"name": "Agent2", "content": "Hi there"},
+            {"name": "Agent1", "content": "How are you?"},
+            {"name": "Agent2", "content": "I'm good"},
+            {"name": "InformationReturnAgent", "content": 'Final result: {"result": "success", "score": 85}'}
         ]
         
         with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
@@ -103,8 +103,8 @@ class TestSelectorGCSimulation:
         assert result["messages"][0]["agent"] == "Agent1"
         assert result["messages"][0]["message"] == "Hello"
         assert len(result["output_variables"]) == 2
-        assert result["output_variables"][0]["name"] == "result"
-        assert result["output_variables"][0]["value"] == "success"
+        assert "result" in result["output_variables"]
+        assert result["output_variables"]["result"] == "success"
     
     def test_process_result_too_few_messages(self):
         """Test result processing with too few messages."""
@@ -137,11 +137,11 @@ class TestSelectorGCSimulation:
         
         mock_result = Mock()
         mock_result.chat_history = [
-            Mock(source="Agent1", content="Hello"),
-            Mock(source="Agent2", content="Hi"),
-            Mock(source="Agent3", content="More chat"),
-            Mock(source="Agent4", content="Even more"),
-            Mock(source="InformationReturnAgent", content="Invalid JSON: {result: incomplete")
+            {"name": "Agent1", "content": "Hello"},
+            {"name": "Agent2", "content": "Hi"},
+            {"name": "Agent3", "content": "More chat"},
+            {"name": "Agent4", "content": "Even more"},
+            {"name": "InformationReturnAgent", "content": "Invalid JSON: {result: incomplete"}
         ]
         
         with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
@@ -156,8 +156,16 @@ class TestSelectorGCSimulation:
                 "termination_condition": "done"
             }, {})
             result = sim._process_result(mock_result)
+
+        expected = {
+            'messages': [{'agent': 'Agent1', 'message': 'Hello'}, {'agent': 'Agent2', 'message': 'Hi'}, {'agent': 'Agent3', 'message': 'More chat'}, {'agent': 'Agent4', 'message': 'Even more'}, {'agent': 'InformationReturnAgent', 'message': 'Invalid JSON: {result: incomplete'}], 
+            'output_variables': {}, 
+            'run_id': '717f762a-8a0d-4eeb-92d8-a4efe65e30a4', 
+            'system_prompts': {'Agent1': 'You are agent 1', 'Agent2': 'You are agent 2', 'InformationReturnAgent': 'test'}
+        }
         
-        assert result is None
+        assert all(key in result for key in expected.keys())
+        assert result["output_variables"] == {}
     
     def test_process_result_handles_none_values(self):
         """Test result processing handles None and Unspecified values."""
@@ -165,11 +173,11 @@ class TestSelectorGCSimulation:
         
         mock_result = Mock()
         mock_result.chat_history = [
-            Mock(source="Agent1", content="Hello"),
-            Mock(source="Agent2", content="Hi"),
-            Mock(source="Agent3", content="More"),
-            Mock(source="Agent4", content="Even more"),
-            Mock(source="InformationReturnAgent", content='{"result": null, "score": "Unspecified", "final": "done"}')
+            {"name": "Agent1", "content": "Hello"},
+            {"name": "Agent2", "content": "Hi"},
+            {"name": "Agent3", "content": "More"},
+            {"name": "Agent4", "content": "Even more"},
+            {"name": "InformationReturnAgent", "content": '{"result": null, "score": "Unspecified", "final": "done"}'}
         ]
         
         with patch('builtins.open', new_callable=mock_open, read_data='{"name": "InformationReturnAgent", "description": "Test", "prompt": "test"}'), \
@@ -188,7 +196,7 @@ class TestSelectorGCSimulation:
         assert result is not None
         assert len(result["output_variables"]) == 3
         # Check that None and "Unspecified" are both converted to "Unspecified"
-        values = [var["value"] for var in result["output_variables"]]
+        values = [v for v in result["output_variables"].values()]
         assert "Unspecified" in values
         assert None not in values
     
@@ -296,8 +304,8 @@ class TestSelectorGCSimulation:
             
             # Verify output variables were extracted correctly
             assert len(result["output_variables"]) == 1
-            assert result["output_variables"][0]["name"] == "price"
-            assert result["output_variables"][0]["value"] == 100
+            assert "price" in result["output_variables"]
+            assert result["output_variables"]["price"] == 100
 
     def test_process_result_with_group_chat_result(self):
         """Test that _process_result works with GroupChatResult (the fix for the bug)."""
@@ -349,7 +357,7 @@ class TestSelectorGCSimulation:
             
             # Verify output variables were extracted
             assert len(result["output_variables"]) == 3
-            output_dict = {var["name"]: var["value"] for var in result["output_variables"]}
+            output_dict = {k: v for k, v in result["output_variables"].items()}
             assert output_dict["final_price"] == 375
             assert output_dict["deal_reached"] is True
             assert output_dict["negotiation_rounds"] == 3

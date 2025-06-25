@@ -17,7 +17,7 @@ import sys
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR / "src" / "backend"))
 
-from engine.logged_simulation import LoggedSelectorGCSimulation
+from engine.simulation import SelectorGCSimulation
 from logging_framework.reporters import HTMLReporter, PDFReporter
 from logging_framework.visualization import SimulationVisualizer
 from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
@@ -25,17 +25,13 @@ from logging_framework.enhanced_visualization import EnhancedSimulationVisualize
 dotenv.load_dotenv()
 
 
-async def run_once(config: dict, environment: dict, max_messages: int, 
-                   min_messages: int, model: str | None = None, 
-                   log_dir: Path | None = None):
+async def run_once(config: dict, environment: dict, model: str | None = None, log_dir: Path = None):
     """Run a single simulation with logging."""
-    sim = LoggedSelectorGCSimulation(
+    sim = SelectorGCSimulation(
         config,
         environment=environment,
-        max_messages=max_messages,
-        min_messages=min_messages,
         model=model,
-        log_dir=log_dir,
+        log_dir=log_dir
     )
     result = await sim.run()
     return result, sim
@@ -89,7 +85,7 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         run_log_dir = output_dir / f"run_{run_idx:03d}"
         
         result, sim = asyncio.run(
-            run_once(config, environment, max_messages, min_messages, model, run_log_dir)
+            run_once(config, environment, model, log_dir=run_log_dir)
         )
         
         if not result:
@@ -110,7 +106,7 @@ def main(config_path: Path, max_messages: int, min_messages: int,
             }
         else:
             pprint(result)
-            outputs = {var["name"]: var["value"] for var in result["output_variables"]}
+            outputs = result["output_variables"]
         
         # Calculate utilities for each agent
         agent_utilities = {}
@@ -118,7 +114,7 @@ def main(config_path: Path, max_messages: int, min_messages: int,
             if hasattr(agent, 'compute_utility'):
                 utility = agent.compute_utility({"outputs": outputs})
                 agent_utilities[agent.name] = utility
-                print(f"{agent.name} utility: {utility:.4f}")
+                print(f"{agent.name} utility: {utility}")
                 
                 # Log the final utility to the simulation logger
                 if hasattr(sim, 'logger'):
@@ -134,9 +130,6 @@ def main(config_path: Path, max_messages: int, min_messages: int,
             "utilities": agent_utilities,
             "log_dir": str(run_log_dir)
         })
-
-        environment["runs"].append((run_idx, {"messages": result["messages"]}))
-        environment["outputs"] = outputs
 
         # persist improved prompts for next run
         for agent in sim.agents:

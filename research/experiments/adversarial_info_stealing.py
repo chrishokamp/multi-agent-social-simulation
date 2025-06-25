@@ -1,7 +1,10 @@
 import sys
 import json
 
-sys.path.append("../sweng25_group22_multiagentsimframework/backend/src")
+import pathlib, sys, types, os
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT))
+sys.path.append(str(ROOT / "src" / "backend"))
 from agents import UtilityAgent
 from orchestrator.simulation_orchestrator import run_all_runs
 from engine.simulation import _utility_class_registry
@@ -45,6 +48,8 @@ class OpportunistAgent(UtilityAgent):
 
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment
         run = environment["runs"][-1]
 
         transcript = run["messages"]
@@ -97,6 +102,8 @@ class InnovatorAgent(UtilityAgent):
     
     def compute_utility(self, environment: Mapping[str, Any]) -> Mapping[str, Any]:
         environment = environment or self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment
         run = environment["runs"][-1]
 
         # reaching into the environment to get the Opportunist's extracted ideas
@@ -146,7 +153,7 @@ _utility_class_registry["InnovatorAgent"] = InnovatorAgent
 _utility_class_registry["OpportunistAgent"] = OpportunistAgent
 simulation_config = json.load(
     open(
-        "../sweng25_group22_multiagentsimframework/configs/adversarial-information-theft.json"
+        "../../src/configs/adversarial-information-theft.json"
     )
 )
 simulation_id = f"sim_{random.randint(100000, 999999)}"

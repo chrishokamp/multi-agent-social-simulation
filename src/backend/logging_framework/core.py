@@ -86,7 +86,7 @@ class AgentLogger:
                 environment_state=environment_state or {}
             )
             self.utility_history.append(snapshot)
-            self.logger.info(f"Utility logged: Round {round_number} - Value {utility_value:.4f}")
+            self.logger.info(f"Utility logged: Round {round_number} - Value {utility_value}")
     
     def get_utility_trend(self) -> List[Tuple[int, float]]:
         """Get utility values over rounds."""
