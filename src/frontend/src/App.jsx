@@ -10,7 +10,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Configurator />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/:simulationId" element={<Dashboard />} />
         <Route path="/configurator" element={<Configurator />} />
