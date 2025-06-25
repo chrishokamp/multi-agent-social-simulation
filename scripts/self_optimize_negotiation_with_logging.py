@@ -25,12 +25,13 @@ from logging_framework.enhanced_visualization import EnhancedSimulationVisualize
 dotenv.load_dotenv()
 
 
-async def run_once(config: dict, environment: dict, model: str | None = None):
+async def run_once(config: dict, environment: dict, model: str | None = None, log_dir: Path = None):
     """Run a single simulation with logging."""
     sim = SelectorGCSimulation(
         config,
         environment=environment,
         model=model,
+        log_dir=log_dir
     )
     result = await sim.run()
     return result, sim
@@ -84,7 +85,7 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         run_log_dir = output_dir / f"run_{run_idx:03d}"
         
         result, sim = asyncio.run(
-            run_once(config, environment, model)
+            run_once(config, environment, model, log_dir=run_log_dir)
         )
         
         if not result:

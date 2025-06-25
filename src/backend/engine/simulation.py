@@ -2,9 +2,11 @@ import re
 import os
 import json
 import textwrap
-from pydantic import BaseModel, Field, ValidationError
+import uuid
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from pydantic import BaseModel, ValidationError
 from autogen import (
     GroupChat,
     GroupChatManager,
@@ -12,9 +14,9 @@ from autogen import (
     LLMConfig,
 )
 from agents import UtilityAgent, BuyerAgent, SellerAgent
-import uuid
-
 from utils import create_logger, client_for_endpoint
+from logging_framework.core import SimulationLogger
+
 logger = create_logger(__name__)
 
 _utility_class_registry = {
@@ -45,7 +47,13 @@ def validate_environment(env: dict) -> dict:
 
 
 class SelectorGCSimulation:
-    def __init__(self, config: dict, environment: dict, model: str | None = None):
+    def __init__(
+        self,
+        config: dict,
+        environment: dict,
+        model: Optional[str] = None,
+        log_dir: Optional[Path] = None,
+    ):
         model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
         self.config = config
         self.llm_config = LLMConfig(api_type="openai", model=model_name)
@@ -55,10 +63,22 @@ class SelectorGCSimulation:
         self.environment = validate_environment(environment)
         self.environment["config"] = self.config
 
-        logger.info(f"Initializing SelectorGCSimulation with config: {self.config}")
+        logger.info(f"Initializing SelectorGCSimulation {self.run_id} with config: {self.config}")
 
-        self.config_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
-        
+        # set up SimulationLogger
+        self.sim_logger = SimulationLogger(self.run_id, log_dir)
+        simulation_info = {
+            "simulation_id": self.run_id,
+            "config": self.config,
+            "model": model_name,
+            "max_messages": self.max_messages,
+            "min_messages": self.min_messages,
+        }
+        # persist simulation metadata
+        with open(self.sim_logger.log_dir / "simulation_info.json", "w") as f:
+            json.dump(simulation_info, f, indent=2)
+
+        # registry for variable types
         type_mapping = {
             "String": "STRING",
             "Number": "NUMBER",
@@ -69,48 +89,42 @@ class SelectorGCSimulation:
             "Dict": "DICT",
         }
 
-        # inject InformationReturnAgent into config
-        if not any(agent["name"] == "InformationReturnAgent" for agent in self.config["agents"]):
-            # check if InformationReturnAgent is there already
-            with open(os.path.join(self.config_directory, "InformationReturnAgent.json"), "r", encoding="utf-8") as file:
-                information_return_agent = json.load(file)
-                information_return_agent["prompt"] = information_return_agent["prompt"].format(
-                    output_variables_str = (
-                        '{\n' + ",\n".join([
-                            f'"{v["name"]}": "{type_mapping.get(v["type"], "UNKNOWN_TYPE")}"'
-                            for v in self.config["output_variables"]
-                        ]) + '\n}'
-                    ),
-                    termination_condition=self.config.get("termination_condition", "TERMINATE")
-                )
-                self.config["agents"].append(information_return_agent)
+        # inject InformationReturnAgent if missing
+        if not any(a["name"] == "InformationReturnAgent" for a in self.config["agents"]):
+            config_dir = Path(__file__).resolve().parents[1] / "config"
+            with open(config_dir / "InformationReturnAgent.json", "r", encoding="utf-8") as file:
+                ira = json.load(file)
+            ira["prompt"] = ira["prompt"].format(
+                output_variables_str=(
+                    "{\n"
+                    + ",\n".join(
+                        f'"{v["name"]}": "{type_mapping.get(v["type"], "UNKNOWN_TYPE")}"'
+                        for v in self.config["output_variables"]
+                    )
+                    + "\n}"
+                ),
+                termination_condition=self.config.get("termination_condition", "TERMINATE"),
+            )
+            self.config["agents"].append(ira)
 
-        # initialize agents
+        # build agent instances
         self.agents = []
-        for agent_config in self.config["agents"]:
-            cls_name   = agent_config.get("utility_class", "UtilityAgent")
+        for agent_cfg in self.config["agents"]:
+            cls_name = agent_cfg.get("utility_class", "UtilityAgent")
             AgentClass = _utility_class_registry[cls_name]
-
             ag = AgentClass(
-                system_prompt=agent_config["prompt"],
-                name=agent_config["name"],
-                description=agent_config["description"],
+                system_prompt=agent_cfg["prompt"],
+                name=agent_cfg["name"],
+                description=agent_cfg["description"],
                 llm_config=self.llm_config,
-                strategy=agent_config.get("strategy"),
+                strategy=agent_cfg.get("strategy"),
                 model=model or self.config.get("model"),
                 optimization_prompt=config.get("optimization_prompt")
             )
-
-            if len(self.environment.get("runs", [])) > 0:
-                # we have >=1 runs to learn from
-                if agent_config.get("self_improve", False):
-                    ag.learn_from_feedback(self.environment)
-
+            # allow self-improvement from prior runs
+            if self.environment.get("runs") and agent_cfg.get("self_improve", False):
+                ag.learn_from_feedback(self.environment)
             self.agents.append(ag)
-
-        # initialize group chat
-        with open(os.path.join(self.config_directory, "selector_prompt.txt"), "r", encoding="utf-8") as file:
-            selector_prompt = file.read()
 
         self.group_chat = GroupChat(
             agents=self.agents,
@@ -121,8 +135,28 @@ class SelectorGCSimulation:
         self.manager = GroupChatManager(
             groupchat=self.group_chat,
             llm_config=self.llm_config,
-            is_termination_msg=lambda m: "TERMINATE" in (m.get("content", "").upper()),
+            is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper(),
         )
+
+        # wire up detailed per-agent logging
+        self._setup_agent_logging()
+
+    def _setup_agent_logging(self):
+        """Attach a SimulationLogger per agent and record init utilities/actions."""
+        for agent in self.agents:
+            ag_logger = self.sim_logger.get_agent_logger(agent.name)
+            agent._logger = ag_logger
+
+            # log initial utility if supported
+            if hasattr(agent, "compute_utility"):
+                init_util = agent.compute_utility(self.environment.get("config", {}))
+                ag_logger.log_utility(0, init_util, self.environment.get("config", {}))
+
+            # log creation
+            ag_logger.log_action(
+                "initialization",
+                f"Agent {agent.name} initialized with strategy: {getattr(agent, 'strategy', {})}"
+            )
 
     def force_info_return(
         self,
@@ -176,41 +210,59 @@ class SelectorGCSimulation:
         return output_variables
 
     def _process_result(self, simulation_result):
+        """Process chat history, extract variables, compute utilities, log everything."""
+        # round counter
+        current_round = 0
+
         if len(simulation_result.chat_history) < self.min_messages:
-            logger.warning(f"Simulation result has too few messages: {len(simulation_result.chat_history)} < {self.min_messages}")
+            self.sim_logger.logger.warning(
+                f"Chat history too short: {len(simulation_result.chat_history)} < {self.min_messages}"
+            )
+            self.sim_logger.save_logs()
             return None
 
-        systems_prompts = {ag.name: ag.system_prompt for ag in self.agents}
-
+        # log each message and agent action
         messages = []
-        for message in simulation_result.chat_history:
-            messages.append({"agent": message["name"], "message": message["content"]})
+        for idx, msg in enumerate(simulation_result.chat_history):
+            if idx > 0 and idx % len(self.agents) == 0:
+                current_round += 1
+                self.sim_logger.increment_round()
 
-        output_variables = []
-        last_message = messages[-1]
-        if last_message["agent"] == "InformationReturnAgent":
-            output_variables = self.parse_ira_message(last_message["message"], output_variables)
+            agent_name = msg["name"]
+            content = msg["content"]
+            messages.append({"agent": agent_name, "message": content})
+
+            self.sim_logger.log_message(agent_name, content, {"round": current_round})
+            for ag in self.agents:
+                if ag.name == agent_name and hasattr(ag, "_logger"):
+                    ag._logger.log_action("message", content, {"round": current_round})
+                    break
+
+        # extract output variables
+        output_vars: List[Dict[str, Any]] = []
+        last = messages[-1]
+        if last["agent"] == "InformationReturnAgent":
+            output_vars = self.parse_ira_message(last["message"], output_vars)
         else:
-            logger.warning("Last message is not from InformationReturnAgent, forcing information return.")
-            output_variables = self.force_info_return(
+            self.sim_logger.logger.warning("Last message not from IRA, forcing info return")
+            output_vars = self.force_info_return(
                 messages=messages,
                 output_variables=self.config["output_variables"]
             )
 
-        logger.info(f"Processed output variables: {output_variables}")
-        
-        processed = {
+        # log metrics for each variable
+        for var in output_vars:
+            if var["value"] not in (None, "Unspecified"):
+                self.sim_logger.metrics.record(var["name"], var["value"])
+
+        # persist and return
+        self.sim_logger.save_logs()
+        return {
             "run_id": self.run_id,
-            "system_prompts": systems_prompts,
+            "system_prompts": {ag.name: ag.system_prompt for ag in self.agents},
             "messages": messages,
-            "output_variables": {
-                v["name"]: v["value"] 
-                for v in output_variables
-            }
+            "output_variables": {v["name"]: v["value"] for v in output_vars},
         }
-
-        return processed
-
     def calculate_utility(self) -> None:
         for ag in self.agents:
             if len(self.environment.get("runs", [])) > 0:
@@ -218,9 +270,18 @@ class SelectorGCSimulation:
                 self.environment = ag.compute_utility(self.environment)
 
     async def run(self):
-        starter = ConversableAgent(
-            "starter", llm_config=self.llm_config, human_input_mode="NEVER"
-        )
+        """Run the simulation, logging at start and completion."""
+        self.sim_logger.logger.info(f"Starting simulation {self.run_id}")
+
+        # pre-conversation log
+        for ag in self.agents:
+            if hasattr(ag, "_logger"):
+                ag._logger.log_action(
+                    "pre_conversation",
+                    f"System prompt: {ag.system_prompt[:200]}..."
+                )
+
+        starter = ConversableAgent("starter", llm_config=self.llm_config, human_input_mode="NEVER")
         chat_result = await starter.a_initiate_chat(
             recipient=self.manager,
             message="Begin",
