@@ -1,1 +1,0 @@
-ncu --set full --target-processes all -f -o NCU_Output %*

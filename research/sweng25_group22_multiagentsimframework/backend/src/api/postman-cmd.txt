@@ -1,3 +1,0 @@
-# This is the command to generate a postman file for the flask api
-
-flask2postman -b http://localhost:5000 api.app.app > gfg_postman.json
