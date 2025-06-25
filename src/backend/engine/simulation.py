@@ -12,7 +12,7 @@ from autogen import (
 from agents import UtilityAgent, BuyerAgent, SellerAgent
 import uuid
 
-from utils import create_logger, get_autogen_client, client_for_endpoint
+from utils import create_logger, client_for_endpoint
 logger = create_logger(__name__)
 
 _utility_class_registry = {
@@ -58,7 +58,7 @@ class SelectorGCSimulation:
                             for v in self.config["output_variables"]
                         ]) + '\n}'
                     ),
-                    termination_condition=self.config["termination_condition"]
+                    termination_condition=self.config.get("termination_condition", "TERMINATE")
                 )
                 self.config["agents"].append(information_return_agent)
 
@@ -78,7 +78,7 @@ class SelectorGCSimulation:
                 optimization_prompt=config.get("optimization_prompt")
             )
 
-            if len(self.environment["runs"]) > 0:
+            if len(self.environment.get("runs", [])) > 0:
                 # we have >=1 runs to learn from
                 if agent_config.get("self_improve", False):
                     ag.learn_from_feedback(self.environment)
@@ -140,7 +140,10 @@ class SelectorGCSimulation:
 
     def parse_ira_message(self, information_return_agent_message: str, output_variables: list[dict[str, str]]) -> None:
         json_match = re.search(r'\{.*\}', information_return_agent_message, re.DOTALL)
-        parsed_json = json.loads(json_match.group(0))
+        if json_match is None:
+            parsed_json = [None] * len(output_variables)
+        else:
+            parsed_json = json.loads(json_match.group(0))
         for variable in parsed_json:
             # Handle both None and "Unspecified" values
             value = parsed_json[variable]
@@ -187,7 +190,7 @@ class SelectorGCSimulation:
 
     def calculate_utility(self) -> None:
         for ag in self.agents:
-            if len(self.environment["runs"]) > 0:
+            if len(self.environment.get("runs", [])) > 0:
                 # we have >=1 runs to learn from
                 self.environment = ag.compute_utility(self.environment)
 
@@ -237,7 +240,7 @@ class SelectorGCSimulation:
 
         # processed = self._process_result(task_result)
         
-        self.environment["runs"].append(processed)
+        self.environment.get("runs", []).append(processed)
         self.calculate_utility()
 
         # if processed:
