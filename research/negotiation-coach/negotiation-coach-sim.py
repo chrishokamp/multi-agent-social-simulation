@@ -11,7 +11,7 @@ import matplotlib.ticker as mticker
 from autogen import LLMConfig, ConversableAgent, GroupChat, GroupChatManager
 
 # ── LLM config (OpenAI or Azure) ────────────────────────────────────────────
-TEMPERATURE = 0.6
+TEMPERATURE = 0.5
 def llm_cfg() -> LLMConfig:
     if os.getenv("OPENAI_API_KEY"):
         return LLMConfig(model="gpt-4o-mini", temperature=TEMPERATURE, max_tokens=2048)
@@ -77,7 +77,9 @@ def reflect(role: str, transcript: str, cfg: dict,
             "You are a seasoned negotiation coach.\n"
             f"Previous strategies:\n- " + "\n- ".join(prev_strats) + "\n"
             "Analyse the transcript and devise exactly ONE new strategy "
-            f"sentence the {role.lower()} could apply in a *future* negotiation.\n"
+            f"sentence the {role.lower()} could apply in a *future* negotiation to get a better price.\n"
+            "If neither party uttered 'Yes, deal!', that means no deal was reached. "
+            "In that case, focus on how to reach a good deal faster next time.\n"
             "Start with an action verb and do NOT duplicate prior strategies. "
             "Do NOT mention specific prices, names or budgets from the dialogue.\n"
             f"{brief}\n."
@@ -103,12 +105,14 @@ for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
         buyer_msg = (f"You have ${cfg['buyer_budget']} for {cfg['item']}. Do not reveal your budget. "
                      "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
                      "You MUST ALWAYS refuse any offer above your budget. \n"
+                     "Goal: secure the best possible price for yourself **while following every rule above**.\n"
                      + ("\nNegotiation strategies:\n" + "\n".join(buyer_bank)
                         if mode in ("buyer_reflect","both_reflect") else ""))
         seller_msg = (f"You sell {cfg['item']}. ALWAYS start at ${cfg['seller_start']} "
                       f"and never go below ${cfg['seller_min']}. Do not reveal your floor price. "
                       "Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. "
                       "NEVER accept a price below your floor. \n"
+                      "Goal: secure the best possible price for yourself **while following every rule above**.\n"
                       + ("\nNegotiation strategies:\n" + "\n".join(seller_bank)
                          if mode in ("seller_reflect","both_reflect") else ""))
 
@@ -119,7 +123,7 @@ for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
         chat = GroupChat(
             agents=[seller, buyer],
             speaker_selection_method="round_robin",
-            max_round=10,                # hard cap if no deal
+            max_round=20,                # hard cap if no deal
         )
         mgr = GroupChatManager(groupchat=chat, llm_config=LLM)
         seller.initiate_chat(
@@ -190,7 +194,7 @@ for util, ax, ttl in [("buyer_ss",axes[0],"Buyer surplus-share"),
     ax.set_ylabel("Surplus share")
     ax.set_title(ttl)
     ax.grid(alpha=.25)
-    ax.tick_params(axis="x", rotation=35)
+    ax.tick_params(axis="x", labelsize=6)
 
 handles = [Line2D([],[], marker=marker_map[m],
                   linestyle='-' if dash_map[m]=='' else (0,dash_map[m]),
@@ -229,7 +233,7 @@ for ax, col in [(ax_b, "buyer_ma"), (ax_s, "seller_ma")]:
     lo, hi = df_ma[col].min(), df_ma[col].max()
     pad = (hi - lo) * 0.15 if hi > lo else 0.05
     ax.set_ylim(lo - pad, hi + pad)
-    ax.tick_params(axis="x", rotation=35)
+    ax.tick_params(axis="x", labelsize=6)
 # ── buyer (left) ────────────────────────────────────────────────────────────
 sns.lineplot(data=df_ma, x="neg", y="buyer_ma", hue="mode",
              palette=palette, markers=marker_map, style="mode",
@@ -273,6 +277,7 @@ fig4.savefig("deal_gym_private_utils.pdf",  bbox_inches="tight")   # vector
 
 # ---------- save tables ----------------------------------------------------
 df.to_csv("deal_gym_runs.csv", index=False)
+df_ma.to_csv("deal_gym_runs_ma.csv", index=False)
 
 summary = (df.groupby("mode")[["buyer_ss","seller_ss"]]
            .mean()
