@@ -3,7 +3,7 @@ from matplotlib.lines import Line2D
 
 # --- 1. load the two result files -------------------------------------------
 df20 = pd.read_csv("run-max-rounds-20/surplus_share_summary.csv")   
-df10 = pd.read_csv("run-max-rounds-20/surplus_share_summary.csv")
+df10 = pd.read_csv("run-max-rounds-10/surplus_share_summary.csv")
 
 # ---- 2. style maps (same as earlier figures) --------------------------------
 palette = {"both_reflect":"#c44e52",
@@ -25,12 +25,12 @@ def scatter_frontier(ax, df, title):
         ax.scatter(r["buyer_ss"], r["seller_ss"],
                    s=110, marker=marker_map[m],
                    color=palette[m], label=m)  # label for legend handles
-        ax.text(r["buyer_ss"] + 0.015, r["seller_ss"] - 0.03,
-                m.replace("_", " "), fontsize=8,
-                color=palette[m])
+        # ax.text(r["buyer_ss"] + 0.015, r["seller_ss"] - 0.03,
+        #         m.replace("_", " "), fontsize=8,
+        #         color=palette[m])
     ax.set_title(title)
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
-    ax.set_xlabel("Buyer surplus share")
+    ax.set_xlabel("Average buyer surplus share")
     ax.grid(alpha=.25)
     return frontier  # return the line handle to add to legend
 
@@ -42,7 +42,7 @@ line_handle = scatter_frontier(ax20, df20, "20-turn")
 scatter_frontier(ax10, df10, "10-turn")
 
 # y-axis label on the left panel
-ax20.set_ylabel("Seller surplus share")
+ax20.set_ylabel("Average seller surplus share")
 
 # ---- 5. custom legend (dots + frontier) -------------------------------------
 dot_handles = [
