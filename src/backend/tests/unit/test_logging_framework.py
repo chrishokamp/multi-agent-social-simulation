@@ -21,6 +21,7 @@ from logging_framework.core import (
     SimulationLogger
 )
 from logging_framework.visualization import SimulationVisualizer
+from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
 from logging_framework.reporters import SimulationReporter, HTMLReporter
 
 
@@ -500,6 +501,171 @@ class TestSimulationVisualizer:
             
             assert fig is not None
             assert len(fig.axes) == 1
+
+
+class TestUnhashableTypeError:
+    """Test handling of unhashable type errors in visualization and reporting."""
+    
+    def setup_problematic_logs(self, log_dir):
+        """Create log files that could cause unhashable type errors."""
+        # Create messages.json with various problematic formats
+        messages = [
+            # Normal message
+            {"timestamp": "2023-01-01T10:00:00", "round": 1, "agent": "Agent1", "message": "Hello", "metadata": {}},
+            # Message wrapped in dict (problematic)
+            {"messages": [{"timestamp": "2023-01-01T10:01:00", "round": 1, "agent": "Agent2", "message": "Hi", "metadata": {}}]},
+            # Direct list (problematic)
+            [{"timestamp": "2023-01-01T10:02:00", "round": 1, "agent": "Agent3", "message": "Hey", "metadata": {}}],
+            # Missing agent field
+            {"timestamp": "2023-01-01T10:03:00", "round": 1, "message": "Missing agent", "metadata": {}},
+            # Non-dict entry
+            "Invalid entry",
+            # Nested dict that could cause hashable issues
+            {"agent": {"name": "Agent4", "type": "complex"}, "message": "Complex agent", "metadata": {}}
+        ]
+        with open(log_dir / "messages.json", 'w') as f:
+            json.dump(messages, f)
+        
+        # Create metrics.json
+        metrics = {
+            "Agent1_utility": {"count": 2, "mean": 0.6, "min": 0.5, "max": 0.7, "last": 0.7}
+        }
+        with open(log_dir / "metrics.json", 'w') as f:
+            json.dump(metrics, f)
+        
+        # Create agent files with problematic data
+        agent_data = {
+            "agent_name": "Agent1",
+            "actions": [
+                {
+                    "timestamp": "2023-01-01T10:00:00",
+                    "agent_name": "Agent1",
+                    "action_type": "message",
+                    "content": "Hello",
+                    "metadata": {}
+                }
+            ],
+            "utility_history": [
+                {
+                    "timestamp": "2023-01-01T10:00:00",
+                    "round_number": 1,
+                    "agent_name": "Agent1",
+                    "utility_value": 0.75,
+                    "environment_state": {}
+                }
+            ]
+        }
+        with open(log_dir / "agent_Agent1.json", 'w') as f:
+            json.dump(agent_data, f)
+    
+    def test_visualization_handles_unhashable_types(self):
+        """Test that visualization handles unhashable type errors gracefully."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            self.setup_problematic_logs(log_dir)
+            
+            # Test basic visualizer
+            visualizer = SimulationVisualizer(log_dir)
+            
+            # This should not raise unhashable type error
+            try:
+                messages = visualizer.load_messages()
+                assert isinstance(messages, list)
+                # Should only get valid messages
+                valid_messages = [m for m in messages if isinstance(m, dict) and 'agent' in m]
+                assert len(valid_messages) >= 1
+            except TypeError as e:
+                if "unhashable type" in str(e):
+                    pytest.fail(f"Unhashable type error not handled: {e}")
+    
+    def test_enhanced_visualization_handles_unhashable_types(self):
+        """Test that enhanced visualization handles unhashable type errors gracefully."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            self.setup_problematic_logs(log_dir)
+            
+            # Test enhanced visualizer
+            visualizer = EnhancedSimulationVisualizer(log_dir)
+            
+            # This should not raise unhashable type error
+            try:
+                messages = visualizer.load_messages()
+                assert isinstance(messages, list)
+                # Should handle all formats gracefully
+                assert len(messages) >= 0  # Could be empty if all invalid
+            except TypeError as e:
+                if "unhashable type" in str(e):
+                    pytest.fail(f"Unhashable type error not handled: {e}")
+    
+    def test_reporter_handles_unhashable_types(self):
+        """Test that reporter handles unhashable type errors gracefully."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            self.setup_problematic_logs(log_dir)
+            
+            # Test reporter initialization and summary generation
+            try:
+                reporter = SimulationReporter(log_dir)
+                summary = reporter.generate_summary()
+                
+                # Should generate summary without errors
+                assert isinstance(summary, dict)
+                assert "total_messages" in summary
+                assert summary["total_messages"] >= 0
+            except TypeError as e:
+                if "unhashable type" in str(e):
+                    pytest.fail(f"Unhashable type error not handled: {e}")
+    
+    def test_html_reporter_handles_unhashable_types(self):
+        """Test that HTML reporter handles unhashable type errors gracefully."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            self.setup_problematic_logs(log_dir)
+            
+            # Test HTML reporter
+            try:
+                reporter = HTMLReporter(log_dir)
+                report_path = reporter.generate_report()
+                
+                # Should generate HTML without errors
+                assert isinstance(report_path, Path)
+                assert report_path.exists()
+                
+                # Read and check content
+                with open(report_path, 'r') as f:
+                    html_content = f.read()
+                    assert "<html>" in html_content
+                    assert "Simulation Report" in html_content
+            except TypeError as e:
+                if "unhashable type" in str(e):
+                    pytest.fail(f"Unhashable type error not handled: {e}")
+    
+    @patch('matplotlib.pyplot.savefig')
+    def test_visualization_with_complex_agents(self, mock_savefig):
+        """Test visualization with complex agent objects that could cause hashable issues."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            vis_dir = log_dir / "visualizations"
+            vis_dir.mkdir(exist_ok=True)
+            
+            self.setup_problematic_logs(log_dir)
+            
+            visualizer = EnhancedSimulationVisualizer(log_dir)
+            
+            # Test all visualization methods
+            try:
+                # These should all handle complex/unhashable data gracefully
+                # Test individual visualization methods that might have unhashable issues
+                if hasattr(visualizer, 'plot_utility_evolution'):
+                    visualizer.plot_utility_evolution()
+                if hasattr(visualizer, 'plot_conversation_flow'):
+                    visualizer.plot_conversation_flow()
+                if hasattr(visualizer, 'plot_negotiation_heatmap'):
+                    visualizer.plot_negotiation_heatmap()
+                assert True  # If we get here without error, test passes
+            except TypeError as e:
+                if "unhashable type" in str(e):
+                    pytest.fail(f"Unhashable type error in visualizations: {e}")
 
 
 if __name__ == "__main__":

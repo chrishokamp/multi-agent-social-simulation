@@ -267,13 +267,13 @@ print('Result:', json.dumps(result, indent=2) if result else 'No result')"
 
 .PHONY: run-simulation
 run-simulation: ## Run simulation with enhanced self-optimization and rich visualizations
-	@echo "$(YELLOW)🚀 Running enhanced simulation with rich logging...$(NC)"
+	@echo "$(YELLOW)🚀 Running simulation, configuration: $(SIMULATION_CONFIG)...$(NC)"
 	@if [ ! -f $(UV_VENV)/bin/python ]; then \
 	echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
 	exit 1; \
 	fi
 	$(UV_VENV)/bin/python scripts/self_optimize_negotiation_with_logging.py --config $(SIMULATION_CONFIG)
-	@echo "$(GREEN)✨ Simulation completed with rich visualizations!$(NC)"
+	@echo "$(GREEN)✨ Simulation completed $(NC)"
 
 .PHONY: run-simulation-simple
 run-simulation-simple: ## Run basic simulation without enhanced logging

@@ -19,6 +19,11 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.patches as mpatches
 
 
+def is_numeric(value):
+    """Check if a value is numeric (int or float, but not bool)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 class EnhancedSimulationVisualizer:
     """Creates enhanced visualizations from simulation logs with beautiful styling."""
     
@@ -56,8 +61,24 @@ class EnhancedSimulationVisualizer:
     
     def load_messages(self) -> List[Dict[str, Any]]:
         """Load conversation messages."""
-        with open(self.log_dir / "messages.json", 'r') as f:
-            return json.load(f)
+        try:
+            with open(self.log_dir / "messages.json", 'r') as f:
+                data = json.load(f)
+                # Ensure we return a list
+                if isinstance(data, list):
+                    return data
+                elif isinstance(data, dict):
+                    # If it's a dict, it might be wrapped
+                    if 'messages' in data:
+                        return data['messages']
+                    else:
+                        # Convert single message to list
+                        return [data]
+                else:
+                    return []
+        except Exception as e:
+            print(f"Error loading messages: {e}")
+            return []
     
     def load_metrics(self) -> Dict[str, Any]:
         """Load metrics summary."""
@@ -77,8 +98,13 @@ class EnhancedSimulationVisualizer:
             color = self.colors[idx % len(self.colors)]
             
             if data['utility_history']:
-                rounds = [u['round_number'] for u in data['utility_history']]
-                utilities = [u['utility_value'] for u in data['utility_history']]
+                # Filter out non-numeric utility values
+                valid_utilities = [(u['round_number'], u['utility_value']) 
+                                 for u in data['utility_history'] 
+                                 if is_numeric(u.get('utility_value'))]
+                if not valid_utilities:
+                    continue
+                rounds, utilities = zip(*valid_utilities)
                 
                 # Main line plot
                 line = ax.plot(rounds, utilities, 
@@ -122,10 +148,11 @@ class EnhancedSimulationVisualizer:
                 if any(u < 0 for u in utilities):
                     ax.axhline(y=0, color='black', linestyle='--', alpha=0.3, linewidth=1)
                 
-                # Annotate key points
-                # Starting value
-                ax.annotate(f'{utilities[0]:.3f}',
-                           xy=(rounds[0], utilities[0]),
+                # Annotate key points (only if we have utilities)
+                if len(utilities) > 0:
+                    # Starting value
+                    ax.annotate(f'{utilities[0]:.3f}',
+                               xy=(rounds[0], utilities[0]),
                            xytext=(-20, 10),
                            textcoords='offset points',
                            fontsize=10,
@@ -136,24 +163,24 @@ class EnhancedSimulationVisualizer:
                            color='white',
                            fontweight='bold')
                 
-                # Ending value
-                ax.annotate(f'{utilities[-1]:.3f}',
-                           xy=(rounds[-1], utilities[-1]),
-                           xytext=(10, 10),
-                           textcoords='offset points',
-                           fontsize=10,
-                           bbox=dict(boxstyle='round,pad=0.5', 
-                                   facecolor=color, 
-                                   alpha=0.7,
-                                   edgecolor='white'),
-                           color='white',
-                           fontweight='bold')
-                
-                # Max value if different from start/end
-                max_idx = np.argmax(utilities)
-                if max_idx not in [0, len(utilities)-1]:
-                    ax.annotate(f'Peak: {utilities[max_idx]:.3f}',
-                               xy=(rounds[max_idx], utilities[max_idx]),
+                    # Ending value
+                    ax.annotate(f'{utilities[-1]:.3f}',
+                               xy=(rounds[-1], utilities[-1]),
+                               xytext=(10, 10),
+                               textcoords='offset points',
+                               fontsize=10,
+                               bbox=dict(boxstyle='round,pad=0.5', 
+                                       facecolor=color, 
+                                       alpha=0.7,
+                                       edgecolor='white'),
+                               color='white',
+                               fontweight='bold')
+                    
+                    # Max value if different from start/end
+                    max_idx = np.argmax(utilities)
+                    if max_idx not in [0, len(utilities)-1]:
+                        ax.annotate(f'Peak: {utilities[max_idx]:.3f}',
+                                   xy=(rounds[max_idx], utilities[max_idx]),
                                xytext=(0, 20),
                                textcoords='offset points',
                                fontsize=9,
@@ -203,7 +230,11 @@ class EnhancedSimulationVisualizer:
         fig, ax = plt.subplots(figsize=(16, 10))
         
         # Create agent positions
-        agents = sorted(list(set(msg['agent'] for msg in messages)))
+        try:
+            agents = sorted(list(set(msg['agent'] for msg in messages if isinstance(msg, dict) and 'agent' in msg)))
+        except (TypeError, KeyError) as e:
+            print(f"Error extracting agents from messages: {e}")
+            return None
         agent_y_pos = {agent: i for i, agent in enumerate(agents)}
         
         # Color map for agents
@@ -216,19 +247,22 @@ class EnhancedSimulationVisualizer:
         
         # Plot messages as curved arrows
         for i, msg in enumerate(messages):
-            y_pos = agent_y_pos[msg['agent']]
+            if not isinstance(msg, dict) or 'agent' not in msg:
+                continue
+            y_pos = agent_y_pos.get(msg['agent'], 0)
             
             # Create a fancy box for the message
             fancy_box = FancyBboxPatch((i-0.4, y_pos-0.35), 0.8, 0.7,
                                       boxstyle="round,pad=0.1",
-                                      facecolor=agent_colors[msg['agent']],
+                                      facecolor=agent_colors.get(msg.get('agent', ''), self.colors[0]),
                                       edgecolor='white',
                                       linewidth=2,
                                       alpha=0.8)
             ax.add_patch(fancy_box)
             
             # Add message preview with word wrap
-            msg_preview = msg['message'][:40] + "..." if len(msg['message']) > 40 else msg['message']
+            message_text = msg.get('message', '')
+            msg_preview = message_text[:40] + "..." if len(message_text) > 40 else message_text
             ax.text(i, y_pos, msg_preview, 
                    ha='center', va='center', 
                    fontsize=9, 
@@ -238,18 +272,20 @@ class EnhancedSimulationVisualizer:
             
             # Draw connections between messages
             if i > 0:
-                prev_agent = messages[i-1]['agent']
-                prev_y = agent_y_pos[prev_agent]
-                
-                # Draw curved connection
-                if prev_agent != msg['agent']:
-                    ax.annotate('', xy=(i-0.4, y_pos), 
-                               xytext=(i-1+0.4, prev_y),
-                               arrowprops=dict(arrowstyle='->', 
-                                             connectionstyle="arc3,rad=0.3",
-                                             color='gray',
-                                             alpha=0.5,
-                                             linewidth=2))
+                prev_msg = messages[i-1]
+                if isinstance(prev_msg, dict) and 'agent' in prev_msg:
+                    prev_agent = prev_msg['agent']
+                    prev_y = agent_y_pos.get(prev_agent, 0)
+                    
+                    # Draw curved connection
+                    if prev_agent != msg.get('agent', ''):
+                        ax.annotate('', xy=(i-0.4, y_pos), 
+                                   xytext=(i-1+0.4, prev_y),
+                                   arrowprops=dict(arrowstyle='->', 
+                                                 connectionstyle="arc3,rad=0.3",
+                                                 color='gray',
+                                                 alpha=0.5,
+                                                 linewidth=2))
         
         # Styling
         ax.set_yticks(range(len(agents)))
@@ -295,7 +331,8 @@ class EnhancedSimulationVisualizer:
                 # Map utilities to message timeline
                 utilities = []
                 utility_dict = {u['round_number']: u['utility_value'] 
-                               for u in data['utility_history']}
+                               for u in data['utility_history']
+                               if is_numeric(u.get('utility_value'))}
                 
                 current_utility = 0
                 for i, msg in enumerate(messages):
@@ -316,10 +353,10 @@ class EnhancedSimulationVisualizer:
                     round_num = action.get('round', 1)
                     # Find corresponding message index
                     msg_idx = next((i for i, msg in enumerate(messages) 
-                                   if msg.get('round', 1) == round_num 
-                                   and msg['agent'] == agent_name), None)
+                                   if isinstance(msg, dict) and msg.get('round', 1) == round_num 
+                                   and msg.get('agent', '') == agent_name), None)
                     
-                    if msg_idx is not None and msg_idx < len(utilities):
+                    if msg_idx is not None and msg_idx < len(utilities) and len(utilities) > 0:
                         # Different markers for different action types
                         marker_style = {
                             'negotiate': 'o',
@@ -399,9 +436,13 @@ class EnhancedSimulationVisualizer:
             return None
         
         # Create interaction matrix
-        agents = sorted(list(set(msg['agent'] for msg in messages)))
+        try:
+            agents = sorted(list(set(msg['agent'] for msg in messages if isinstance(msg, dict) and 'agent' in msg)))
+        except (TypeError, KeyError) as e:
+            print(f"Error extracting agents from messages: {e}")
+            return None
         n_agents = len(agents)
-        n_rounds = max(msg.get('round', 1) for msg in messages)
+        n_rounds = max((msg.get('round', 1) for msg in messages if isinstance(msg, dict)), default=1)
         
         # Utility matrix
         utility_matrix = np.zeros((n_agents, n_rounds))
@@ -412,7 +453,10 @@ class EnhancedSimulationVisualizer:
                 for util in data['utility_history']:
                     round_idx = util['round_number'] - 1
                     if round_idx < n_rounds:
-                        utility_matrix[i, round_idx] = util['utility_value']
+                        if is_numeric(util.get('utility_value')):
+                            utility_matrix[i, round_idx] = util['utility_value']
+                        else:
+                            utility_matrix[i, round_idx] = 0  # Default to 0 for non-numeric values
             except:
                 pass
         
@@ -474,9 +518,10 @@ class EnhancedSimulationVisualizer:
         # Message frequency plot
         round_messages = [0] * n_rounds
         for msg in messages:
-            round_idx = msg.get('round', 1) - 1
-            if round_idx < n_rounds:
-                round_messages[round_idx] += 1
+            if isinstance(msg, dict):
+                round_idx = msg.get('round', 1) - 1
+                if 0 <= round_idx < n_rounds:
+                    round_messages[round_idx] += 1
         
         ax2.bar(range(n_rounds), round_messages, color='skyblue', alpha=0.7)
         ax2.set_xlabel('Round', fontsize=12, fontweight='bold')
@@ -518,10 +563,12 @@ class EnhancedSimulationVisualizer:
             }
             
             if data['utility_history']:
-                utilities = [u['utility_value'] for u in data['utility_history']]
-                metrics['Final Utility'] = utilities[-1]
-                metrics['Avg Utility'] = np.mean(utilities)
-                metrics['Utility Growth'] = utilities[-1] - utilities[0] if len(utilities) > 1 else 0
+                utilities = [u['utility_value'] for u in data['utility_history']
+                            if is_numeric(u.get('utility_value'))]
+                if utilities:
+                    metrics['Final Utility'] = utilities[-1]
+                    metrics['Avg Utility'] = np.mean(utilities)
+                    metrics['Utility Growth'] = utilities[-1] - utilities[0] if len(utilities) > 1 else 0
             
             if data['actions']:
                 action_types = set(a['action_type'] for a in data['actions'])
@@ -662,8 +709,13 @@ class EnhancedSimulationVisualizer:
             color = self.colors[idx % len(self.colors)]
             
             if data['utility_history']:
-                rounds = [u['round_number'] for u in data['utility_history']]
-                utilities = [u['utility_value'] for u in data['utility_history']]
+                # Filter out non-numeric utility values
+                valid_utilities = [(u['round_number'], u['utility_value']) 
+                                 for u in data['utility_history'] 
+                                 if is_numeric(u.get('utility_value'))]
+                if not valid_utilities:
+                    continue
+                rounds, utilities = zip(*valid_utilities)
                 
                 ax.plot(rounds, utilities, 
                        color=color,
@@ -712,13 +764,22 @@ class EnhancedSimulationVisualizer:
         messages = self.load_messages()
         
         if messages:
-            agents = sorted(list(set(msg['agent'] for msg in messages)))
+            try:
+                agents = sorted(list(set(msg['agent'] for msg in messages if isinstance(msg, dict) and 'agent' in msg)))
+            except (TypeError, KeyError) as e:
+                print(f"Error extracting agents from messages: {e}")
+                agents = []
             agent_colors = {agent: self.colors[i % len(self.colors)] 
                            for i, agent in enumerate(agents)}
             
             for i, msg in enumerate(messages):
-                agent = msg['agent']
-                y_pos = agents.index(agent)
+                if not isinstance(msg, dict) or 'agent' not in msg:
+                    continue
+                agent = msg.get('agent', '')
+                try:
+                    y_pos = agents.index(agent)
+                except ValueError:
+                    continue
                 
                 # Message bubble
                 circle = plt.Circle((i, y_pos), 0.4, 
@@ -729,9 +790,15 @@ class EnhancedSimulationVisualizer:
                 ax.add_patch(circle)
                 
                 # Connect messages
-                if i > 0:
-                    ax.plot([i-1, i], [agents.index(messages[i-1]['agent']), y_pos],
-                           'gray', alpha=0.3, linewidth=2)
+                if i > 0 and i-1 < len(messages):
+                    prev_msg = messages[i-1]
+                    if isinstance(prev_msg, dict) and 'agent' in prev_msg:
+                        try:
+                            prev_y = agents.index(prev_msg['agent'])
+                            ax.plot([i-1, i], [prev_y, y_pos],
+                                   'gray', alpha=0.3, linewidth=2)
+                        except ValueError:
+                            pass
             
             ax.set_ylim(-0.5, len(agents)-0.5)
             ax.set_xlim(-0.5, len(messages)-0.5)
@@ -756,8 +823,10 @@ class EnhancedSimulationVisualizer:
                 data = self.load_agent_data(agent_name)
                 
                 if data['utility_history']:
-                    utilities = [u['utility_value'] for u in data['utility_history']]
-                    data_matrix.append(utilities)
+                    utilities = [u['utility_value'] for u in data['utility_history']
+                                if is_numeric(u.get('utility_value'))]
+                    if utilities:
+                        data_matrix.append(utilities)
             
             if data_matrix:
                 # Pad arrays to same length
@@ -841,9 +910,11 @@ class EnhancedSimulationVisualizer:
             data = self.load_agent_data(agent_name)
             
             if data['utility_history']:
-                utilities = [u['utility_value'] for u in data['utility_history']]
-                all_utilities.append(utilities)
-                labels.append(agent_name)
+                utilities = [u['utility_value'] for u in data['utility_history']
+                            if is_numeric(u.get('utility_value'))]
+                if utilities:
+                    all_utilities.append(utilities)
+                    labels.append(agent_name)
         
         if all_utilities:
             # Create violin plot

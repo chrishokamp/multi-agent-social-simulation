@@ -25,7 +25,8 @@ def main():
     print("🚀 Running test without API calls...")
     print()
     
-    # Run the test framework
+    # Add scripts to path and run the test framework
+    sys.path.append(str(BASE_DIR))
     from scripts.test_logging_framework import main as test_main
     test_main()
 
