@@ -228,7 +228,12 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
     for run in history:
         run_data = {"run_id": run["run_id"]}
         run_data.update(run["outputs"])
-        run_data.update({f"{agent}_utility": util for agent, util in run["utilities"].items()})
+        # Only include numeric utility values
+        for agent, util in run["utilities"].items():
+            if isinstance(util, (int, float)) and not isinstance(util, bool):
+                run_data[f"{agent}_utility"] = util
+            else:
+                run_data[f"{agent}_utility"] = None  # Use None for non-numeric values
         runs_data.append(run_data)
     
     df = pd.DataFrame(runs_data)
@@ -237,15 +242,26 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
     fig, ax = plt.subplots(figsize=(12, 6))
     
     utility_columns = [col for col in df.columns if col.endswith('_utility')]
+    plotted_any = False
     for col in utility_columns:
-        agent_name = col.replace('_utility', '')
-        ax.plot(df['run_id'], df[col], marker='o', label=agent_name, linewidth=2, markersize=8)
+        # Filter out None values for plotting
+        valid_data = df[['run_id', col]].dropna()
+        if not valid_data.empty:
+            agent_name = col.replace('_utility', '')
+            ax.plot(valid_data['run_id'], valid_data[col], marker='o', label=agent_name, linewidth=2, markersize=8)
+            plotted_any = True
     
-    ax.set_xlabel('Run Number', fontsize=12)
-    ax.set_ylabel('Utility Value', fontsize=12)
-    ax.set_title('Agent Utility Evolution Across Self-Optimization Runs', fontsize=14, fontweight='bold')
-    ax.legend(loc='best', frameon=True, shadow=True)
-    ax.grid(True, alpha=0.3)
+    if plotted_any:
+        ax.set_xlabel('Run Number', fontsize=12)
+        ax.set_ylabel('Utility Value', fontsize=12)
+        ax.set_title('Agent Utility Evolution Across Self-Optimization Runs', fontsize=14, fontweight='bold')
+        ax.legend(loc='best', frameon=True, shadow=True)
+        ax.grid(True, alpha=0.3)
+    else:
+        ax.text(0.5, 0.5, 'No numeric utility data available', 
+               transform=ax.transAxes, ha='center', va='center', fontsize=16)
+        ax.set_title('Agent Utility Evolution Across Self-Optimization Runs', fontsize=14, fontweight='bold')
+        ax.axis('off')
     
     plt.tight_layout()
     fig.savefig(viz_dir / "utility_evolution.png", dpi=300, bbox_inches='tight')
@@ -381,7 +397,10 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
             html_content += f"<td>{var_value}</td>"
         
         for util_value in run['utilities'].values():
-            html_content += f"<td>{util_value:.4f}</td>"
+            if isinstance(util_value, (int, float)) and not isinstance(util_value, bool):
+                html_content += f"<td>{util_value:.4f}</td>"
+            else:
+                html_content += "<td>N/A</td>"
         
         html_content += f'<td><a class="run-link" href="run_{run["run_id"]:03d}/report.html">View Report</a></td>'
         html_content += "</tr>"

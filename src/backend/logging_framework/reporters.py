@@ -23,8 +23,24 @@ class SimulationReporter:
     def _load_data(self):
         """Load all simulation data."""
         # Load messages
-        with open(self.log_dir / "messages.json", 'r') as f:
-            self.messages = json.load(f)
+        try:
+            with open(self.log_dir / "messages.json", 'r') as f:
+                data = json.load(f)
+                # Ensure we have a list of messages
+                if isinstance(data, list):
+                    self.messages = data
+                elif isinstance(data, dict):
+                    # If it's a dict, it might be wrapped
+                    if 'messages' in data:
+                        self.messages = data['messages']
+                    else:
+                        # Convert single message to list
+                        self.messages = [data]
+                else:
+                    self.messages = []
+        except Exception as e:
+            print(f"Error loading messages: {e}")
+            self.messages = []
         
         # Load metrics
         with open(self.log_dir / "metrics.json", 'r') as f:
@@ -49,7 +65,7 @@ class SimulationReporter:
             'simulation_id': self.simulation_info.get('simulation_id', 'unknown'),
             'timestamp': datetime.now().isoformat(),
             'total_messages': len(self.messages),
-            'total_rounds': max([msg['round'] for msg in self.messages]) if self.messages else 0,
+            'total_rounds': max([msg.get('round', 1) for msg in self.messages if isinstance(msg, dict)], default=0) if self.messages else 0,
             'agents': list(self.agent_data.keys()),
             'metrics_summary': self.metrics,
             'agent_summaries': {}
@@ -72,11 +88,22 @@ class SimulationReporter:
             
             # Utility progression
             if data['utility_history']:
-                agent_summary['utility_progression'] = [
-                    {'round': u['round_number'], 'utility': u['utility_value']}
-                    for u in data['utility_history']
-                ]
-                agent_summary['final_utility'] = data['utility_history'][-1]['utility_value']
+                # Extract utility progression, filtering out non-numeric values
+                utility_progression = []
+                final_utility = None
+                
+                for u in data['utility_history']:
+                    util_val = u.get('utility_value', 0)
+                    # Only include numeric utility values
+                    if isinstance(util_val, (int, float)) and not isinstance(util_val, bool):
+                        utility_progression.append({
+                            'round': u.get('round_number', 0), 
+                            'utility': util_val
+                        })
+                        final_utility = util_val  # Keep updating to get the last numeric value
+                
+                agent_summary['utility_progression'] = utility_progression
+                agent_summary['final_utility'] = final_utility
             
             summary['agent_summaries'][agent_name] = agent_summary
         
@@ -131,12 +158,20 @@ class SimulationReporter:
         if self.messages:
             report += "### Opening Messages\n"
             for msg in self.messages[:5]:
-                report += f"- **{msg['agent']}** (Round {msg['round']}): {msg['message'][:100]}...\n"
+                if isinstance(msg, dict):
+                    agent = msg.get('agent', 'Unknown')
+                    round_num = msg.get('round', 'N/A')
+                    message = msg.get('message', '')
+                    report += f"- **{agent}** (Round {round_num}): {message[:100]}...\n"
             
             if len(self.messages) > 10:
                 report += "\n### Closing Messages\n"
                 for msg in self.messages[-5:]:
-                    report += f"- **{msg['agent']}** (Round {msg['round']}): {msg['message'][:100]}...\n"
+                    if isinstance(msg, dict):
+                        agent = msg.get('agent', 'Unknown')
+                        round_num = msg.get('round', 'N/A')
+                        message = msg.get('message', '')
+                        report += f"- **{agent}** (Round {round_num}): {message[:100]}...\n"
         
         return report
 
@@ -388,19 +423,33 @@ class HTMLReporter(SimulationReporter):
         {% if messages %}
             <h3>Opening Messages</h3>
             {% for msg in messages[:5] %}
+            {% if msg is mapping and 'agent' in msg %}
             <div class="message">
-                <strong>{{ msg.agent }}</strong> (Round {{ msg.round }}): 
-                {{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}
+                <strong>{{ msg.agent if msg.agent is string else msg.agent.name|default(msg.agent) }}</strong> 
+                (Round {{ msg.round|default('?') }}): 
+                {% if 'message' in msg %}
+                    {{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}
+                {% else %}
+                    <em>No message content</em>
+                {% endif %}
             </div>
+            {% endif %}
             {% endfor %}
             
             {% if messages|length > 10 %}
             <h3>Closing Messages</h3>
             {% for msg in messages[-5:] %}
+            {% if msg is mapping and 'agent' in msg %}
             <div class="message">
-                <strong>{{ msg.agent }}</strong> (Round {{ msg.round }}): 
-                {{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}
+                <strong>{{ msg.agent if msg.agent is string else msg.agent.name|default(msg.agent) }}</strong> 
+                (Round {{ msg.round|default('?') }}): 
+                {% if 'message' in msg %}
+                    {{ msg.message[:200] }}{% if msg.message|length > 200 %}...{% endif %}
+                {% else %}
+                    <em>No message content</em>
+                {% endif %}
             </div>
+            {% endif %}
             {% endfor %}
             {% endif %}
         {% endif %}
