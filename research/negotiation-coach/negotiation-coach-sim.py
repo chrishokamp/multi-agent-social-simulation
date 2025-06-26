@@ -10,6 +10,8 @@ from matplotlib.lines import Line2D
 import matplotlib.ticker as mticker
 from autogen import LLMConfig, ConversableAgent, GroupChat, GroupChatManager
 
+MAX_ROUNDS = 20  
+
 # ── LLM config (OpenAI or Azure) ────────────────────────────────────────────
 TEMPERATURE = 0.5
 def llm_cfg() -> LLMConfig:
@@ -123,7 +125,7 @@ for mode in ("no_reflect", "buyer_reflect", "seller_reflect", "both_reflect"):
         chat = GroupChat(
             agents=[seller, buyer],
             speaker_selection_method="round_robin",
-            max_round=20,                # hard cap if no deal
+            max_round=MAX_ROUNDS,                # hard cap if no deal
         )
         mgr = GroupChatManager(groupchat=chat, llm_config=LLM)
         seller.initiate_chat(
