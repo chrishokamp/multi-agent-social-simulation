@@ -57,30 +57,7 @@ const Button = ({ children, onClick, color = 'green', disabled = false }) => {
   const baseClasses =
     'p-2 mt-3 rounded-lg font-bold transition-colors duration-200 cursor-pointer';
   const colorStyles = {
-    green: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-main-200))',
-      color: 'hsl(var(--oncolor-100))',
-    },
-    red: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--danger-100))',
-      color: 'hsl(var(--oncolor-100))',
-    },
-    darkviolet: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-000))',
-      color: 'hsl(var(--oncolor-100))',
-    },
-    purple: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-100))',
-      color: 'hsl(var(--oncolor-100))',
-    },
-    lightpurple: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-200))',
-      color: 'hsl(var(--oncolor-100))',
-    },
-    darkpurple: {
-      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-900))',
-      color: 'hsl(var(--oncolor-100))',
-    },
+    
   };
 
   return (
@@ -221,7 +198,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border rounded-lg  bg-transparent hover:border-violet-400">
+    <div className="flex flex-col p-3 mt-3 border rounded-lg  bg-transparent">
       <h1 className="font-bold text-lg">Output Variables</h1>
       <p className="text-gray-300 text-sm">
         Define the variables to be extracted from the simulation
@@ -385,7 +362,7 @@ const Tab = ({ label, isActive, onClick }) => {
     <button
       className={`cursor-pointer px-4 py-2 font-medium rounded-t-lg ${
         isActive
-          ? 'border-t border-r border-l border-violet-300'
+          ? 'border-t border-r border-l'
           : 'text-gray-400 hover:'
       }`}
       onClick={onClick}
