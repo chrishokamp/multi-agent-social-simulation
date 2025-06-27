@@ -13,7 +13,7 @@ from autogen import (
     ConversableAgent,
     LLMConfig,
 )
-from agents import UtilityAgent, BuyerAgent, SellerAgent
+from agents import UtilityAgent, BuyerAgent, SellerAgent, NegotiationCoachAgent, NegotiationCoachBuyerAgent, NegotiationCoachSellerAgent
 from utils import create_logger, client_for_endpoint
 from logging_framework.core import SimulationLogger
 
@@ -23,6 +23,9 @@ _utility_class_registry = {
     "UtilityAgent": UtilityAgent,
     "BuyerAgent":   BuyerAgent,
     "SellerAgent":  SellerAgent,
+    "NegotiationCoachAgent": NegotiationCoachAgent,
+    "NegotiationCoachBuyerAgent": NegotiationCoachBuyerAgent,
+    "NegotiationCoachSellerAgent": NegotiationCoachSellerAgent,
 }
 
 
