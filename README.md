@@ -36,9 +36,9 @@ export OPENAI_API_KEY="your-api-key"
 export DB_CONNECTION_STRING="mongodb://localhost:27017"
 ```
 
-### 3. Run the Simulation
+### 3. Run Simulations using the API
 
-The main command runs a self-optimising simulation:
+The main entrypoint is the `make run-simulation` command.
 
 ```bash
 make run-simulation
