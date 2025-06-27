@@ -819,7 +819,7 @@ const Dashboard = () => {
                 <div
                   key={sim.simulation_id}
                   onClick={() => setSimulationId(sim.simulation_id)}
-                  className={`container p-3 my-2 flex justify-between items-center border rounded-lg text-left cursor-pointer transition-colors duration-200 ${
+                  className={`container p-3 my-2 flex justify-between items-center border rounded text-left cursor-pointer transition-colors duration-200 ${
                     simulationId === sim.simulation_id
                       ? ' border'
                       : 'border'
@@ -834,7 +834,7 @@ const Dashboard = () => {
             </div>
 
             {/* Error Message */}
-            {error && <p className="danger">{error}</p>}
+            {error && <p className="danger p-2 rounded">{error}</p>}
 
             {/* View Dashboard Button */}
             <div className="mt-6">
@@ -879,7 +879,7 @@ const Dashboard = () => {
         <div className="flex space-x-2">
           <Link
             to="/simulations"
-            className="px-4 py-2 hover:shadow-button  rounded-lg transition-colors flex items-center"
+            className="px-4 py-2 hover:shadow-button  rounded transition-colors flex items-center"
           >
             <TbArrowBackUp className="mr-2 h-5 w-5" />
             Catalog
@@ -887,7 +887,7 @@ const Dashboard = () => {
 
           <button
             onClick={handleDownloadConfig}
-            className="px-4 py-2 hover:shadow-button  rounded-lg transition-colors flex items-center"
+            className="px-4 py-2 hover:shadow-button  rounded transition-colors flex items-center"
           >
             <IoMdSave className="mr-2 h-5 w-5" />
             Download&nbsp;JSON
@@ -949,7 +949,7 @@ const Dashboard = () => {
 
       {/* Chart Configuration Panel */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 bg-violet-800/20 rounded">
+        <div className="flex justify-between items-center mb-4 p-2rounded">
           <h2 className="text-xl  font-semibold">Chart Configuration</h2>
           <button
             onClick={() => toggleSection('chartConfig')}
@@ -964,7 +964,7 @@ const Dashboard = () => {
         </div>
 
         {collapsibleSections.chartConfig && (
-          <div className="p-4  rounded-lg border">
+          <div className="p-4  rounded border">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
               {/* Chart Type Selection */}
               <div>
@@ -1248,7 +1248,7 @@ const Dashboard = () => {
       {/* Main Visualization */}
       <div className="mb-6">
         {chartConfig.xAxis && chartConfig.yAxis ? (
-          <div className="bg-violet-950/30 p-4 rounded-lg border border-violet-500/30">
+          <div className=" p-4 rounded border">
             <ReactECharts
               option={generateChartOptions()}
               style={{ height: '500px', width: '100%' }}

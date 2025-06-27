@@ -7,6 +7,7 @@ import { FaLongArrowAltRight } from 'react-icons/fa';
 import { FaRandom } from 'react-icons/fa';
 import { RiAiGenerate } from 'react-icons/ri';
 import { MdOutlineQueuePlayNext } from 'react-icons/md';
+import { FaListUl } from 'react-icons/fa6';
 
 
 const TextField = ({ label, description, value, onChange, placeholder }) => {
@@ -52,7 +53,7 @@ const TextArea = ({
 
 const Button = ({ children, onClick, color = 'green', disabled = false }) => {
   const baseClasses =
-    'p-2 mt-3 rounded-lg font-bold transition-colors duration-200 cursor-pointer';
+    'p-2 mt-3 rounded font-bold transition-colors duration-200 cursor-pointer';
   const colorStyles = {
     
   };
@@ -117,7 +118,7 @@ const AgentsList = ({ agents, setAgents }) => {
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border-light rounded-lg bg-transparent">
+    <div className="flex flex-col p-3 mt-3 border-light rounded bg-transparent">
       <h1 className="font-bold text-lg">Agents</h1>
       <p className="text-sm">
         Define the agents that will participate in the simulation
@@ -128,7 +129,7 @@ const AgentsList = ({ agents, setAgents }) => {
 
       <div className="mt-3 space-y-4">
         {agents.map((agent, index) => (
-          <div key={index} className="p-3 border-light rounded-lg">
+          <div key={index} className="p-3 border-light rounded">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-semibold">Agent #{index + 1}</h2>
               <Button color="red" onClick={() => removeAgent(index)}>
@@ -194,7 +195,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border-light rounded-lg bg-transparent">
+    <div className="flex flex-col p-3 mt-3 border-light rounded bg-transparent">
       <h1 className="font-bold text-lg">Output Variables</h1>
       <p className="text-sm">
         Define the variables to be extracted from the simulation
@@ -205,7 +206,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
 
       <div className="mt-3 space-y-4">
         {variables.map((variable, index) => (
-          <div key={index} className="p-3 border-light rounded-lg">
+          <div key={index} className="p-3 border-light rounded">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-semibold">Variable #{index + 1}</h2>
               <Button color="red" onClick={() => removeVariable(index)}>
@@ -290,9 +291,9 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
   };
 
   return (
-    <div className="container p-3 mt-0 border-light rounded-lg relative">
+    <div className="container p-3 mt-0 border-light rounded relative">
       {isGenerating && (
-        <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8  border-light mb-2"></div>
             <p className="">Generating Configuration...</p>
@@ -313,7 +314,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
       </ul>
 
       {error && (
-        <div className="p-2 rounded-lg danger">
+        <div className="p-2 rounded danger">
           {error}
         </div>
       )}
@@ -346,7 +347,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
 
 const JsonPreview = ({ data }) => {
   return data ? (
-    <div className="mt-4 p-3 border-light rounded-lg overflow-auto max-h-60">
+    <div className="mt-4 p-3 border-light rounded overflow-auto max-h-60">
       <h2 className="font-bold mb-2">Generated JSON Configuration:</h2>
       <pre className="text-sm">{JSON.stringify(data, null, 2)}</pre>
     </div>
@@ -536,7 +537,7 @@ const Configuration = () => {
         <div className="flex items-center justify-between mt-6">
         </div>
         {error && (
-          <div className="p-2 danger rounded-lg">
+          <div className="p-2 danger rounded">
             {error}
           </div>
         )}
@@ -558,7 +559,7 @@ const Configuration = () => {
         {/* Tab content */}
         <div className="">
           {activeTab === 'manual' && (
-            <div className="container p-3 mt-0 border-light rounded-lg tab-connected">
+            <div className="container p-3 mt-0 border-light rounded tab-connected">
               {/* Raw JSON input */}
               <TextArea
                 label="Raw JSON"
