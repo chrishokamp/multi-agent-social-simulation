@@ -1,53 +1,57 @@
 {
   "model": "gpt-4o",
   "config": {
-    "name": "Laptop Negotiation with Only Buyer Self-Reflection",
+    "name": "Laptop Negotiation - Buyer Self-Reflection Only",
     "agents": [
       {
         "name": "Buyer",
-        "description": "Wants the laptop for the lowest possible price and within their budget.",
-        "prompt": "You are a buyer looking to purchase a laptop. Your budget is {$budget}. Do not reveal your budget. You MUST ALWAYS refuse any offer above your budget. Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. Goal: secure the best possible price for yourself **while following every rule above**.\n",
+        "description": "Wants the laptop for the lowest possible price and within budget.",
+        "prompt": "You are the BUYER.\n• Budget (hard ceiling): {budget}\n• Never reveal this budget.\n\nNegotiation rules\n  1. Refuse any offer above your budget.\n  2. If the seller will not meet your budget repeatedly, reply exactly: No deal.\n  3. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: secure the best price for yourself while obeying every rule above.",
         "utility_class": "BuyerAgent",
-        "strategy": {"budget": "$budget"},
+        "strategy": {"budget": "budget"},
         "self_improve": true,
         "optimization_target": true
       },
       {
         "name": "Seller",
-        "description": "Wants to sell the laptop at the best possible price between their floor and asking price.",
-        "prompt": "You are a seller looking to sell a laptop. Your floor price is {$floor} and your asking price is {$asking_price}. Do not reveal your floor price. You MUST ALWAYS refuse any offer below your floor price. Say 'Yes, deal!' to accept a price. Do not utter those words anytime before. Goal: secure the best possible price for yourself **while following every rule above**.\n",
+        "description": "Wants to sell the laptop for the best price between floor and ask.",
+        "prompt": "You are the SELLER.\n• Asking price: {asking_price}\n• Floor price: {floor}\n• Never reveal the floor.\n\nNegotiation rules\n  1. Always open at the asking price.\n  2. Refuse any price below the floor.\n  3. If the buyer refuses to meet the floor repeatedly, reply exactly: No deal.\n  4. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: secure the best price for yourself while obeying every rule above.",
         "utility_class": "SellerAgent",
-        "strategy": {"floor": "$floor", "asking_price": "$asking_price"},
+        "strategy": {"floor": "floor", "asking_price": "asking_price"},
         "self_improve": false
       }
     ],
     "termination_condition": "STOP_NEGOTIATION",
     "output_variables": [
-      {"name": "final_price", "type": "Number", "description": "The agreed-upon final price"},
-      {"name": "deal_reached", "type": "Boolean", "description": "Whether the buyer and seller reached an agreement"},
-      {"name": "negotiation_rounds", "type": "Number", "description": "Number of back-and-forth exchanges"},
-      {"name": "buyer_satisfaction", "type": "Number", "description": "Buyer's satisfaction with the outcome (1-10 scale)"},
-      {"name": "seller_satisfaction", "type": "Number", "description": "Seller's satisfaction with the outcome (1-10 scale)"},
-      {"name": "last_offer_made", "type": "Number", "description": "The last offer made by the buyer"},
-      {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
+      {"name": "final_price",        "type": "Number",  "description": "Agreed price"},
+      {"name": "deal_reached",       "type": "Boolean", "description": "True if agreement reached"},
+      {"name": "negotiation_rounds", "type": "Number",  "description": "Turn count"},
+      {"name": "buyer_satisfaction", "type": "Number",  "description": "Buyer satisfaction (1-10)"},
+      {"name": "seller_satisfaction","type": "Number",  "description": "Seller satisfaction (1-10)"},
+      {"name": "last_offer_made",    "type": "Number",  "description": "Buyer’s last offer"},
+      {"name": "last_offer_received","type": "Number",  "description": "Seller’s last offer"}
     ]
   },
+
   "num_runs": 10,
+
   "simulation_context": {
     "type": "negotiation",
     "domain": "consumer_goods",
     "objectives": ["maximize_utility", "reach_agreement"],
-    "constraints": ["price_constraints", "budget_limits","fairness"],
+    "constraints": ["price_constraints", "budget_limits", "fairness"],
     "tags": ["buyer-seller", "price-negotiation", "laptop-marketplace"]
   },
-"variables": {
-  "asking_price": {
-    "range": {"min": 900, "max": 1400, "step": 50}
-  },
-  "floor": {
-    "expr": "asking_price - randint(100, 300)"
-  },
-  "budget": {
-    "expr": "randint(floor + 50, asking_price - 50)"
+
+  "variables": {
+    "asking_price": {
+      "range": { "min": 900, "max": 1400, "step": 50 }
+    },
+    "floor": {
+      "expr": "asking_price - randint(100, 300)"
+    },
+    "budget": {
+      "expr": "randint(floor + 50, asking_price - 50)"
+    }
   }
 }
