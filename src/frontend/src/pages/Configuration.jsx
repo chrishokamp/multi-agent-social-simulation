@@ -532,7 +532,8 @@ const Configuration = () => {
   return (
     <div className="flex justify-center min-h-screen py-16">
       <Navbar />
-      <div className="w-full max-w-3xl px-4">
+      <div className="w-full max-w-3xl px-4 pt-40">
+        {/* Added pt-10 for vertical padding after Navbar */}
         <div className="flex items-center justify-between mt-6">
         </div>
 
