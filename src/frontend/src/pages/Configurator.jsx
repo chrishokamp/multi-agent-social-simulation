@@ -12,15 +12,16 @@ import { FaListUl } from 'react-icons/fa6';
 
 const TextField = ({ label, description, value, onChange, placeholder }) => {
   return (
-    <label className="flex flex-col mt-3 p-3 rounded-lg  bg-transparent border">
-      <h1 className="font-bold text-lg">{label}</h1>
-      <p className="text-gray-300 text-sm mb-2">{description}</p>
+    <label className="flex flex-col mt-3 p-3 rounded-lg bg-transparent border" style={{ borderColor: 'hsl(var(--border-200))' }}>
+      <h1 className="font-bold text-lg" style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
+      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
       <input
         className="mt-1 p-2 rounded-lg outline-none"
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       />
     </label>
   );
@@ -38,14 +39,15 @@ const TextArea = ({
   textArea = '',
 }) => {
   return (
-    <label className={`flex flex-col mt-3 p-3 rounded-lg  ${container}`}>
-      <h1 className={`font-bold ${textSize}`}>{label}</h1>
-      <p className="text-gray-300 text-sm mb-2">{description}</p>
+    <label className={`flex flex-col mt-3 p-3 rounded-lg ${container}`} style={{ background: 'hsl(var(--bg-100))', borderColor: 'hsl(var(--border-200))' }}>
+      <h1 className={`font-bold ${textSize}`} style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
+      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
       <textarea
-        className={`mt-1 p-2 rounded-lg outline-none bg-midnight ${height} ${textArea}`}
+        className={`mt-1 p-2 rounded-lg outline-none ${height} ${textArea}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       />
     </label>
   );
@@ -53,21 +55,40 @@ const TextArea = ({
 
 const Button = ({ children, onClick, color = 'green', disabled = false }) => {
   const baseClasses =
-    'p-2 mt-3 rounded-lg font-bold  transition-colors duration-200 cursor-pointer';
-  const colorClasses = {
-    green: `${disabled ? 'bg-gray-600' : 'bg-green-800 hover:bg-green-600'}`,
-    red: `${disabled ? 'bg-gray-600' : 'bg-red-800 hover:bg-red-600'}`,
-    darkviolet: `${disabled ? 'bg-gray-600' : 'bg-violet-950 hover:bg-violet-800'}`,
-    purple: `${disabled ? 'bg-gray-600' : 'bg-violet-800 hover:bg-violet-600'}`,
-    lightpurple: `${disabled ? 'bg-gray-600' : 'bg-violet-500 hover:bg-violet-400'}`,
-    darkpurple: `${disabled ? 'bg-gray-600' : 'bg-violet-900/40 hover:bg-violet-900/50'}`,
+    'p-2 mt-3 rounded-lg font-bold transition-colors duration-200 cursor-pointer';
+  const colorStyles = {
+    green: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-main-200))',
+      color: 'hsl(var(--oncolor-100))',
+    },
+    red: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--danger-100))',
+      color: 'hsl(var(--oncolor-100))',
+    },
+    darkviolet: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-000))',
+      color: 'hsl(var(--oncolor-100))',
+    },
+    purple: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-100))',
+      color: 'hsl(var(--oncolor-100))',
+    },
+    lightpurple: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-200))',
+      color: 'hsl(var(--oncolor-100))',
+    },
+    darkpurple: {
+      background: disabled ? 'hsl(var(--border-400))' : 'hsl(var(--accent-pro-900))',
+      color: 'hsl(var(--oncolor-100))',
+    },
   };
 
   return (
     <button
-      className={`${baseClasses} ${colorClasses[color]}`}
+      className={baseClasses}
       onClick={onClick}
       disabled={disabled}
+      style={colorStyles[color]}
     >
       {children}
     </button>
@@ -76,16 +97,17 @@ const Button = ({ children, onClick, color = 'green', disabled = false }) => {
 
 const Select = ({ label, description, options, value, onChange }) => {
   return (
-    <label className="flex flex-col mt-3 p-3 border rounded-lg  bg-transparent">
-      <h1 className="font-bold text-lg">{label}</h1>
-      <p className="text-gray-300 text-sm mb-2">{description}</p>
+    <label className="flex flex-col mt-3 p-3 border rounded-lg bg-transparent" style={{ borderColor: 'hsl(var(--border-200))' }}>
+      <h1 className="font-bold text-lg" style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
+      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
       <select
         className="custom-select mt-1 p-2 rounded-lg outline-none"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} style={{ background: 'hsl(var(--accent-brand))', color: 'hsl(var(--oncolor-100))' }}>
             {option.label}
           </option>
         ))}
@@ -542,7 +564,6 @@ const Configurator = () => {
       <Navbar />
       <div className="w-full max-w-3xl px-4">
         <div className="flex items-center justify-between mt-6">
-          <h1 className="text-2xl font-bold mt-8 ">Simulation Configurator</h1>
         </div>
 
         {error && (

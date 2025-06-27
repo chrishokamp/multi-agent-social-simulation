@@ -9,7 +9,7 @@
 /* For example, if you need a colour that doesn't exist in the default TailwindCSS palette, you can define it here */
 @theme {
 --accent-brand: 15 63.1% 59.6%;
---accent-main-000: 15 55.6% 52.4%;
+--accent-main-000: red;
 --accent-main-100: 15 55.6% 52.4%;
 --accent-main-200: 15 63.1% 59.6%;
 --accent-main-900: 0 0% 0%;
@@ -61,7 +61,7 @@
 }
 
 body {
-  background: hsl(var(--bg-100));
+
   font-family: 'Manrope', sans-serif;
   color: var(--text-000);
 
@@ -102,4 +102,18 @@ body {
 
 .custom-select option:hover {
   background-color: hsl(var(--accent-main-100));
+}
+
+.navbar-brand {
+  color: hsl(var(--text-000));
+  font-weight: bold;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  font-family: var(--font-sans-serif);
+  transition: color 0.2s;
+}
+
+.navbar-brand:hover {
+  color: hsl(var(--accent-main-200));
 }
