@@ -120,7 +120,7 @@ body {
 }
 
 button {
-  background-color: hsl(var(--accent-main-200));
+  background-color: hsl(var(--text-300));
   color: hsl(var(--oncolor-100));
   border: none;
   padding: 0.5rem 1rem;
@@ -169,5 +169,5 @@ button {
   background: transparent;
 }
 .tab-inactive:hover {
-  color: hsl(var(--accent-main-200));
+  color: hsl(var(--text-000));
 }
