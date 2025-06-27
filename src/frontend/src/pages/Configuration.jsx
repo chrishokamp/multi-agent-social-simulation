@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService.js';
-import Navbar from './components/Navbar';
+import Navbar from './components/Navbar.jsx';
 
 import { FaLongArrowAltRight } from 'react-icons/fa';
 import { FaRandom } from 'react-icons/fa';
