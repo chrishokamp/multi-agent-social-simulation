@@ -314,7 +314,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
       </ul>
 
       {error && (
-        <div className="p-3 mb-3  rounded-lg danger">
+        <div className="p-2 rounded-lg danger">
           {error}
         </div>
       )}
@@ -536,9 +536,8 @@ const Configuration = () => {
         {/* Added pt-10 for vertical padding after Navbar */}
         <div className="flex items-center justify-between mt-6">
         </div>
-
         {error && (
-          <div className="danger">
+          <div className="p-2 danger rounded-lg">
             {error}
           </div>
         )}

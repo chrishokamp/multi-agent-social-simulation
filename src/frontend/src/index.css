@@ -142,9 +142,10 @@ button {
   color: hsl(var(--accent-brand));
 }
 
-.danger{
-  background-color: hsl(var(--danger-200));
+.danger {
+  background-color: hsl(var(--danger-000));
   color: hsl(var(--oncolor-100));
+  border: 1px solid hsl(var(--danger-100));
 }
 
 
