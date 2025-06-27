@@ -273,7 +273,7 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
             f"Previous strategies:\n- "
             + "\n- ".join(self.negotiation_strategies)
             + "\n"
-            "Analyse the transcript and devise exactly ONE new strategy "
+            "Analyse the transcript and devise exactly ONE new negotiation strategy "
             f"sentence the {self.name} could apply in a *future* negotiation to get a better price.\n"
             "If neither party uttered 'Yes, deal!', that means no deal was reached. "
             "In that case, focus on how to reach a good deal faster next time.\n"
@@ -284,7 +284,7 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
             "• If utility was 'loss' or 'poor', focus on improvement. "
             "• If 'great', suggest how to replicate or slightly enhance success. \n"
             "Include one recognised negotiation tactic (e.g., anchoring, mirroring, time-pressure) that fits what you observed in the transcript."
-            "Think step-by-step and return ONLY that single strategy sentence."
+            "Think step-by-step and return ONLY that single negotiation strategy sentence."
         )
 
         tag = (
@@ -304,7 +304,7 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
                     f"STRATEGY:\n{json.dumps(self.strategy)}\n\n"
                     f"FULL HISTORY:\n{history}\n\n"
                     f"UTILITY ACHIEVED: {utility:.3f}({tag})\n\n"
-                    "New strategy:"
+                    "New negotiation strategy:"
                 ),
             },
         ]
