@@ -8,10 +8,10 @@
 
 /* For example, if you need a colour that doesn't exist in the default TailwindCSS palette, you can define it here */
 @theme {
---accent-brand: 15 63.1% 59.6%;
---accent-main-000: 15 55.6% 52.4%;
---accent-main-100: 15 55.6% 52.4%;
---accent-main-200: 15 63.1% 59.6%;
+--accent-brand: 60 2.6% 7.6%;
+--accent-main-000: 50 20.7% 88.6%;
+--accent-main-100: 50 20.7% 88.6%;
+--accent-main-200: 50 20.7% 88.6%;
 --accent-main-900: 0 0% 0%;
 --accent-pro-000: 251 34.2% 33.3%;
 --accent-pro-100: 251 40% 45.1%;
@@ -129,7 +129,7 @@ button {
 }
 
 .navbar-link {
-  color: hsl(var(--text-000));
+  color: hsl(var(--text-400));
   font-weight: 500;
   font-size: 1rem;
   transition: color 0.2s;
@@ -137,7 +137,7 @@ button {
 }
 .navbar-link:hover,
 .navbar-link:focus {
-  color: hsl(var(--accent-main-200));
+  color: hsl(var(--accent-brand));
 }
 
 .danger{
@@ -184,7 +184,7 @@ button {
   padding: 0.75rem;
   border-radius: 0.5rem;
   background: transparent;
-  border: 1px solid hsl(var(--border-200));
+  border: 1px solid hsl(var(--border-400));
 }
 .form-label-title {
   font-size: 1.125rem;
@@ -202,15 +202,16 @@ button {
   outline: none;
   background: hsl(var(--bg-000));
   color: hsl(var(--text-000));
-  border: 1px solid hsl(var(--border-200));
+  border: 1px solid hsl(var(--border-400));
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .form-input:focus {
-  border-color: hsl(var(--accent-main-200));
+  border-color: hsl(var(--border-100));
   box-shadow: 0 0 0 2px hsl(var(--accent-main-200) / 0.2);
 }
 
 .container {
   background: hsl(var(--bg-200));
+  border: 1px solid hsl(var(--border-400));
 }

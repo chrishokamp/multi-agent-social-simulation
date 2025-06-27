@@ -365,7 +365,7 @@ const Tab = ({ label, isActive, onClick }) => {
   );
 };
 
-const Configurator = () => {
+const Configuration = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ai');
   // Manual configuration state
@@ -653,4 +653,4 @@ const Configurator = () => {
   );
 };
 
-export default Configurator;
+export default Configuration;

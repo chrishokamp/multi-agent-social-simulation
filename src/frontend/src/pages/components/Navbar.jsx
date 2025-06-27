@@ -28,7 +28,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center py-6">
         <div className="flex items-center gap-2 text-md">
           <a href="/" className="navbar-brand flex items-center ">
-            NegotiationGym
+            NegotiationGym 🏋️
           </a>
         </div>
         <nav className="sm:flex hidden">

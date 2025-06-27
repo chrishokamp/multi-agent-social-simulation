@@ -200,7 +200,7 @@ const SimulationsList = () => {
           <h1 className="text-2xl font-bold" style={{ color: 'hsl(var(--text-000))' }}>Simulations</h1>
           <div className="flex space-x-4">
             <Link
-              to="/configurator"
+              to="/Configuration"
               className="px-4 py-2 rounded-lg transition-colors"
             >
               <FaPlus className="inline-block mr-2 mb-0.75" />
@@ -223,7 +223,7 @@ const SimulationsList = () => {
               <div className="rounded-lg p-8 text-center" style={{ background: 'hsl(var(--bg-200))' }}>
                 <p className="mb-4" style={{ color: 'hsl(var(--text-400))' }}>No simulations found</p>
                 <Link
-                  to="/configurator"
+                  to="/Configuration"
                   className="px-4 py-2 rounded-lg inline-block"
                   style={{ background: 'hsl(var(--accent-main-200))', color: 'hsl(var(--oncolor-100))' }}
                 >

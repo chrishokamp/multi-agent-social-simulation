@@ -8,8 +8,8 @@ import { RiDashboardHorizontalFill } from "react-icons/ri";
 export const navLinks = [
     {
         id: 1,
-        name: 'Configurator',
-        href: '/configurator',
+        name: 'Configuration',
+        href: '/Configuration',
         icon: GrConfigure,
     },
     {
@@ -28,7 +28,7 @@ export const navLinks = [
 
 export const features = [
     {
-        title: 'Agent Configurator',
+        title: 'Agent Configuration',
         description:
             'Define roles, goals, and hyperparameters. Queue your simulation. Let us do the rest.',
         icon: GrConfigure,
