@@ -861,7 +861,7 @@ const Dashboard = () => {
     return (
       <div className="w-full min-h-screen bg-transparent p-4">
         <Navbar />
-        <div className="mt-20 text-red-500 text-center">
+        <div className="danger">
           Error loading simulation data. Please check the simulation ID and try again.
         </div>
       </div>

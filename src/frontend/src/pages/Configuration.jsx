@@ -38,7 +38,7 @@ const TextArea = ({
   textArea = '',
 }) => {
   return (
-    <label className={`form-label ${container}`}>
+    <label className={`form-label ${container} container`}>
       <h1 className={`form-label-title ${textSize}`}>{label}</h1>
       <p className="form-label-desc">{description}</p>
       <textarea
@@ -118,9 +118,9 @@ const AgentsList = ({ agents, setAgents }) => {
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border rounded-lg  bg-transparent">
+    <div className="flex flex-col p-3 mt-3 border-light rounded-lg bg-transparent">
       <h1 className="font-bold text-lg">Agents</h1>
-      <p className="text-gray-300 text-sm">
+      <p className="text-sm">
         Define the agents that will participate in the simulation
       </p>
       <Button onClick={addAgent}>
@@ -129,7 +129,7 @@ const AgentsList = ({ agents, setAgents }) => {
 
       <div className="mt-3 space-y-4">
         {agents.map((agent, index) => (
-          <div key={index} className="p-3 border rounded-lg">
+          <div key={index} className="p-3 border-light rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-semibold">Agent #{index + 1}</h2>
               <Button color="red" onClick={() => removeAgent(index)}>
@@ -159,7 +159,7 @@ const AgentsList = ({ agents, setAgents }) => {
               value={agent.prompt}
               onChange={(value) => updateAgent(index, 'prompt', value)}
               placeholder="e.g., You are a judge presiding over a court case..."
-              container="bg-transparent border"
+              container="bg-transparent border-light"
             />
           </div>
         ))}
@@ -195,9 +195,9 @@ const OutputVariablesList = ({ variables, setVariables }) => {
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border rounded-lg  bg-transparent">
+    <div className="flex flex-col p-3 mt-3 border-light rounded-lg bg-transparent">
       <h1 className="font-bold text-lg">Output Variables</h1>
-      <p className="text-gray-300 text-sm">
+      <p className="text-sm">
         Define the variables to be extracted from the simulation
       </p>
       <Button color="darkpurple" onClick={addVariable}>
@@ -206,7 +206,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
 
       <div className="mt-3 space-y-4">
         {variables.map((variable, index) => (
-          <div key={index} className="p-3 border rounded-lg">
+          <div key={index} className="p-3 border-light rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-semibold">Variable #{index + 1}</h2>
               <Button color="red" onClick={() => removeVariable(index)}>
@@ -291,13 +291,13 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
   };
 
   return (
-    <div className="container p-3 mt-0 border rounded-lg relative">
+    <div className="container p-3 mt-0 border-light rounded-lg relative">
       {isGenerating && (
         <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-white mb-2"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8  border-light mb-2"></div>
             <p className="">Generating Configuration...</p>
-            <p className="text-gray-400 text-sm mt-2">This may take a few moments</p>
+            <p className=" text-sm mt-2">This may take a few moments</p>
           </div>
         </div>
       )}
@@ -327,7 +327,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
         height="min-h-48"
         container="container"
         textSize="text-md"
-        textArea="border focus:outline-none focus:ring-2"
+        textArea="border-light focus:outline-none focus:ring-2"
       />
 
       <div className="flex items-center justify-center gap-3 mb-2">
@@ -347,8 +347,8 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
 
 const JsonPreview = ({ data }) => {
   return data ? (
-    <div className="mt-4 p-3 border rounded-lg overflow-auto max-h-60">
-      <h2 className="font-bold  mb-2">Generated JSON Configuration:</h2>
+    <div className="mt-4 p-3 border-light rounded-lg overflow-auto max-h-60">
+      <h2 className="font-bold mb-2">Generated JSON Configuration:</h2>
       <pre className="text-sm">{JSON.stringify(data, null, 2)}</pre>
     </div>
   ) : null;
@@ -560,7 +560,7 @@ const Configuration = () => {
         {/* Tab content */}
         <div className="">
           {activeTab === 'manual' && (
-            <div className="container p-3 mt-0 border rounded-lg tab-connected">
+            <div className="container p-3 mt-0 border-light rounded-lg tab-connected">
               {/* Raw JSON input */}
               <TextArea
                 label="Raw JSON"
@@ -571,6 +571,7 @@ const Configuration = () => {
                 height="min-h-24"
                 container=""
                 textSize="text-sm"
+                textArea="border-light focus:outline-none focus:ring-2"
               />
               <Button color="green" onClick={loadJson}>
                 Load JSON

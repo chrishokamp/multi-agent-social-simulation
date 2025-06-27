@@ -28,12 +28,12 @@
 --bg-400: 50 20.7% 88.6%;
 --bg-500: 50 20.7% 88.6%;
 --border-100: 30 3.3% 11.8%;
---border-200: 30 3.3% 11.8%;
+--border-200: 214 213 208;
 --border-300: 30 3.3% 11.8%;
 --border-400: 30 3.3% 11.8%;
 --danger-000: 0 61.4% 22.4%;
 --danger-100: 0 58.6% 34.1%;
---danger-200: 0 58.6% 34.1%;
+--danger-200: 50 20.7% 88.6%;
 --danger-900: 0 50% 95%;
 --oncolor-100: 0 0% 100%;
 --oncolor-200: 60 6.7% 97.1%;
@@ -59,11 +59,13 @@
   scroll-behavior: smooth;
   --text-100: 60 2.6% 7.6%;
     font-weight: 100;
+
 }
 
 body {
   font-family: 'Manrope', sans-serif;
   color: var(--text-000);
+  background-color: hsl(var(--bg-100));
 
 }
 
@@ -165,7 +167,7 @@ button {
 
 .tab-active {
   color: hsl(var(--accent-brand));
-  background: hsl(var(--bg-200));
+  background: hsl(var(--bg-300));
   border-bottom: 2px solid hsl(var(--accent-brand));
 }
 
@@ -184,7 +186,7 @@ button {
   padding: 0.75rem;
   border-radius: 0.5rem;
   background: transparent;
-  border: 1px solid hsl(var(--border-400));
+  border: 1px solid hsl(var(--bg-500));
 }
 .form-label-title {
   font-size: 1.125rem;
@@ -202,16 +204,20 @@ button {
   outline: none;
   background: hsl(var(--bg-000));
   color: hsl(var(--text-000));
-  border: 1px solid hsl(var(--border-400));
+  border: 1px solid hsl(var(--bg-500));
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .form-input:focus {
   border-color: hsl(var(--border-100));
-  box-shadow: 0 0 0 2px hsl(var(--accent-main-200) / 0.2);
 }
 
 .container {
   background: hsl(var(--bg-200));
-  border: 1px solid hsl(var(--border-400));
+  border: 1px solid hsl(var(--bg-500));
+
+}
+
+.border-light{
+  border-color: hsl(var(--bg-500));
 }
