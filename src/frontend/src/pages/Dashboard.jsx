@@ -804,10 +804,10 @@ const Dashboard = () => {
   // Render opening screen if no simulation ID is provided
   if (isOpeningScreenVisible) {
     return (
-      <div className="w-full min-h-screen">
+      <div className="min-h-screen">
         <Navbar />
         <div className="flex items-center justify-center mt-40"> {/* Adjusted top margin */}
-          <div className="w-full px-4 container rounded mt-20 mb-6 p-10">
+          <div className="w-full max-w-3xl px-4 container rounded mt-20 p-10">
             <h2 className="text-2xl p-2 font-bold">Select a Simulation</h2>
             <p className="text-lg">
               Choose the simulation that you want to analyse.

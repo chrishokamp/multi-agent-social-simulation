@@ -192,9 +192,9 @@ const SimulationsList = () => {
   };
 
   return (
-    <div className="flex justify-center py-8 mt-40">
+    <div className="flex justify-center py-8 h-auto mt-40">
       <Navbar />
-      <div className="w-full max-w-4xl px-4 container rounded mt-20 pt-10">
+      <div className="w-full max-w-3xl px-4 container rounded mt-20 pt-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl p-2 font-bold">Simulations</h1>
           <div className="flex">
