@@ -307,17 +307,17 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
 
       <h1 className="font-bold text-lg">Automatic Configuration</h1>
       <ul className="list-disc list-inside mt-2 pl-3">
-        <li className="text-gray-300 text-sm">
+        <li className="text-sm">
           Describe your simulation in natural language, and let us generate a configuration for you.
         </li>
-        <li className="text-gray-300 text-sm">
+        <li className="text-sm">
           Remember to include the agents, their roles, termination condition and the expected
           outcomes.
         </li>
       </ul>
 
       {error && (
-        <div className="p-3 mb-3 bg-red-900 border border-red-700  rounded-lg">
+        <div className="p-3 mb-3  rounded-lg danger">
           {error}
         </div>
       )}
@@ -360,11 +360,7 @@ const JsonPreview = ({ data }) => {
 const Tab = ({ label, isActive, onClick }) => {
   return (
     <button
-      className={`cursor-pointer px-4 py-2 font-medium rounded-t-lg ${
-        isActive
-          ? 'border-t border-r border-l'
-          : 'text-gray-400 hover:'
-      }`}
+      className={`tab-btn ${isActive ? 'tab-active' : 'tab-inactive'}`}
       onClick={onClick}
     >
       {label}

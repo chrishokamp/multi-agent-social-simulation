@@ -140,3 +140,34 @@ button {
 .navbar-link:focus {
   color: hsl(var(--accent-main-200));
 }
+
+.danger{
+  background-color: hsl(var(--danger-200));
+  color: hsl(var(--oncolor-100));
+}
+
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 1rem;
+  border: none;
+  background: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.tab-active {
+  color: hsl(var(--accent-brand));
+  background: hsl(var(--bg-200));
+  border-bottom: 2px solid hsl(var(--accent-brand));
+}
+
+.tab-inactive {
+  color: hsl(var(--text-400));
+  background: transparent;
+}
+.tab-inactive:hover {
+  color: hsl(var(--accent-main-200));
+}
