@@ -120,7 +120,7 @@ const AgentsList = ({ agents, setAgents }) => {
   return (
     <div className="flex flex-col p-3 mt-3 border-light rounded bg-transparent">
       <h1 className="font-bold text-lg">Agents</h1>
-      <p className="text-sm">
+      <p >
         Define the agents that will participate in the simulation
       </p>
       <Button onClick={addAgent}>
@@ -197,7 +197,7 @@ const OutputVariablesList = ({ variables, setVariables }) => {
   return (
     <div className="flex flex-col p-3 mt-3 border-light rounded bg-transparent">
       <h1 className="font-bold text-lg">Output Variables</h1>
-      <p className="text-sm">
+      <p >
         Define the variables to be extracted from the simulation
       </p>
       <Button color="darkpurple" onClick={addVariable}>
@@ -297,17 +297,17 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8  border-light mb-2"></div>
             <p className="">Generating Configuration...</p>
-            <p className=" text-sm mt-2">This may take a few moments</p>
+            <p className="  mt-2">This may take a few moments</p>
           </div>
         </div>
       )}
 
       <h1 className="font-bold text-lg">Automatic Configuration</h1>
       <ul className="list-disc list-inside mt-2 pl-3">
-        <li className="text-sm">
+        <li >
           Describe your simulation in natural language, and let us generate a configuration for you.
         </li>
-        <li className="text-sm">
+        <li >
           Remember to include the agents, their roles, termination condition and the expected
           outcomes.
         </li>
@@ -349,7 +349,7 @@ const JsonPreview = ({ data }) => {
   return data ? (
     <div className="mt-4 p-3 border-light rounded overflow-auto max-h-60">
       <h2 className="font-bold mb-2">Generated JSON Configuration:</h2>
-      <pre className="text-sm">{JSON.stringify(data, null, 2)}</pre>
+      <pre >{JSON.stringify(data, null, 2)}</pre>
     </div>
   ) : null;
 };
@@ -569,7 +569,7 @@ const Configuration = () => {
                 placeholder='{"num_runs":10,"config":{...}}'
                 height="min-h-24"
                 container=""
-                textSize="text-sm"
+                textSize=""
                 textArea="border-light focus:outline-none focus:ring-2"
               />
               <Button color="green" onClick={loadJson}>

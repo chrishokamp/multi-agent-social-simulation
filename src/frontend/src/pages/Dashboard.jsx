@@ -806,9 +806,9 @@ const Dashboard = () => {
     return (
       <div className="w-full min-h-screen">
         <Navbar />
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className=" container backdrop-blur-3xl p-10 w-96 md:w-1/2 lg:w-1/3 min-h-[300px] flex flex-col justify-center rounded-xl shadow-card text-center">
-            <h2 className="text-2xl md:text-3xl font-bold">Select a Simulation</h2>
+        <div className="flex items-center justify-center mt-40"> {/* Adjusted top margin */}
+          <div className="w-full px-4 container rounded mt-20 mb-6 p-10">
+            <h2 className="text-2xl p-2 font-bold">Select a Simulation</h2>
             <p className="text-lg">
               Choose the simulation that you want to analyse.
             </p>

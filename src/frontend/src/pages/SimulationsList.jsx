@@ -58,7 +58,7 @@ const SimulationItem = ({ simulation, onViewRenderer, onViewDashboard, onDelete 
   const isComplete = simulation.progress_percentage === 100;
 
   return (
-    <div className="p-4 mb-3 rounded-lg  border border-light transition-colors">
+    <div className="p-4 mb-3 rounded  border border-light transition-colors">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-lg font-semibold mb-1" style={{ color: 'hsl(var(--text-000))' }}>{simulation.name}</h2>
@@ -91,8 +91,7 @@ const SimulationItem = ({ simulation, onViewRenderer, onViewDashboard, onDelete 
           )}
           <button
             onClick={() => onDelete(simulation.simulation_id, isComplete)}
-            className="px-3 py-1 rounded transition-colors cursor-pointer"
-            style={{ background: 'hsl(var(--danger-100))', color: 'hsl(var(--oncolor-100))' }}
+            className="px-3 py-1 danger transition-colors cursor-pointer p-2 rounded"
           >
             <MdDelete className="h-5 w-5 inline-block mb-0.75 mr-1" />
             Delete
@@ -193,15 +192,15 @@ const SimulationsList = () => {
   };
 
   return (
-    <div className="flex justify-center min-h-screen py-8">
+    <div className="flex justify-center py-8 mt-40">
       <Navbar />
-      <div className="w-full max-w-4xl px-4">
-        <div className="flex justify-between items-center mt-18 mb-6 pt-40">
-          <h1 className="text-2xl font-bold" style={{ color: 'hsl(var(--text-000))' }}>Simulations</h1>
-          <div className="flex space-x-4">
+      <div className="w-full max-w-4xl px-4 container rounded mt-20 pt-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl p-2 font-bold">Simulations</h1>
+          <div className="flex">
             <Link
               to="/Configuration"
-              className="px-4 py-2 rounded-lg transition-colors"
+              className="px-4 py-2 rounded transition-colors"
             >
               <FaPlus className="inline-block mr-2 mb-0.75" />
               Create New Simulation
@@ -209,7 +208,7 @@ const SimulationsList = () => {
           </div>
         </div>
         {error && (
-          <div className="p-3 mb-4 rounded-lg" style={{ background: 'hsl(var(--danger-000))', border: '1px solid hsl(var(--danger-100))', color: 'hsl(var(--oncolor-100))' }}>
+          <div className="danger p-2 rounded">
             {error}
           </div>
         )}
@@ -220,11 +219,10 @@ const SimulationsList = () => {
         ) : (
           <>
             {simulations.length === 0 ? (
-              <div className="rounded-lg p-8 text-center" style={{ background: 'hsl(var(--bg-200))' }}>
+              <div className="rounded p-8 text-center">
                 <p className="mb-4" style={{ color: 'hsl(var(--text-400))' }}>No simulations found</p>
                 <button
                   onClick={() => navigate('/Configuration')}
-                  
                 >
                   Create Your First Simulation
                 </button>
