@@ -6,6 +6,7 @@ a domain-specific `compute_utility()` method.  Nothing else in the
 framework has to change – you can still pass them anywhere a normal
 `AssistantAgent` is expected.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -15,6 +16,7 @@ import json
 from autogen.agentchat import AssistantAgent
 
 from utils import client_for_endpoint, create_logger
+
 logger = create_logger(__name__)
 
 
@@ -23,6 +25,7 @@ class UtilityAgent(AssistantAgent, ABC):
     Base class that adds an overridable `compute_utility` hook.
     Child classes should fill in the details for their own task.
     """
+
     def __init__(
         self,
         system_prompt: str,
@@ -33,7 +36,9 @@ class UtilityAgent(AssistantAgent, ABC):
         optimization_prompt: str | None = None,
         **kwargs,
     ):
-        super().__init__(*args, system_message=system_prompt, llm_config=llm_config, **kwargs)
+        super().__init__(
+            *args, system_message=system_prompt, llm_config=llm_config, **kwargs
+        )
         self.system_prompt: str = system_prompt
         self.strategy: dict[str, Any] = dict(strategy or {})
         # Let the agent remember the environment it saw last time
@@ -47,7 +52,9 @@ class UtilityAgent(AssistantAgent, ABC):
         """
         A list of the utility values computed in previous rounds
         """
-        return [run["output_variables"]["utility"] for run in self._last_environment["runs"]]
+        return [
+            run["output_variables"]["utility"] for run in self._last_environment["runs"]
+        ]
 
     def compute_utility(
         self,
@@ -64,34 +71,34 @@ class UtilityAgent(AssistantAgent, ABC):
         self._last_environment = environment
         return environment
 
-    def learn_from_feedback(
-        self,
-        environment: Mapping[str, Any] | None = None
-    ) -> None:
-        
+    def get_history(self, environment: Mapping[str, Any], n_runs: int) -> str:
+        history_lines = []
+        for run in environment["runs"][-n_runs:]:  # only look at the last n runs
+            run_id = run["run_id"]
+            msg = f"###########\nRUN {run_id}:\n"
+            for m in run["messages"]:
+                # Handle different message formats
+                if isinstance(m, dict):
+                    agent_name = m.get("agent", m.get("name", "Unknown"))
+                    message_content = m.get("message", m.get("content", ""))
+                    history_lines.append(f"{agent_name}: {message_content}")
+                else:
+                    history_lines.append(str(m))
+        history = "\n".join(history_lines)
+        return history
+
+    def learn_from_feedback(self, environment: Mapping[str, Any] | None = None) -> None:
+
         if environment is None or "runs" not in environment:
             return  # no environment to learn from
 
         # Check if there are any runs to learn from
         if not environment["runs"]:
             return  # no previous runs
-        
+
+        history = self.get_history(environment, n_runs=5)
         most_recent_run = environment["runs"][-1]
         utility = most_recent_run["output_variables"].get("utility", {})[self.name]
-            
-        history_lines = []
-        for run in environment["runs"][-5:]:  # only look at the last 5 runs
-            run_id = run["run_id"]
-            msg = f"###########\nRUN {run_id}:\n"
-            for m in run["messages"]:
-                # Handle different message formats
-                if isinstance(m, dict):
-                    agent_name = m.get('agent', m.get('name', 'Unknown'))
-                    message_content = m.get('message', m.get('content', ''))
-                    history_lines.append(f"{agent_name}: {message_content}")
-                else:
-                    history_lines.append(str(m))
-        history = "\n".join(history_lines)
 
         # Use custom optimization prompt if provided, otherwise use default
         optimization_content = self.optimization_prompt or (
@@ -102,7 +109,7 @@ class UtilityAgent(AssistantAgent, ABC):
             "The new prompt should be more assertive, business-like, and utility-maximizing than the current one. "
             "Remember: Higher utility = Better performance. Respond ONLY with the new prompt text."
         )
-        
+
         messages = [
             {
                 "role": "system",
@@ -126,7 +133,9 @@ class UtilityAgent(AssistantAgent, ABC):
         )
 
         new_prompt = response.choices[0].message.content.strip()
-        logger.info(f"Agent {self.name} learned new prompt: {new_prompt} (previous: {self.system_prompt})")
+        logger.info(
+            f"Agent {self.name} learned new prompt: {new_prompt} (previous: {self.system_prompt})"
+        )
         self.system_prompt = new_prompt
         return
 
@@ -160,6 +169,7 @@ class UtilityAgent(AssistantAgent, ABC):
 
 # ----------- example agents -------------
 
+
 class BuyerAgent(UtilityAgent):
     """
     Scores itself on the *money saved* in a negotiation.
@@ -189,11 +199,13 @@ class BuyerAgent(UtilityAgent):
             utility = 0.0
         else:
             final_price = float(most_recent_run["output_variables"]["final_price"])
-            max_price   = float(self.strategy["max_price"])
+            max_price = float(self.strategy["max_price"])
             # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
             utility = 1.0 - (final_price / max_price)
 
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
+            -1
+        ]["output_variables"].get("utility", {})
         environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
@@ -220,10 +232,173 @@ class SellerAgent(UtilityAgent):
             utility = 0.0
         else:
             final_price = float(most_recent_run["output_variables"]["final_price"])
-            target      = float(self.strategy["target_price"])
+            target = float(self.strategy["target_price"])
             utility = min(final_price / target, 1.0)
-        
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][-1]["output_variables"].get("utility", {})
+
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
+            -1
+        ]["output_variables"].get("utility", {})
         environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
         self._last_environment = environment
         return environment
+
+
+class NegotiationCoachAgent(UtilityAgent, ABC):
+    """
+    A base class for agents that receive strategies from a coach that
+    they can use to improve their performance in future rounds.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.negotiation_strategies: list = []
+        self.original_system_prompt = self.system_prompt
+
+    def learn_from_feedback(self, environment: Mapping[str, Any] | None = None) -> None:
+
+        if environment is None or "runs" not in environment:
+            return  # no environment to learn from
+
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return  # no previous runs
+
+        history = self._get_history(environment, n_runs=1)
+        most_recent_run = environment["runs"][-1]
+        utility = most_recent_run["output_variables"].get("utility", {})[self.name]
+
+        # Use custom optimization prompt if provided, otherwise use default
+        optimization_content = self.optimization_prompt or (
+            "You are a seasoned negotiation coach.\n"
+            f"Previous strategies:\n- "
+            + "\n- ".join(self.negotiation_strategies)
+            + "\n"
+            "Analyse the transcript and devise exactly ONE new strategy "
+            f"sentence the {self.name} could apply in a *future* negotiation to get a better price.\n"
+            "If neither party uttered 'Yes, deal!', that means no deal was reached. "
+            "In that case, focus on how to reach a good deal faster next time.\n"
+            "Start with an action verb and do NOT duplicate prior strategies. "
+            "Do NOT mention specific prices, names or budgets from the dialogue.\n"
+            f"{self._get_private_constraints()}\n."
+            f"The {self.name}'s normalised utility for this deal was {utility:.2f} ({tag}).\n"
+            "• If utility was 'loss' or 'poor', focus on improvement. "
+            "• If 'great', suggest how to replicate or slightly enhance success. \n"
+            "Include one recognised negotiation tactic (e.g., anchoring, mirroring, time-pressure) that fits what you observed in the transcript."
+            "Think step-by-step and return ONLY that single strategy sentence."
+        )
+
+        tag = (
+            "great"
+            if utility > 0.8
+            else "okay" if utility > 0.4 else "poor" if utility > 0 else "loss"
+        )
+        messages = [
+            {
+                "role": "system",
+                "content": optimization_content,
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"CURRENT PROMPT:\n{self.system_prompt}\n\n"
+                    f"STRATEGY:\n{json.dumps(self.strategy)}\n\n"
+                    f"FULL HISTORY:\n{history}\n\n"
+                    f"UTILITY ACHIEVED: {utility:.3f}({tag})\n\n"
+                    "New strategy:"
+                ),
+            },
+        ]
+
+        response = self._client.chat.completions.create(
+            model=self.model_name or "gpt-4o",
+            messages=messages,
+        )
+
+        new_strategy = response.choices[0].message.content.strip()
+        logger.info(f"Agent {self.name} learned new strategy: {new_strategy}")
+        self.negotiation_strategies.append(new_strategy)
+        self.system_prompt = self.original_system_prompt + (
+            "\nNegotiation strategies:\n" + "\n".join(self.negotiation_strategies)
+            if self.negotiation_strategies
+            else ""
+        )
+        return
+
+
+class NegotiationCoachBuyerAgent(NegotiationCoachAgent):
+    def compute_utility(
+        self,
+        environment: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        if environment is None:
+            environment = self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment  # no environment to learn from
+
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return environment  # no previous runs
+
+        most_recent_run = environment["runs"][-1]
+
+        if most_recent_run["output_variables"]["deal_reached"] is False:
+            # No deal reached, so no utility
+            utility = 0.0
+        else:
+            budget = float(self.strategy.get("budget", 0))
+            max_price = float(most_recent_run["output_variables"].get("final_price", 0))
+            if budget == 0:
+                utility = 0.0
+            else:
+                utility = (budget - max_price) / budget
+
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
+            -1
+        ]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        self._last_environment = environment
+        return environment
+
+    def _get_private_constraints(self) -> str:
+        return f"Buyer budget was ${self.strategy.get('budget', 0)}"
+
+
+class NegotiationCoachSellerAgent(NegotiationCoachAgent):
+    def compute_utility(
+        self,
+        environment: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        if environment is None:
+            environment = self._last_environment or {}
+        if environment is None or "runs" not in environment:
+            return environment  # no environment to learn from
+
+        # Check if there are any runs to learn from
+        if not environment["runs"]:
+            return environment  # no previous runs
+
+        most_recent_run = environment["runs"][-1]
+
+        if most_recent_run["output_variables"]["deal_reached"] is False:
+            # No deal reached, so no utility
+            utility = 0.0
+        else:
+            final_price = float(most_recent_run["output_variables"]["final_price"])
+            max_price = float(self.strategy["max_price"])
+            seller_floor = float(self.strategy.get("seller_floor", 0))
+            # Normalise to [0, 1]: 1 ⇒ paid seller_floor, 0 ⇒ paid max_price.
+            denominator = max_price - seller_floor
+            if denominator == 0:
+                utility = 0.0
+            else:
+                utility = (final_price - seller_floor) / denominator
+
+        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
+            -1
+        ]["output_variables"].get("utility", {})
+        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        self._last_environment = environment
+        return environment
+
+    def _get_private_constraints(self) -> str:
+        return f"Seller floor was ${self.strategy.get('seller_floor', 0)}"
