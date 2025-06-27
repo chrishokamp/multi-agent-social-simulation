@@ -157,6 +157,12 @@ button {
   cursor: pointer;
 }
 
+.tab-btn.tab-active {
+  border-bottom: none !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
 .tab-active {
   color: hsl(var(--accent-brand));
   background: hsl(var(--bg-200));

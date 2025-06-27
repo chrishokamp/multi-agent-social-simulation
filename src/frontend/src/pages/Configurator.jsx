@@ -291,7 +291,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
   };
 
   return (
-    <div className="container p-3 mt-3 border rounded-lg relative">
+    <div className="container p-3 mt-0 border rounded-lg relative">
       {isGenerating && (
         <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
@@ -331,12 +331,12 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
       />
 
       <div className="flex items-center justify-center gap-3 mb-2">
-        <Button color="lightpurple" onClick={getRandomPrompt}>
+        <Button onClick={getRandomPrompt}>
           <FaRandom className="mr-2 inline-block mb-0.5" />
           Random Prompt
         </Button>
         <FaLongArrowAltRight className="mt-3  h-7 w-7" />
-        <Button color="purple" onClick={generateConfig} disabled={isGenerating}>
+        <Button onClick={generateConfig} disabled={isGenerating}>
           <RiAiGenerate className="mr-2 inline-block mb-0.5 h-5 w-5" />
           {isGenerating ? 'Generating Configuration...' : 'Generate Configuration'}
         </Button>
@@ -559,7 +559,7 @@ const Configurator = () => {
         {/* Tab content */}
         <div className="">
           {activeTab === 'manual' && (
-            <div className="container p-3 mt-3 border rounded-lg">
+            <div className="container p-3 mt-0 border rounded-lg tab-connected">
               {/* Raw JSON input */}
               <TextArea
                 label="Raw JSON"
@@ -634,7 +634,7 @@ const Configurator = () => {
 
           <div className="flex flex-col md:flex-row gap-3 mt-4 items-center justify-center">
             {activeTab === 'manual' && (
-              <Button color="purple" onClick={createSimulationConfig}>
+              <Button onClick={createSimulationConfig}>
                 <RiAiGenerate className="mr-2 inline-block mb-0.5 h-5 w-5" />
                 Generate Configuration
               </Button>
