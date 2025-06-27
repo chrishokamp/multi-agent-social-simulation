@@ -7,7 +7,6 @@ import { FaLongArrowAltRight } from 'react-icons/fa';
 import { FaRandom } from 'react-icons/fa';
 import { RiAiGenerate } from 'react-icons/ri';
 import { MdOutlineQueuePlayNext } from 'react-icons/md';
-import { FaListUl } from 'react-icons/fa6';
 
 
 const TextField = ({ label, description, value, onChange, placeholder }) => {
