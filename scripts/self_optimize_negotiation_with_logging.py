@@ -8,8 +8,13 @@ from pathlib import Path
 from pprint import pprint
 from datetime import datetime
 
+import copy
 import click
 import dotenv
+import random
+import math
+import json
+
 
 import sys
 
@@ -23,6 +28,47 @@ from logging_framework.visualization import SimulationVisualizer
 from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
 
 dotenv.load_dotenv()
+
+
+def materialise_config(cfg:dict)->dict:
+    """
+    Return a *static* copy of `cfg` by
+      1) sampling all entries under cfg['variables'] (if present);
+      2) filling `{var}` placeholders in agent prompts / strategy dicts;
+      3) removing the `variables` section.
+    A config lacking the 'variables' key is considered already static.
+    """
+    static = copy.deepcopy(cfg)
+
+    var_rules = static.pop("variables", None)
+    if not var_rules:            # already static
+        return static
+    if "config" not in static:
+        return static
+
+    SAFE = {"randint": random.randint, "choice": random.choice,
+            "min": min, "max": max, "abs": abs, "round": round, "math": math}
+
+    values = {}
+    for name, rule in var_rules.items():
+        if "range" in rule:
+            r = rule["range"]
+            step = r.get("step",1)
+            values[name] = random.randrange(r["min"], r["max"]+1, step)
+        elif "choice" in rule:
+            values[name] = random.choice(rule["choice"])
+        elif "expr" in rule:
+            values[name] = eval(rule["expr"], SAFE, values)
+        else:
+            raise ValueError(f"Unknown rule for variable '{name}'")
+
+    for ag in static["config"]["agents"]:
+        # prompt
+        ag["prompt"] = ag["prompt"].format(**values)
+        # strategy dict
+        ag["strategy"] = {k: values.get(v, v) for k,v in ag["strategy"].items()}
+
+    return static["config"]
 
 
 async def run_once(config: dict, environment: dict, model: str | None = None, log_dir: Path = None):
@@ -80,6 +126,7 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         print(f"\n{'='*60}")
         print(f"Run {run_idx}/{num_runs}")
         print(f"{'='*60}")
+        config = materialise_config(raw)
         
         # Create run-specific log directory
         run_log_dir = output_dir / f"run_{run_idx:03d}"
