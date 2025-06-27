@@ -288,9 +288,9 @@ const Dashboard = () => {
     let series = [];
 
     // Define chart colors that match the site's palette
-    const primaryColor = '#a78bfa'; // violet-400
-    const secondaryColor = '#27ddc6'; // teal color shown in the code
-    const accentColor = '#8b5cf6'; // violet-500
+    const primaryColor = 'hsl(var(--accent-pro-200))';
+    const secondaryColor = 'hsl(var(--accent-secondary-100))';
+    const accentColor = 'hsl(var(--accent-pro-100))';
 
     // Handle comparison mode
     if (comparison.enabled && comparison.variable && comparison.runs.length > 0) {
@@ -433,7 +433,7 @@ const Dashboard = () => {
         text: `${chartConfig.yAxis} vs ${chartConfig.xAxis}`,
         left: 'center',
         top: 10,
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
       },
       grid: {
         left: '5%', // Increased to prevent left overflow
@@ -447,7 +447,7 @@ const Dashboard = () => {
         axisPointer: {
           type: 'cross',
           label: {
-            backgroundColor: '#6a7985',
+            backgroundColor: 'hsl(var(--accent-pro-000))',
           },
         },
         formatter: function (params) {
@@ -462,27 +462,27 @@ const Dashboard = () => {
           return result;
         },
         textStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
-        backgroundColor: 'rgba(80, 60, 130, 0.9)', // Dark violet background
-        borderColor: '#8b5cf6', // violet-500
+        backgroundColor: 'hsl(var(--accent-pro-900))',
+        borderColor: 'hsl(var(--accent-pro-200))',
         borderWidth: 1,
       },
       legend: {
         data: series.map((s) => s.name),
         top: 40,
         left: 'center',
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
         show: chartConfig.showLegend,
         type: 'scroll', // Enable scrolling for many items
         pageButtonPosition: 'end', // Position of page buttons
         pageButtonItemGap: 5, // Gap between page buttons
         pageButtonGap: 5, // Gap between page buttons and page info
-        pageIconColor: '#a78bfa', // violet-400
-        pageIconInactiveColor: '#4c1d95', // violet-900
+        pageIconColor: 'hsl(var(--accent-pro-200))',
+        pageIconInactiveColor: 'hsl(var(--accent-pro-900))',
         pageIconSize: 12, // Size of page buttons
         pageTextStyle: {
-          color: '#a78bfa', // violet-400
+          color: 'hsl(var(--accent-pro-200))',
         },
       },
       toolbox: {
@@ -491,13 +491,13 @@ const Dashboard = () => {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
             title: 'Save as Image',
             iconStyle: {
-              color: '#a78bfa', // violet-400
-              borderColor: '#fff',
+              color: 'hsl(var(--accent-pro-200))',
+              borderColor: 'hsl(var(--oncolor-100))',
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: '#8b5cf6', // violet-500 on hover
+                color: 'hsl(var(--accent-pro-100))',
               },
             },
           },
@@ -515,27 +515,27 @@ const Dashboard = () => {
         nameLocation: 'middle',
         nameGap: 30,
         nameTextStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           formatter: xNumeric ? (value) => value : null,
           margin: 15, // Extra margin to prevent cutoff
           rotate: xData.length > 10 ? 45 : 0, // Rotate labels if there are many points
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700 for axis lines
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700 for ticks
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         splitLine: {
           lineStyle: {
-            color: '#4c1d95', // violet-900 for grid lines
+            color: 'hsl(var(--accent-pro-900))',
             opacity: 0.3,
           },
         },
@@ -547,25 +547,25 @@ const Dashboard = () => {
           nameLocation: 'middle',
           nameGap: 50,
           nameTextStyle: {
-            color: '#fff',
+            color: 'hsl(var(--oncolor-100))',
           },
           axisLabel: {
-            color: '#fff',
+            color: 'hsl(var(--oncolor-100))',
             margin: 15, // Extra margin to prevent cutoff
           },
           axisLine: {
             lineStyle: {
-              color: '#6d28d9', // violet-700 for axis lines
+              color: 'hsl(var(--accent-pro-000))',
             },
           },
           axisTick: {
             lineStyle: {
-              color: '#6d28d9', // violet-700 for ticks
+              color: 'hsl(var(--accent-pro-000))',
             },
           },
           splitLine: {
             lineStyle: {
-              color: '#4c1d95', // violet-900 for grid lines
+              color: 'hsl(var(--accent-pro-900))',
               opacity: 0.3,
             },
           },
@@ -579,20 +579,20 @@ const Dashboard = () => {
               nameLocation: 'middle',
               nameGap: 50,
               nameTextStyle: {
-                color: '#27ddc6', // Teal for secondary axis
+                color: 'hsl(var(--accent-secondary-100))',
               },
               axisLabel: {
-                color: '#27ddc6',
+                color: 'hsl(var(--accent-secondary-100))',
                 margin: 15, // Extra margin to prevent cutoff
               },
               axisLine: {
                 lineStyle: {
-                  color: '#27ddc6', // Teal for secondary axis
+                  color: 'hsl(var(--accent-secondary-100))',
                 },
               },
               axisTick: {
                 lineStyle: {
-                  color: '#27ddc6', // Teal for secondary axis
+                  color: 'hsl(var(--accent-secondary-100))',
                 },
               },
               splitLine: {
@@ -664,15 +664,15 @@ const Dashboard = () => {
       title: {
         text: 'Messages per Run',
         left: 'center',
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
       },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(80, 60, 130, 0.9)',
-        borderColor: '#8b5cf6',
+        backgroundColor: 'hsl(var(--accent-pro-900))',
+        borderColor: 'hsl(var(--accent-pro-200))',
         borderWidth: 1,
         textStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
       },
       grid: {
@@ -686,39 +686,39 @@ const Dashboard = () => {
         type: 'category',
         data: messageLabels,
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           margin: 10,
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           margin: 10,
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         splitLine: {
           lineStyle: {
-            color: '#4c1d95', // violet-900
+            color: 'hsl(var(--accent-pro-900))',
             opacity: 0.3,
           },
         },
@@ -730,13 +730,13 @@ const Dashboard = () => {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
             title: 'Save as Image',
             iconStyle: {
-              color: '#a78bfa', // violet-400
-              borderColor: '#fff',
+              color: 'hsl(var(--accent-pro-200))',
+              borderColor: 'hsl(var(--oncolor-100))',
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: '#8b5cf6', // violet-500 on hover
+                color: 'hsl(var(--accent-pro-100))',
               },
             },
           },
@@ -752,7 +752,7 @@ const Dashboard = () => {
           data: messagesData,
           smooth: true,
           itemStyle: {
-            color: '#27ddc6', // Teal color
+            color: 'hsl(var(--accent-secondary-100))',
           },
           areaStyle: {
             color: {
@@ -762,8 +762,8 @@ const Dashboard = () => {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: 'rgba(39, 221, 206, 0.5)' },
-                { offset: 1, color: 'rgba(39, 221, 206, 0)' },
+                { offset: 0, color: 'hsl(var(--accent-secondary-100) / 0.5)' },
+                { offset: 1, color: 'hsl(var(--accent-secondary-100) / 0)' },
               ],
             },
           },
@@ -807,9 +807,9 @@ const Dashboard = () => {
       <div className="w-full min-h-screen">
         <Navbar />
         <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-violet-900/5 backdrop-blur-3xl p-10 w-96 md:w-1/2 lg:w-1/3 min-h-[300px] flex flex-col justify-center rounded-xl shadow-violet-600/60 shadow-card text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-violet-400">Select a Simulation</h2>
-            <p className="text-lg text-gray-400 mt-4">
+          <div className=" backdrop-blur-3xl p-10 w-96 md:w-1/2 lg:w-1/3 min-h-[300px] flex flex-col justify-center rounded-xl shadow-violet-600/60 shadow-card text-center">
+            <h2 className="text-2xl md:text-3xl font-bold">Select a Simulation</h2>
+            <p className="text-lg">
               Choose the simulation that you want to analyse.
             </p>
 
@@ -834,7 +834,7 @@ const Dashboard = () => {
             </div>
 
             {/* Error Message */}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
+            {error && <p className="danger">{error}</p>}
 
             {/* View Dashboard Button */}
             <div className="mt-6">
@@ -843,8 +843,8 @@ const Dashboard = () => {
                 disabled={!simulationId}
                 className={`${
                   !simulationId
-                    ? 'bg-violet-900/50 cursor-not-allowed'
-                    : 'bg-violet-800 hover:shadow-button'
+                    ? 'cursor-not-allowed'
+                    : ' hover:shadow-button'
                 } text-white px-6 py-3 rounded-full transition-colors duration-200 cursor-pointer`}
               >
                 View Dashboard

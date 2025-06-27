@@ -12,16 +12,15 @@ import { FaListUl } from 'react-icons/fa6';
 
 const TextField = ({ label, description, value, onChange, placeholder }) => {
   return (
-    <label className="flex flex-col mt-3 p-3 rounded-lg bg-transparent border" style={{ borderColor: 'hsl(var(--border-200))' }}>
-      <h1 className="font-bold text-lg" style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
-      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
+    <label className="form-label">
+      <h1 className="form-label-title">{label}</h1>
+      <p className="form-label-desc">{description}</p>
       <input
-        className="mt-1 p-2 rounded-lg outline-none"
+        className="form-input"
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       />
     </label>
   );
@@ -39,15 +38,14 @@ const TextArea = ({
   textArea = '',
 }) => {
   return (
-    <label className={`flex flex-col mt-3 p-3 rounded-lg ${container}`} style={{ background: 'hsl(var(--bg-100))', borderColor: 'hsl(var(--border-200))' }}>
-      <h1 className={`font-bold ${textSize}`} style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
-      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
+    <label className={`form-label ${container}`}>
+      <h1 className={`form-label-title ${textSize}`}>{label}</h1>
+      <p className="form-label-desc">{description}</p>
       <textarea
-        className={`mt-1 p-2 rounded-lg outline-none ${height} ${textArea}`}
+        className={`form-input ${height} ${textArea}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       />
     </label>
   );
@@ -74,17 +72,16 @@ const Button = ({ children, onClick, color = 'green', disabled = false }) => {
 
 const Select = ({ label, description, options, value, onChange }) => {
   return (
-    <label className="flex flex-col mt-3 p-3 border rounded-lg bg-transparent" style={{ borderColor: 'hsl(var(--border-200))' }}>
-      <h1 className="font-bold text-lg" style={{ color: 'hsl(var(--text-000))' }}>{label}</h1>
-      <p className="text-sm mb-2" style={{ color: 'hsl(var(--text-400))' }}>{description}</p>
+    <label className="form-label">
+      <h1 className="form-label-title">{label}</h1>
+      <p className="form-label-desc">{description}</p>
       <select
-        className="custom-select mt-1 p-2 rounded-lg outline-none"
+        className="form-input custom-select"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{ background: 'hsl(var(--bg-100))', color: 'hsl(var(--text-000))', border: '1px solid hsl(var(--border-200))' }}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value} style={{ background: 'hsl(var(--accent-brand))', color: 'hsl(var(--oncolor-100))' }}>
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -126,7 +123,7 @@ const AgentsList = ({ agents, setAgents }) => {
       <p className="text-gray-300 text-sm">
         Define the agents that will participate in the simulation
       </p>
-      <Button color="darkpurple" onClick={addAgent}>
+      <Button onClick={addAgent}>
         Add Agent
       </Button>
 
@@ -294,7 +291,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
   };
 
   return (
-    <div className="flex flex-col p-3 mt-3 border rounded-lg relative">
+    <div className="container p-3 mt-3 border rounded-lg relative">
       {isGenerating && (
         <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
@@ -328,7 +325,7 @@ const AIConfigGenerator = ({ onConfigGenerated, isGenerating, setIsGenerating })
         onChange={setPrompt}
         placeholder="e.g., Create a court case simulation with a judge, prosecutor, and defense attorney. The simulation should track the verdict and sentence length..."
         height="min-h-48"
-        container="bg-transparent"
+        container="container"
         textSize="text-md"
         textArea="border focus:outline-none focus:ring-2"
       />
@@ -540,13 +537,13 @@ const Configurator = () => {
         </div>
 
         {error && (
-          <div className="p-3 mb-4 bg-red-900 border border-red-700  rounded-lg">
+          <div className="danger">
             {error}
           </div>
         )}
 
         {/* Tab navigation */}
-        <div className="flex justify-center items-center border-b mt-6">
+        <div className="flex justify-center items-center">
           <Tab
             label="Automatic Configuration"
             isActive={activeTab === 'ai'}
@@ -560,9 +557,9 @@ const Configurator = () => {
         </div>
 
         {/* Tab content */}
-        <div className="pt-4">
+        <div className="">
           {activeTab === 'manual' && (
-            <>
+            <div className="container p-3 mt-3 border rounded-lg">
               {/* Raw JSON input */}
               <TextArea
                 label="Raw JSON"
@@ -571,7 +568,7 @@ const Configurator = () => {
                 onChange={setRawJson}
                 placeholder='{"num_runs":10,"config":{...}}'
                 height="min-h-24"
-                container="bg-transparent"
+                container=""
                 textSize="text-sm"
               />
               <Button color="green" onClick={loadJson}>
@@ -610,7 +607,6 @@ const Configurator = () => {
                 placeholder="e.g., 1"
               />
 
-
               <AgentsList agents={agents} setAgents={setAgents} />
 
               <TextArea
@@ -619,11 +615,11 @@ const Configurator = () => {
                 value={terminationCondition}
                 onChange={setTerminationCondition}
                 placeholder="e.g., The judge has delivered a verdict"
-                container="border"
+                container=""
               />
 
               <OutputVariablesList variables={outputVariables} setVariables={setOutputVariables} />
-            </>
+            </div>
           )}
 
           {activeTab === 'ai' && (

@@ -10,8 +10,6 @@ const Navbar = () => {
             <a
               href={href}
               className="navbar-link flex items-center gap-2 text-md"
-              onMouseOver={e => e.currentTarget.style.color = 'hsl(var(--bg-200))'}
-              onMouseOut={e => e.currentTarget.style.color = 'hsl(var(--text-000))'}
             >
               <Icon
                 className={name === 'Dashboard' ? 'h-6 w-6 -mr-0.75' : 'h-5 w-5'}

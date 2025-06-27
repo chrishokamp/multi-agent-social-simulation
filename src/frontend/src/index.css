@@ -58,10 +58,10 @@
 * {
   scroll-behavior: smooth;
   --text-100: 60 2.6% 7.6%;
+    font-weight: 100;
 }
 
 body {
-
   font-family: 'Manrope', sans-serif;
   color: var(--text-000);
 
@@ -112,7 +112,6 @@ body {
   text-decoration: none;
   font-family: var(--font-sans-serif);
   transition: color 0.2s;
-  background: hsl(var(--bg-200));
 }
 
 .navbar-brand:hover {
@@ -170,4 +169,42 @@ button {
 }
 .tab-inactive:hover {
   color: hsl(var(--text-000));
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: 1px solid hsl(var(--border-200));
+}
+.form-label-title {
+  font-size: 1.125rem;
+  color: hsl(var(--text-000));
+}
+.form-label-desc {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--text-400));
+}
+.form-input {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  outline: none;
+  background: hsl(var(--bg-000));
+  color: hsl(var(--text-000));
+  border: 1px solid hsl(var(--border-200));
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  border-color: hsl(var(--accent-main-200));
+  box-shadow: 0 0 0 2px hsl(var(--accent-main-200) / 0.2);
+}
+
+.container {
+  background: hsl(var(--bg-200));
 }
