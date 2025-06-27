@@ -8,18 +8,63 @@
 
 /* For example, if you need a colour that doesn't exist in the default TailwindCSS palette, you can define it here */
 @theme {
-  --color-midnight: #110619;
-  --shadow-button: 0px 2px 8px 0px rgba(139, 92, 246, 1);
-  --shadow-card: 0px 1px 20px 0px rgba(139, 92, 246, 1);
+--accent-brand: 15 63.1% 59.6%;
+--accent-main-000: 15 55.6% 52.4%;
+--accent-main-100: 15 55.6% 52.4%;
+--accent-main-200: 15 63.1% 59.6%;
+--accent-main-900: 0 0% 0%;
+--accent-pro-000: 251 34.2% 33.3%;
+--accent-pro-100: 251 40% 45.1%;
+--accent-pro-200: 251 61% 72.2%;
+--accent-pro-900: 253 33.3% 91.8%;
+--accent-secondary-000: 210 73.7% 40.2%;
+--accent-secondary-100: 210 70.9% 51.6%;
+--accent-secondary-200: 210 70.9% 51.6%;
+--accent-secondary-900: 211 72% 90%;
+--bg-000: 0 0% 100%;
+--bg-100: 48 33.3% 97.1%;
+--bg-200: 53 28.6% 94.5%;
+--bg-300: 48 25% 92.2%;
+--bg-400: 50 20.7% 88.6%;
+--bg-500: 50 20.7% 88.6%;
+--border-100: 30 3.3% 11.8%;
+--border-200: 30 3.3% 11.8%;
+--border-300: 30 3.3% 11.8%;
+--border-400: 30 3.3% 11.8%;
+--danger-000: 0 61.4% 22.4%;
+--danger-100: 0 58.6% 34.1%;
+--danger-200: 0 58.6% 34.1%;
+--danger-900: 0 50% 95%;
+--oncolor-100: 0 0% 100%;
+--oncolor-200: 60 6.7% 97.1%;
+--oncolor-300: 60 6.7% 97.1%;
+--text-000: 60 2.6% 7.6%;
+--text-100: 60 2.6% 7.6%;
+--text-200: 60 2.5% 23.3%;
+--text-300: 60 2.5% 23.3%;
+--text-400: 51 3.1% 43.7%;
+--text-500: 51 3.1% 43.7%;
 }
 
+:root {
+--font-serif: var(--font-tiempos), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+--font-sans-serif: var(--font-styrene-b), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+--font-system: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+--font-dyslexia: var(--font-open-dyslexic), "Comic Sans MS", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+--font-user-message: var(--font-sans-serif);
+--font-claude-message: var(--font-serif);
+--dropdown-max-height: 480px;
+}
 * {
   scroll-behavior: smooth;
+  --text-100: 60 2.6% 7.6%;
 }
 
 body {
-  background: #110619;
+  background: hsl(var(--bg-100));
   font-family: 'Manrope', sans-serif;
+  color: var(--text-000);
+
 }
 
 
@@ -28,39 +73,33 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #110619;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.7);
   border-radius: 10px;
   transition: background 0.3s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.9);
+  background: hsl(var(--accent-main-200)); /* Use a theme accent color on hover */
 }
 
 .side-panel {
   width: 25%; /* Set width to 25% */
   max-height: 100vh; /* Limit height to the screen height */
-  background-color: #1a202c; /* Midnight background color (you can change this to fit your design) */
+  background-color: hsl(var(--accent-pro-000)); /* Use a theme color for the side panel */
   overflow-y: auto; /* Make the content scrollable if it overflows */
-  box-shadow: 0px 4px 6px rgba(138, 87, 255, 0.6); /* Shadow with violet color */
   position: fixed; /* Fix the side panel in place */
   top: 0;
   right: 0; /* Or 'left: 0;' depending on where you want the panel */
 }
 
 .custom-select option {
-  background-color: #250b47;
-  /* deep violet */
-  color: #ffffff;
-  /* white text */
+  background-color: hsl(var(--accent-brand));
+  color: hsl(var(--oncolor-100));
 }
 
 .custom-select option:hover {
-  background-color: #7c2ae8;
-  /* lighter violet on hover? */
+  background-color: hsl(var(--accent-main-100));
 }
