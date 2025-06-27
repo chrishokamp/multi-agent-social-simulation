@@ -9,7 +9,7 @@
 /* For example, if you need a colour that doesn't exist in the default TailwindCSS palette, you can define it here */
 @theme {
 --accent-brand: 15 63.1% 59.6%;
---accent-main-000: red;
+--accent-main-000: 15 55.6% 52.4%;
 --accent-main-100: 15 55.6% 52.4%;
 --accent-main-200: 15 63.1% 59.6%;
 --accent-main-900: 0 0% 0%;
@@ -112,8 +112,31 @@ body {
   text-decoration: none;
   font-family: var(--font-sans-serif);
   transition: color 0.2s;
+  background: hsl(var(--bg-200));
 }
 
 .navbar-brand:hover {
+  color: hsl(var(--accent-main-200));
+}
+
+button {
+  background-color: hsl(var(--accent-main-200));
+  color: hsl(var(--oncolor-100));
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navbar-link {
+  color: hsl(var(--text-000));
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+.navbar-link:hover,
+.navbar-link:focus {
   color: hsl(var(--accent-main-200));
 }
