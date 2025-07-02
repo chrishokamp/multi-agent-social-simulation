@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Mapping
 import json
 
+
 from autogen.agentchat import AssistantAgent
 
 from utils import client_for_endpoint, create_logger
@@ -255,6 +256,8 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
         self.original_system_prompt = self.system_prompt
 
     def learn_from_feedback(self, environment: Mapping[str, Any] | None = None) -> None:
+        
+        agent_strategies_key = f"strategies_{self.name.lower()}"
 
         if environment is None or "runs" not in environment:
             return  # no environment to learn from
@@ -262,16 +265,23 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
         # Check if there are any runs to learn from
         if not environment["runs"]:
             return  # no previous runs
-
-        history = self._get_history(environment, n_runs=1)
+        environment.setdefault(agent_strategies_key, [])
+        
+        history = self.get_history(environment, n_runs=1)
         most_recent_run = environment["runs"][-1]
         utility = most_recent_run["output_variables"].get("utility", {})[self.name]
 
+        tag = (
+            "great"
+            if utility > 0.8
+            else "okay" if utility > 0.4 else "poor" if utility > 0 else "loss"
+        )
+
         # Use custom optimization prompt if provided, otherwise use default
-        optimization_content = self.optimization_prompt or (
+        optimization_content = (
             "You are a seasoned negotiation coach.\n"
             f"Previous strategies:\n- "
-            + "\n- ".join(self.negotiation_strategies)
+            + "\n- ".join(environment.get(agent_strategies_key, []))
             + "\n"
             "Analyse the transcript and devise exactly ONE new negotiation strategy "
             f"sentence the {self.name} could apply in a *future* negotiation to get a better price.\n"
@@ -285,12 +295,6 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
             "• If 'great', suggest how to replicate or slightly enhance success. \n"
             "Include one recognised negotiation tactic (e.g., anchoring, mirroring, time-pressure) that fits what you observed in the transcript."
             "Think step-by-step and return ONLY that single negotiation strategy sentence."
-        )
-
-        tag = (
-            "great"
-            if utility > 0.8
-            else "okay" if utility > 0.4 else "poor" if utility > 0 else "loss"
         )
         messages = [
             {
@@ -313,10 +317,10 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
             model=self.model_name or "gpt-4o",
             messages=messages,
         )
-
         new_strategy = response.choices[0].message.content.strip()
         logger.info(f"Agent {self.name} learned new strategy: {new_strategy}")
         self.negotiation_strategies.append(new_strategy)
+        environment[agent_strategies_key].append(new_strategy)
         self.system_prompt = self.original_system_prompt + (
             "\nNegotiation strategies:\n" + "\n".join(self.negotiation_strategies)
             if self.negotiation_strategies
@@ -384,8 +388,8 @@ class NegotiationCoachSellerAgent(NegotiationCoachAgent):
             utility = 0.0
         else:
             final_price = float(most_recent_run["output_variables"]["final_price"])
-            max_price = float(self.strategy["max_price"])
-            seller_floor = float(self.strategy.get("seller_floor", 0))
+            max_price = float(self.strategy["asking_price"])
+            seller_floor = float(self.strategy.get("asking_price", 0))
             # Normalise to [0, 1]: 1 ⇒ paid seller_floor, 0 ⇒ paid max_price.
             denominator = max_price - seller_floor
             if denominator == 0:
