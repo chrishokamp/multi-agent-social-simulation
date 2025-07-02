@@ -466,5 +466,5 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
 
 
 if __name__ == "__main__":
-    random.seed()
+    random.seed(7236)
     main()
