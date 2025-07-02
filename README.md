@@ -80,7 +80,17 @@ Evaluate an expression at runtime
 "floor": { "expr": "asking_price - randint(100, 300)" }
 ```
 
-Variables can reference each other and can be referenced in the prompt like
+Variables can reference each other, provided that the referenced veriables are defined earlier in the list
+
+```json
+"variables": {
+  "asking_price": { "range": { "min": 900, "max": 1400, "step": 50 } },
+  "floor": { "expr": "asking_price - randint(100, 300)" },
+  "budget": { "expr": "randint(floor + 50, asking_price - 50)" }
+}
+```
+
+Variables can be referenced in the prompt like
 
 ```json
 "You are the SELLER of a laptop.\n• Asking price: {asking_price}"
