@@ -5,6 +5,7 @@ import textwrap
 import uuid
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import random
 
 from pydantic import BaseModel, ValidationError
 from autogen import (
@@ -110,7 +111,7 @@ class SelectorGCSimulation:
             )
             self.config["agents"].append(ira)
 
-        # build agent instances
+                                
         self.agents = []
         for agent_cfg in self.config["agents"]:
             cls_name = agent_cfg.get("utility_class", "UtilityAgent")
@@ -260,6 +261,16 @@ class SelectorGCSimulation:
 
         # persist and return
         self.sim_logger.save_logs()
+        strategies = {}
+        buyer_strat = self.environment.get('strategies_buyer', [])
+        seller_strat = self.environment.get('strategies_seller', [])
+        if buyer_strat:
+            strategies['buyer'] = buyer_strat
+        if seller_strat:
+            strategies['seller'] = seller_strat
+        if strategies:
+            with open(self.sim_logger.log_dir / "strategies.json", "w") as f:
+                json.dump(strategies, f, indent=2)
         return {
             "run_id": self.run_id,
             "system_prompts": {ag.name: ag.system_prompt for ag in self.agents},
