@@ -16,7 +16,7 @@ MAX_ROUNDS = 20
 TEMPERATURE = 0.5
 def llm_cfg() -> LLMConfig:
     if os.getenv("OPENAI_API_KEY"):
-        return LLMConfig(model="gpt-4o-mini", temperature=TEMPERATURE, max_tokens=2048)
+        return LLMConfig(model="gpt-4o", temperature=TEMPERATURE, max_tokens=2048)
     need = ("AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT")
     if not all(os.getenv(k) for k in need):
         sys.exit("Set OPENAI_API_KEY or the three AZURE_* variables.")
@@ -294,4 +294,4 @@ with open("deal_gym_reflect_system_messages.json", "w") as f:
     json.dump(system_messages, f, indent=2)
 with open("deal_gym_reflect_transcripts.json", "w") as f:
     json.dump(all_transcripts, f, indent=2)
-print("✓ Done – results saved.")
+print("✓ Done - results saved.")
