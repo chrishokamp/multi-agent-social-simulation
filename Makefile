@@ -328,6 +328,50 @@ test-logging-unit: ## Run logging framework unit tests
 	$(UV_VENV)/bin/python -m pytest src/backend/tests/integration/test_logged_simulation.py -v
 	@echo "$(GREEN)Logging framework unit tests completed!$(NC)"
 
+# UI Testing with Playwright
+.PHONY: install-playwright
+install-playwright: ## Install Playwright and browsers for UI testing
+	@echo "$(YELLOW)Installing Playwright...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/pip install playwright
+	$(UV_VENV)/bin/playwright install chromium
+	@echo "$(GREEN)Playwright installed!$(NC)"
+
+.PHONY: test-ui
+test-ui: ## Run UI integration tests with Playwright
+	@echo "$(YELLOW)Running UI tests...$(NC)"
+	@if ! command -v $(UV_VENV)/bin/playwright &> /dev/null; then \
+		echo "$(RED)Playwright not installed. Run 'make install-playwright' first.$(NC)"; \
+		exit 1; \
+	fi
+	@if ! curl -s http://localhost:5173 > /dev/null; then \
+		echo "$(RED)Frontend not running. Start it with 'make dev-frontend'$(NC)"; \
+		exit 1; \
+	fi
+	@if ! curl -s http://localhost:5000 > /dev/null; then \
+		echo "$(RED)Backend not running. Start it with 'make dev-backend'$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python test_ui.py
+	@echo "$(GREEN)UI tests completed!$(NC)"
+
+.PHONY: test-ui-simple
+test-ui-simple: ## Run simple UI-backend integration test (no browser required)
+	@echo "$(YELLOW)Running simple UI integration test...$(NC)"
+	@if ! curl -s http://localhost:5173 > /dev/null; then \
+		echo "$(RED)Frontend not running. Start it with 'make dev-frontend'$(NC)"; \
+		exit 1; \
+	fi
+	@if ! curl -s http://localhost:5000 > /dev/null; then \
+		echo "$(RED)Backend not running. Start it with 'make dev-backend'$(NC)"; \
+		exit 1; \
+	fi
+	$(UV_VENV)/bin/python test_ui_simple.py
+	@echo "$(GREEN)Simple UI test completed!$(NC)"
+
 # Docker support (future)
 .PHONY: docker-build
 docker-build: ## Build Docker images

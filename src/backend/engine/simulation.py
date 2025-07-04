@@ -32,7 +32,7 @@ _utility_class_registry = {
 
 class SimulationRun(BaseModel):
     run_id: str
-    output_variables: Dict[str, Any]
+    output_variables: Any  # Can be either Dict[str, Any] or List[Dict[str, Any]]
     system_prompts: Optional[Dict[str, str]] = None
     messages: Optional[List[Dict[str, str]]] = None
 
@@ -274,7 +274,7 @@ class SelectorGCSimulation:
             "run_id": self.run_id,
             "system_prompts": {ag.name: ag.system_prompt for ag in self.agents},
             "messages": messages,
-            "output_variables": {v["name"]: v["value"] for v in output_vars},
+            "output_variables": output_vars,  # Return as list, not dict
         }
     def calculate_utility(self) -> None:
         for ag in self.agents:

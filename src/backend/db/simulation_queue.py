@@ -95,6 +95,23 @@ class SimulationQueue(MongoBase):
         print(f"Retrieved simulation: {simulation_id}, {config}")  
         return simulation_id, config
     
+    def retrieve_full_job(self):
+        # get oldest object and retrieve all remaining runs at once
+        oldest_object = self.queue_collection.find_one(sort=[("timestamp", 1)])
+        
+        if not oldest_object:
+            return None  # return None if queue is empty
+        
+        simulation_id = oldest_object["simulation_id"]
+        config = oldest_object["config"]
+        num_runs = oldest_object["remaining_runs"]
+        
+        # Delete the job from the queue since we're taking all runs
+        self.queue_collection.delete_one({"simulation_id": simulation_id})
+        
+        logger.info(f"Retrieved full job: {simulation_id} with {num_runs} runs")
+        return simulation_id, config, num_runs
+    
     def delete(self, simulation_id):
         result = self.queue_collection.delete_one({"simulation_id": simulation_id})
         return result.deleted_count > 0

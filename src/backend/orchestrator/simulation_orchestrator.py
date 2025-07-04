@@ -83,11 +83,24 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, upd
 
         if not simulation_result:
             print(f"Run {i} failed; retrying...")
+            logger.error(f"Simulation {simulation_id} run {i+1} returned no result")
             continue
 
+        logger.info(f"Simulation {simulation_id} run {i+1} completed with result type: {type(simulation_result)}")
+        
         if update_catalog:
-            results_store.insert(simulation_id, simulation_result)
-            catalog_store.update_progress(simulation_id)
+            try:
+                print(f"[Orchestrator] About to call results_store.insert for {simulation_id}")
+                insert_result = results_store.insert(simulation_id, simulation_result)
+                print(f"[Orchestrator] insert_result = {insert_result}")
+                if insert_result:
+                    logger.info(f"Saved results for simulation {simulation_id} run {i+1}")
+                else:
+                    logger.error(f"Insert returned None for simulation {simulation_id} run {i+1}")
+                catalog_store.update_progress(simulation_id)
+                logger.info(f"Updated progress for simulation {simulation_id}")
+            except Exception as e:
+                logger.error(f"Failed to save results for simulation {simulation_id}: {e}")
 
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         sim_history_dir = f"simulations/{simulation_id}/history"

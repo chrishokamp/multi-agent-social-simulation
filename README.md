@@ -204,6 +204,13 @@ make test-backend
 
 # Unit tests only
 make test-unit
+
+# UI tests (requires Playwright)
+make install-playwright  # First time only
+make test-ui
+
+# Simple UI-backend integration test (no browser)
+make test-ui-simple
 ```
 
 ## Project Structure
