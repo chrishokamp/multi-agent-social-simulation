@@ -29,14 +29,24 @@ Run unittests
 make test
 ```
 
-### 2. Set API Keys
+#### Environment Variable Setup
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
 export DB_CONNECTION_STRING="mongodb://localhost:27017"
+
+# Optional: Azure OpenAI
+export AZURE_OPENAI_ENDPOINT="your-endpoint"
+export AZURE_OPENAI_API_KEY="your-key"
+
+# Optional: Ollama
+export OLLAMA_MODEL="qwen3:4b"
+
+# Optional: if using user interface
+export DB_CONNECTION_STRING="mongodb://localhost:27017"
 ```
 
-### 3. Run Simulations using the API
+### 2. Run Simulations using the API
 
 The main entrypoint is the `make run-simulation` command.
 
@@ -55,20 +65,7 @@ In order to run with a specific config:
 ```bash
 make run-simulation CONFIG="path/to/your/config"
 ```
-
-### Environment Setup
-
-```bash
-export OPENAI_API_KEY="your-api-key"
-export DB_CONNECTION_STRING="mongodb://localhost:27017"
-
-# Optional: Azure OpenAI
-export AZURE_OPENAI_ENDPOINT="your-endpoint"
-export AZURE_OPENAI_API_KEY="your-key"
-
-# Optional: Ollama
-export OLLAMA_MODEL="qwen3:4b"
-```
+### 3. Run and Explore Simulations using the User Interface
 
 ### MongoDB Setup
 
@@ -84,7 +81,7 @@ brew services start mongodb/brew/mongodb-community@6.0
 docker run -d -p 27017:27017 --name mongodb mongo:6.0
 ```
 
-### 4. Run Backend
+#### Run Backend
 
 ```bash
 python src/backend/main.py
@@ -92,7 +89,7 @@ python src/backend/main.py
 
 The API will be available at `http://localhost:5000`
 
-### 5. Run Frontend
+#### Run Frontend
 
 ```bash
 cd src/frontend
