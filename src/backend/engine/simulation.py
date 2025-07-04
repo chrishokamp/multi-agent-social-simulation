@@ -262,12 +262,11 @@ class SelectorGCSimulation:
         # persist and return
         self.sim_logger.save_logs()
         strategies = {}
-        buyer_strat = self.environment.get('strategies_buyer', [])
-        seller_strat = self.environment.get('strategies_seller', [])
-        if buyer_strat:
-            strategies['buyer'] = buyer_strat
-        if seller_strat:
-            strategies['seller'] = seller_strat
+
+        for agent in self.agents:
+            strat = self.environment.get(f"strategies_{agent.name.lower()}", [])
+            if strat:
+                strategies[agent.name.lower()] = strat
         if strategies:
             with open(self.sim_logger.log_dir / "strategies.json", "w") as f:
                 json.dump(strategies, f, indent=2)

@@ -58,43 +58,7 @@ make run-simulation CONFIG="path/to/your/config"
 
 ## Configuration
 
-You can define dynamic, randomized parameters for your simulations using the 
-`variables` section in your config. This allows you to generate a new scenario 
-for every run.
-
-Each variable can be defined as:
-
-**range**
-
-Uniformly sample a random value
-
-```json
-"asking_price": { "range": { "min": 900, "max": 1400, "step": 50 } }
-```
-
-**expr**
-
-Evaluate an expression at runtime
-
-```json
-"floor": { "expr": "asking_price - randint(100, 300)" }
-```
-
-Variables can reference each other, provided that the referenced veriables are defined earlier in the list
-
-```json
-"variables": {
-  "asking_price": { "range": { "min": 900, "max": 1400, "step": 50 } },
-  "floor": { "expr": "asking_price - randint(100, 300)" },
-  "budget": { "expr": "randint(floor + 50, asking_price - 50)" }
-}
-```
-
-Variables can be referenced in the prompt like
-
-```json
-"You are the SELLER of a laptop.\n• Asking price: {asking_price}"
-```
+Configuration files can be found and changed in `src/configs`. 
 
 ### Environment Setup
 
@@ -180,6 +144,46 @@ sim_id = response.json()["simulation_id"]
 
 # Check results
 results = requests.get(f"http://localhost:5000/sim/results/{sim_id}")
+```
+
+### Dynamic Configuration
+
+You can define dynamic, randomized parameters for your simulations using the 
+`variables` section in your config. This allows you to generate a new scenario 
+for every run.
+
+Each variable can be defined as:
+
+**range**
+
+Uniformly sample a random value
+
+```json
+"asking_price": { "range": { "min": 900, "max": 1400, "step": 50 } }
+```
+
+**expr**
+
+Evaluate an expression at runtime
+
+```json
+"floor": { "expr": "asking_price - randint(100, 300)" }
+```
+
+Variables can reference each other, provided that the referenced veriables are defined earlier in the list
+
+```json
+"variables": {
+  "asking_price": { "range": { "min": 900, "max": 1400, "step": 50 } },
+  "floor": { "expr": "asking_price - randint(100, 300)" },
+  "budget": { "expr": "randint(floor + 50, asking_price - 50)" }
+}
+```
+
+Variables can be referenced in the prompt like
+
+```json
+"You are the SELLER of a laptop.\n• Asking price: {asking_price}"
 ```
 
 ### Generate Configuration with AI
