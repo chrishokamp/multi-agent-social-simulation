@@ -42,7 +42,7 @@ def materialise_config(cfg:dict)->dict:
 
     var_rules = static.pop("variables", None)
     if not var_rules:            # already static
-        return static
+        return static['config']
     if "config" not in static:
         return static
 

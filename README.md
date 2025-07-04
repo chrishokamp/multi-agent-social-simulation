@@ -56,10 +56,6 @@ In order to run with a specific config:
 make run-simulation CONFIG="path/to/your/config"
 ```
 
-## Configuration
-
-Configuration files can be found and changed in `src/configs`. 
-
 ### Environment Setup
 
 ```bash
@@ -170,7 +166,7 @@ Evaluate an expression at runtime
 "floor": { "expr": "asking_price - randint(100, 300)" }
 ```
 
-Variables can reference each other, provided that the referenced veriables are defined earlier in the list
+Variables with `expr` can use `randint` (random.randint), `choice` (random.choice), `min`, `max`, `abs` and `round`, and reference each other, provided that the referenced variables are defined earlier in the list
 
 ```json
 "variables": {
