@@ -48,8 +48,10 @@ def create_simulation():
         simulation_id = simulation_queue.insert(request_json["config"], request_json["num_runs"])
         if simulation_id:
             if simulation_catalog.insert(simulation_id, request_json["config"]["name"], request_json["num_runs"]):
-                return jsonify(
-                    {"message": f"Successfully created simulation with ID: {simulation_id} and {request_json['num_runs']} runs."}
-                ), 200
+                return jsonify({
+                    "message": f"Successfully created simulation with ID: {simulation_id} and {request_json['num_runs']} runs.",
+                    "simulation_id": simulation_id,
+                    "num_runs": request_json['num_runs']
+                }), 200
 
     return jsonify({"message": "Invalid request syntax."}), 400

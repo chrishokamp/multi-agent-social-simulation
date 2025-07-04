@@ -428,8 +428,8 @@ const Configuration = () => {
       top_p: parseFloat(topP)
     });
 
-    // Log the simulation ID
-    console.log(`Retrieved simulation: ${config.id}\n`);
+    // Log the simulation info (note: config won't have an id until after creation)
+    console.log('Generated configuration:');
 
     // Log the simulation data in a structured format
     console.log(`Simulation Name: ${generatedConfig.name}\n`);

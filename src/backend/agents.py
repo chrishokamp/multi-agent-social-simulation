@@ -99,7 +99,25 @@ class UtilityAgent(AssistantAgent, ABC):
 
         history = self.get_history(environment, n_runs=5)
         most_recent_run = environment["runs"][-1]
-        utility = most_recent_run["output_variables"].get("utility", {})[self.name]
+        
+        # Extract utility from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        utility = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            utility = output_vars.get("utility", {}).get(self.name, 0)
+        else:
+            # Find utility in the list
+            for var in output_vars:
+                if var.get("name") == "utility":
+                    utility_value = var.get("value", {})
+                    if isinstance(utility_value, dict):
+                        utility = utility_value.get(self.name, 0)
+                    break
+        
+        if utility is None:
+            utility = 0
 
         # Use custom optimization prompt if provided, otherwise use default
         optimization_content = self.optimization_prompt or (
@@ -137,6 +155,24 @@ class UtilityAgent(AssistantAgent, ABC):
         logger.info(
             f"Agent {self.name} learned new prompt: {new_prompt} (previous: {self.system_prompt})"
         )
+        
+        # Emit optimization event if hook manager is available
+        if hasattr(self, 'simulation_id') and hasattr(self, 'run_id'):
+            from engine.message_hook import get_hook_manager
+            hook_manager = get_hook_manager()
+            hook_manager.on_optimization(
+                agent_name=self.name,
+                optimization_data={
+                    "improved": new_prompt != self.system_prompt,
+                    "utility": utility,
+                    "utility_delta": utility,  # Could track change if we store previous utility
+                    "old_prompt": self.system_prompt,
+                    "new_prompt": new_prompt,
+                    "simulation_id": getattr(self, 'simulation_id', None),
+                    "run_id": getattr(self, 'run_id', None)
+                }
+            )
+        
         self.system_prompt = new_prompt
         return
 
@@ -195,19 +231,54 @@ class BuyerAgent(UtilityAgent):
 
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["output_variables"]["deal_reached"] is False:
+        # Extract values from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        deal_reached = None
+        final_price = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            # Convert dict to list format for backward compatibility
+            output_vars = [{"name": k, "value": v} for k, v in output_vars.items()]
+            most_recent_run["output_variables"] = output_vars
+        
+        # Find deal_reached and final_price in the list
+        for var in output_vars:
+            if var.get("name") == "deal_reached":
+                deal_reached = var.get("value")
+                if isinstance(deal_reached, str):
+                    deal_reached = deal_reached.upper() == "TRUE"
+            elif var.get("name") == "final_price":
+                final_price = var.get("value")
+        
+        if deal_reached is False:
             # No deal reached, so no utility
             utility = 0.0
-        else:
-            final_price = float(most_recent_run["output_variables"]["final_price"])
+        elif deal_reached is True and final_price is not None:
+            final_price = float(final_price)
             max_price = float(self.strategy["max_price"])
             # Normalise to [0, 1]: 1 ⇒ huge saving, 0 ⇒ paid max price.
             utility = 1.0 - (final_price / max_price)
+        else:
+            # If we can't determine the outcome, utility is 0
+            utility = 0.0
 
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
-            -1
-        ]["output_variables"].get("utility", {})
-        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        # Add utility to output_variables list
+        utility_var = None
+        for var in output_vars:
+            if var.get("name") == "utility":
+                utility_var = var
+                break
+        
+        if utility_var is None:
+            # Add new utility variable
+            utility_var = {"name": "utility", "value": {}}
+            output_vars.append(utility_var)
+        
+        if not isinstance(utility_var["value"], dict):
+            utility_var["value"] = {}
+        
+        utility_var["value"][self.name] = utility
         self._last_environment = environment
         return environment
 
@@ -228,18 +299,53 @@ class SellerAgent(UtilityAgent):
 
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["output_variables"]["deal_reached"] is False:
+        # Extract values from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        deal_reached = None
+        final_price = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            # Convert dict to list format for backward compatibility
+            output_vars = [{"name": k, "value": v} for k, v in output_vars.items()]
+            most_recent_run["output_variables"] = output_vars
+        
+        # Find deal_reached and final_price in the list
+        for var in output_vars:
+            if var.get("name") == "deal_reached":
+                deal_reached = var.get("value")
+                if isinstance(deal_reached, str):
+                    deal_reached = deal_reached.upper() == "TRUE"
+            elif var.get("name") == "final_price":
+                final_price = var.get("value")
+        
+        if deal_reached is False:
             # No deal reached, so no utility
             utility = 0.0
-        else:
-            final_price = float(most_recent_run["output_variables"]["final_price"])
+        elif deal_reached is True and final_price is not None:
+            final_price = float(final_price)
             target = float(self.strategy["target_price"])
             utility = min(final_price / target, 1.0)
+        else:
+            # If we can't determine the outcome, utility is 0
+            utility = 0.0
 
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
-            -1
-        ]["output_variables"].get("utility", {})
-        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        # Add utility to output_variables list
+        utility_var = None
+        for var in output_vars:
+            if var.get("name") == "utility":
+                utility_var = var
+                break
+        
+        if utility_var is None:
+            # Add new utility variable
+            utility_var = {"name": "utility", "value": {}}
+            output_vars.append(utility_var)
+        
+        if not isinstance(utility_var["value"], dict):
+            utility_var["value"] = {}
+        
+        utility_var["value"][self.name] = utility
         self._last_environment = environment
         return environment
 
@@ -269,7 +375,25 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
         
         history = self.get_history(environment, n_runs=1)
         most_recent_run = environment["runs"][-1]
-        utility = most_recent_run["output_variables"].get("utility", {})[self.name]
+        
+        # Extract utility from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        utility = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            utility = output_vars.get("utility", {}).get(self.name, 0)
+        else:
+            # Find utility in the list
+            for var in output_vars:
+                if var.get("name") == "utility":
+                    utility_value = var.get("value", {})
+                    if isinstance(utility_value, dict):
+                        utility = utility_value.get(self.name, 0)
+                    break
+        
+        if utility is None:
+            utility = 0
 
         tag = (
             "great"
@@ -345,21 +469,56 @@ class NegotiationCoachBuyerAgent(NegotiationCoachAgent):
 
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["output_variables"]["deal_reached"] is False:
+        # Extract values from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        deal_reached = None
+        final_price = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            # Convert dict to list format for backward compatibility
+            output_vars = [{"name": k, "value": v} for k, v in output_vars.items()]
+            most_recent_run["output_variables"] = output_vars
+        
+        # Find deal_reached and final_price in the list
+        for var in output_vars:
+            if var.get("name") == "deal_reached":
+                deal_reached = var.get("value")
+                if isinstance(deal_reached, str):
+                    deal_reached = deal_reached.upper() == "TRUE"
+            elif var.get("name") == "final_price":
+                final_price = var.get("value")
+        
+        if deal_reached is False:
             # No deal reached, so no utility
             utility = 0.0
-        else:
+        elif deal_reached is True and final_price is not None:
             budget = float(self.strategy.get("budget", 0))
-            max_price = float(most_recent_run["output_variables"].get("final_price", 0))
+            final_price_float = float(final_price)
             if budget == 0:
                 utility = 0.0
             else:
-                utility = (budget - max_price) / budget
+                utility = (budget - final_price_float) / budget
+        else:
+            # If we can't determine the outcome, utility is 0
+            utility = 0.0
 
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
-            -1
-        ]["output_variables"].get("utility", {})
-        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        # Add utility to output_variables list
+        utility_var = None
+        for var in output_vars:
+            if var.get("name") == "utility":
+                utility_var = var
+                break
+        
+        if utility_var is None:
+            # Add new utility variable
+            utility_var = {"name": "utility", "value": {}}
+            output_vars.append(utility_var)
+        
+        if not isinstance(utility_var["value"], dict):
+            utility_var["value"] = {}
+        
+        utility_var["value"][self.name] = utility
         self._last_environment = environment
         return environment
 
@@ -383,11 +542,31 @@ class NegotiationCoachSellerAgent(NegotiationCoachAgent):
 
         most_recent_run = environment["runs"][-1]
 
-        if most_recent_run["output_variables"]["deal_reached"] is False:
+        # Extract values from output_variables list
+        output_vars = most_recent_run.get("output_variables", [])
+        deal_reached = None
+        final_price = None
+        
+        # If output_variables is a dict (old format), convert to list format
+        if isinstance(output_vars, dict):
+            # Convert dict to list format for backward compatibility
+            output_vars = [{"name": k, "value": v} for k, v in output_vars.items()]
+            most_recent_run["output_variables"] = output_vars
+        
+        # Find deal_reached and final_price in the list
+        for var in output_vars:
+            if var.get("name") == "deal_reached":
+                deal_reached = var.get("value")
+                if isinstance(deal_reached, str):
+                    deal_reached = deal_reached.upper() == "TRUE"
+            elif var.get("name") == "final_price":
+                final_price = var.get("value")
+        
+        if deal_reached is False:
             # No deal reached, so no utility
             utility = 0.0
-        else:
-            final_price = float(most_recent_run["output_variables"]["final_price"])
+        elif deal_reached is True and final_price is not None:
+            final_price = float(final_price)
             max_price = float(self.strategy["asking_price"])
             seller_floor = float(self.strategy.get("asking_price", 0))
             # Normalise to [0, 1]: 1 ⇒ paid seller_floor, 0 ⇒ paid max_price.
@@ -396,11 +575,26 @@ class NegotiationCoachSellerAgent(NegotiationCoachAgent):
                 utility = 0.0
             else:
                 utility = (final_price - seller_floor) / denominator
+        else:
+            # If we can't determine the outcome, utility is 0
+            utility = 0.0
 
-        environment["runs"][-1]["output_variables"]["utility"] = environment["runs"][
-            -1
-        ]["output_variables"].get("utility", {})
-        environment["runs"][-1]["output_variables"]["utility"][self.name] = utility
+        # Add utility to output_variables list
+        utility_var = None
+        for var in output_vars:
+            if var.get("name") == "utility":
+                utility_var = var
+                break
+        
+        if utility_var is None:
+            # Add new utility variable
+            utility_var = {"name": "utility", "value": {}}
+            output_vars.append(utility_var)
+        
+        if not isinstance(utility_var["value"], dict):
+            utility_var["value"] = {}
+        
+        utility_var["value"][self.name] = utility
         self._last_environment = environment
         return environment
 

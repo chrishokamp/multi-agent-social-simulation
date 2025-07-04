@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import Navbar from './components/Navbar';
+import ChatStream from './components/ChatStream';
 import api from '/src/services/apiService';
 
 import { TbArrowBackUp } from 'react-icons/tb';
@@ -268,8 +269,8 @@ const Dashboard = () => {
 
     // New code for bar charts
     const isBarChart = chartConfig.type === 'bar';
-    const barCategories = dataPoints.map((p) => String(p.x));
-    const barValues = dataPoints.map((p) => p.y);
+    const barCategories = dataPoints.filter(p => p.x !== undefined && p.x !== null).map((p) => String(p.x));
+    const barValues = dataPoints.filter(p => p.y !== undefined && p.y !== null).map((p) => p.y);
 
     // Apply filters if enabled
     if (filterOptions.enabled) {
@@ -279,6 +280,11 @@ const Dashboard = () => {
     // Re-extract x and y values after filtering
     xData = dataPoints.map((p) => p.x);
     yData = dataPoints.map((p) => p.y);
+    
+    // Filter out any undefined or null values to prevent animation errors
+    dataPoints = dataPoints.filter(p => p.x !== undefined && p.x !== null && p.y !== undefined && p.y !== null);
+    xData = xData.filter(x => x !== undefined && x !== null);
+    yData = yData.filter(y => y !== undefined && y !== null);
 
     // Determine if data is numeric
     const xNumeric = isDataNumeric(xData);
@@ -337,20 +343,20 @@ const Dashboard = () => {
           markPoint: {
             symbolSize: 15,
             itemStyle: { color: comparisonColor },
-            data: [
+            data: actualIndex < xData.length && compareData[actualIndex] !== undefined ? [
               {
                 name: `Run ${runIndex}`,
-                xAxis: xData.includes(xData[actualIndex]) ? xData[actualIndex] : null,
+                xAxis: xData[actualIndex],
                 yAxis: compareData[actualIndex],
               },
-            ],
+            ] : [],
           },
-          data: [
+          data: actualIndex < xData.length && compareData[actualIndex] !== undefined ? [
             [
-              xData.includes(xData[actualIndex]) ? xData[actualIndex] : null,
+              xData[actualIndex],
               compareData[actualIndex],
             ],
-          ],
+          ] : [],
         });
       });
     }
@@ -391,51 +397,85 @@ const Dashboard = () => {
         type: 'line',
         yAxisIndex: 1,
         itemStyle: { color: secondaryColor },
-        data: dataPoints.map((point) => [point.x, secondaryYData[point.index]]),
+        data: dataPoints.map((point) => {
+          const yValue = secondaryYData[point.index];
+          return yValue !== undefined && yValue !== null ? [point.x, yValue] : null;
+        }).filter(d => d !== null),
         emphasis: { focus: 'series' },
       });
     }
     // Standard single series
     else {
-      series.push({
-        name: chartConfig.yAxis,
-        type: chartConfig.type === 'area' ? 'line' : chartConfig.type,
-        barMaxWidth: chartConfig.type === 'bar' ? '60%' : undefined,
-        areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.3 } : undefined,
-        itemStyle: { color: primaryColor },
-        smooth: chartConfig.type === 'line' || chartConfig.type === 'area',
-        data: isBarChart ? barValues : dataPoints.map((point) => [point.x, point.y]),
-        emphasis: { focus: 'series' },
-        label: {
-          show: chartConfig.showDataLabels,
-          position: 'top',
-          textStyle: { color: '#fff' },
-        },
-        markLine: chartConfig.showTrendline
-          ? {
-              silent: true,
-              lineStyle: {
-                color: '#fff',
-                width: 1,
-                opacity: 0.5,
-                type: 'dashed',
-              },
-              data: [{ type: 'average', name: 'Avg' }],
+      // Handle pie chart differently
+      if (chartConfig.type === 'pie') {
+        // For pie charts, we need name-value pairs
+        const pieData = dataPoints
+          .filter(p => p.x !== undefined && p.x !== null && p.y !== undefined && p.y !== null)
+          .map((point) => ({
+            name: String(point.x),
+            value: Number(point.y) || 0
+          }));
+        
+        series.push({
+          name: chartConfig.yAxis,
+          type: 'pie',
+          radius: '50%',
+          data: pieData,
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
             }
-          : undefined,
-      });
+          },
+          label: {
+            show: chartConfig.showDataLabels,
+            formatter: '{b}: {c} ({d}%)'
+          }
+        });
+      } else {
+        // Line, bar, scatter, area charts
+        series.push({
+          name: chartConfig.yAxis,
+          type: chartConfig.type === 'area' ? 'line' : chartConfig.type,
+          barMaxWidth: chartConfig.type === 'bar' ? '60%' : undefined,
+          areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.3 } : undefined,
+          itemStyle: { color: primaryColor },
+          smooth: chartConfig.type === 'line' || chartConfig.type === 'area',
+          data: isBarChart ? barValues.filter(v => v !== undefined && v !== null) : dataPoints.map((point) => [point.x, point.y]),
+          emphasis: { focus: 'series' },
+          label: {
+            show: chartConfig.showDataLabels,
+            position: 'top',
+            textStyle: { color: '#fff' },
+          },
+          markLine: chartConfig.showTrendline
+            ? {
+                silent: true,
+                lineStyle: {
+                  color: '#fff',
+                  width: 1,
+                  opacity: 0.5,
+                  type: 'dashed',
+                },
+                data: [{ type: 'average', name: 'Avg' }],
+              }
+            : undefined,
+        });
+      }
     }
 
     // Build chart options
+    const isPieChart = chartConfig.type === 'pie';
     const chartOptions = {
       backgroundColor: 'transparent',
       title: {
-        text: `${chartConfig.yAxis} vs ${chartConfig.xAxis}`,
+        text: isPieChart ? `${chartConfig.yAxis} by ${chartConfig.xAxis}` : `${chartConfig.yAxis} vs ${chartConfig.xAxis}`,
         left: 'center',
         top: 10,
         textStyle: { color: 'hsl(var(--oncolor-100))' },
       },
-      grid: {
+      grid: isPieChart ? undefined : {
         left: '5%', // Increased to prevent left overflow
         right: secondaryYAxis.enabled ? '10%' : '5%', // Increased for secondary axis
         bottom: '15%', // Increased to prevent bottom overflow
@@ -443,24 +483,26 @@ const Dashboard = () => {
         containLabel: true, // Ensures labels are contained within the grid
       },
       tooltip: {
-        trigger: 'axis',
-        axisPointer: {
+        trigger: isPieChart ? 'item' : 'axis',
+        axisPointer: isPieChart ? undefined : {
           type: 'cross',
           label: {
             backgroundColor: 'hsl(var(--accent-pro-000))',
           },
         },
-        formatter: function (params) {
-          let result = '';
-          params.forEach((param) => {
-            // For bar charts, param.value is a single number
-            // For line/scatter, param.value is an [x,y] array
-            const val = Array.isArray(param.value) ? param.value[1] : param.value;
-            const runIndex = param.dataIndex + 1;
-            result += `Run ${runIndex}<br/>${param.seriesName}: ${val}<br/><br/>`;
-          });
-          return result;
-        },
+        formatter: isPieChart 
+          ? '{a} <br/>{b}: {c} ({d}%)'
+          : function (params) {
+              let result = '';
+              params.forEach((param) => {
+                // For bar charts, param.value is a single number
+                // For line/scatter, param.value is an [x,y] array
+                const val = Array.isArray(param.value) ? param.value[1] : param.value;
+                const runIndex = param.dataIndex + 1;
+                result += `Run ${runIndex}<br/>${param.seriesName}: ${val}<br/><br/>`;
+              });
+              return result;
+            },
         textStyle: {
           color: 'hsl(var(--oncolor-100))',
         },
@@ -507,7 +549,7 @@ const Dashboard = () => {
         itemSize: 20, // Larger icon
         itemGap: 10,
       },
-      xAxis: {
+      xAxis: isPieChart ? undefined : {
         type: isBarChart ? 'category' : xNumeric ? 'value' : 'category',
         data: isBarChart ? barCategories : undefined,
         boundaryGap: isBarChart, // true for bar charts, false otherwise
@@ -540,7 +582,7 @@ const Dashboard = () => {
           },
         },
       },
-      yAxis: [
+      yAxis: isPieChart ? undefined : [
         {
           type: 'value',
           name: chartConfig.yAxis,
@@ -868,6 +910,19 @@ const Dashboard = () => {
     );
   }
 
+  // Check if simulation has no runs (pending/processing)
+  const isPending = simulationData && simulationData.runs.length === 0;
+  
+  // Determine simulation status
+  const getSimulationStatus = () => {
+    if (!simulationData) return 'loading';
+    if (isPending) return 'pending';
+    if (simulationData.runs.length > 0) return 'completed';
+    return 'unknown';
+  };
+  
+  const simulationStatus = getSimulationStatus();
+
   // Render main dashboard
   return (
     <div className="w-full min-h-screen p-4 bg-transparent">
@@ -897,31 +952,74 @@ const Dashboard = () => {
     
       {/* Simulation Info Panel */}
       <div className="">
-        <div className="p-2 rounded mb-4">
-          <p>
-            <span className="font-bold">Simulation ID: </span>
-            {simulationId}
-          </p>
-          <p>
-            <span className="font-bold">Agents: </span>
-            {Array.from(
-              new Set(
-                simulationData.runs
-                  .flatMap((run) => run.messages?.map((msg) => msg.agent) || [])
-                  .filter((agent) => agent !== 'InformationReturnAgent')
-              )
-            ).join(', ')}
-          </p>
-          <p>
-            <span className="font-bold">Total Runs:</span> {simulationData.runs.length}
-          </p>
+        <div className="p-4 rounded mb-4 border bg-white/5">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Simulation Details</h2>
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${
+                simulationStatus === 'pending' ? 'bg-yellow-400 animate-pulse' : 
+                simulationStatus === 'completed' ? 'bg-green-400' : 
+                'bg-gray-400'
+              }`} />
+              <span className="text-sm capitalize">{simulationStatus}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-1 text-sm">
+            <p>
+              <span className="font-medium text-gray-600">ID:</span>{' '}
+              <span className="font-mono">{simulationId}</span>
+            </p>
+            
+            {simulationStatus === 'pending' && (
+              <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded">
+                <p className="text-yellow-800 dark:text-yellow-200">
+                  <span className="font-medium">🔄 Processing:</span> Your simulation is currently running. 
+                  Messages will appear in real-time below as agents interact.
+                </p>
+              </div>
+            )}
+            
+            {simulationStatus === 'completed' && (
+              <>
+                <p>
+                  <span className="font-medium text-gray-600">Agents:</span>{' '}
+                  {Array.from(
+                    new Set(
+                      simulationData.runs
+                        .flatMap((run) => run.messages?.map((msg) => msg.agent) || [])
+                        .filter((agent) => agent !== 'InformationReturnAgent')
+                    )
+                  ).join(', ') || 'No agents found'}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-600">Total Runs:</span>{' '}
+                  {simulationData.runs.length}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-600">Status:</span>{' '}
+                  <span className="text-green-600">✓ Completed</span>
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Messages per Run Chart */}
+      {/* Live Chat Stream */}
       <div className="mb-6">
-        <ReactECharts option={generateMessageChartOption()} className="h-80 w-full" />
+        <ChatStream 
+          simulationId={simulationId} 
+          isSimulationComplete={!isPending && simulationData?.runs?.length > 0}
+        />
       </div>
+
+      {/* Messages per Run Chart */}
+      {!isPending && (
+        <div className="mb-6">
+          <ReactECharts option={generateMessageChartOption()} className="h-80 w-full" />
+        </div>
+      )}
       
       {/* Mode Selector */}
       <div className="mb-6 flex space-x-4">
@@ -1356,7 +1454,7 @@ const Dashboard = () => {
                   onClick={() => setChartConfig({ ...chartConfig, yAxis: variable })}
                 >
                   <h3 className="font-medium text-lg mb-2">{variable}</h3>
-                  {numeric ? (
+                  {numeric && stats ? (
                     <div>
                       <p className="text-sm">Mean: {stats.mean}</p>
                       <p className="text-sm">

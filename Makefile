@@ -66,6 +66,19 @@ dev-backend: check-env ## Start backend development server
 	@echo "$(YELLOW)Starting backend server...$(NC)"
 	cd $(BACKEND_DIR) && $(PYTHON) main.py
 
+.PHONY: dev-backend-watch
+dev-backend-watch: check-env ## Start backend development server with auto-reload
+	@echo "$(YELLOW)Starting backend server with auto-reload...$(NC)"
+	@if [ ! -f $(UV_VENV)/bin/python ]; then \
+		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
+		exit 1; \
+	fi
+	@if ! $(UV_VENV)/bin/python -c "import watchdog" 2>/dev/null; then \
+		echo "$(YELLOW)Installing watchdog for auto-reload...$(NC)"; \
+		$(UV_VENV)/bin/pip install watchdog; \
+	fi
+	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python main_dev.py
+
 .PHONY: dev-frontend
 dev-frontend: ## Start frontend development server
 	@echo "$(YELLOW)Starting frontend development server...$(NC)"

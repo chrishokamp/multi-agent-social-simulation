@@ -21,7 +21,7 @@ from logging_framework.core import (
     SimulationLogger
 )
 from logging_framework.visualization import SimulationVisualizer
-from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
+from logging_framework.multi_panel_visualizer import EnhancedSimulationVisualizer
 from logging_framework.reporters import SimulationReporter, HTMLReporter
 
 

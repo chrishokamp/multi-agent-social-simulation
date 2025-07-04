@@ -69,26 +69,17 @@ const SimulationItem = ({ simulation, onViewRenderer, onViewDashboard, onDelete 
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          {isComplete && (
-            <>
-              <button
-                onClick={() => onViewRenderer(simulation.simulation_id)}
-                className="px-3 py-1 rounded transition-colors cursor-pointer"
-                style={{ background: 'hsl(var(--accent-pro-000))', color: 'hsl(var(--oncolor-100))' }}
-              >
-                <FaImage className="inline-block mb-0.75 mr-2" />
-                View Render
-              </button>
-              <button
-                onClick={() => onViewDashboard(simulation.simulation_id)}
-                className="px-3 py-1 rounded transition-colors cursor-pointer"
-                style={{ background: 'hsl(var(--accent-pro-200))', color: 'hsl(var(--oncolor-100))' }}
-              >
-                <FaChartColumn className="inline-block mb-0.75 mr-2" />
-                View Dashboard
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => onViewDashboard(simulation.simulation_id)}
+            className="px-3 py-1 rounded transition-colors cursor-pointer"
+            style={{ 
+              background: isComplete ? 'hsl(var(--accent-pro-200))' : 'hsl(var(--accent-pro-100))', 
+              color: 'hsl(var(--oncolor-100))' 
+            }}
+          >
+            <FaChartColumn className="inline-block mb-0.75 mr-2" />
+            {isComplete ? 'View Dashboard' : 'View Progress'}
+          </button>
           <button
             onClick={() => onDelete(simulation.simulation_id, isComplete)}
             className="px-3 py-1 danger transition-colors cursor-pointer p-2 rounded"

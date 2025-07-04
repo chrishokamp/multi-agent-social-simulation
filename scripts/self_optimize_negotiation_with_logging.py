@@ -14,6 +14,7 @@ import dotenv
 import random
 import math
 import json
+import os
 
 
 import sys
@@ -21,6 +22,10 @@ import sys
 # Allow running without installation by adjusting PYTHONPATH
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR / "src" / "backend"))
+
+# Preserve backward compatibility - disable streaming by default for CLI
+if 'ENABLE_REALTIME_STREAMING' not in os.environ:
+    os.environ['ENABLE_REALTIME_STREAMING'] = 'false'
 
 from engine.simulation import SelectorGCSimulation
 from logging_framework.reporters import HTMLReporter, PDFReporter

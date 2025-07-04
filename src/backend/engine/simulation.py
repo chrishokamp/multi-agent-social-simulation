@@ -14,9 +14,11 @@ from autogen import (
     ConversableAgent,
     LLMConfig,
 )
+from engine.streaming_group_chat import StreamingGroupChat, StreamingGroupChatManager
 from agents import UtilityAgent, BuyerAgent, SellerAgent, NegotiationCoachAgent, NegotiationCoachBuyerAgent, NegotiationCoachSellerAgent
 from utils import create_logger, client_for_endpoint
 from logging_framework.core import SimulationLogger
+from engine.message_hook import get_hook_manager, HookedConversableAgent, FileStreamHook
 
 logger = create_logger(__name__)
 
@@ -57,6 +59,7 @@ class SelectorGCSimulation:
         environment: dict,
         model: Optional[str] = None,
         log_dir: Optional[Path] = None,
+        simulation_id: Optional[str] = None,
     ):
         model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
         self.config = config
@@ -64,10 +67,11 @@ class SelectorGCSimulation:
         self.min_messages = config.get("min_messages", 2)
         self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
+        self.simulation_id = simulation_id or self.run_id  # Use provided simulation_id or generate one
         self.environment = validate_environment(environment)
         self.environment["config"] = self.config
 
-        logger.info(f"Initializing SelectorGCSimulation {self.run_id} with config: {self.config}")
+        logger.info(f"Initializing SelectorGCSimulation {self.simulation_id} (run: {self.run_id}) with config: {self.config}")
 
         # set up SimulationLogger
         self.sim_logger = SimulationLogger(self.run_id, log_dir)
@@ -125,18 +129,25 @@ class SelectorGCSimulation:
                 model=model or self.config.get("model"),
                 optimization_prompt=config.get("optimization_prompt")
             )
+            # Set simulation_id and run_id on the agent for optimization tracking
+            ag.simulation_id = self.simulation_id
+            ag.run_id = self.run_id
+            
             # allow self-improvement from prior runs
             if self.environment.get("runs") and agent_cfg.get("self_improve", False):
                 ag.learn_from_feedback(self.environment)
             self.agents.append(ag)
 
-        self.group_chat = GroupChat(
+        # Use StreamingGroupChat for real-time message streaming
+        self.group_chat = StreamingGroupChat(
             agents=self.agents,
             messages=[],
+            simulation_id=self.simulation_id,
+            run_id=self.run_id,
             max_round=self.max_messages,
             speaker_selection_method="auto",
         )
-        self.manager = GroupChatManager(
+        self.manager = StreamingGroupChatManager(
             groupchat=self.group_chat,
             llm_config=self.llm_config,
             is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper(),
@@ -144,6 +155,9 @@ class SelectorGCSimulation:
 
         # wire up detailed per-agent logging
         self._setup_agent_logging()
+        
+        # Setup message hooks for real-time streaming
+        self._setup_message_hooks()
 
     def _setup_agent_logging(self):
         """Attach a SimulationLogger per agent and record init utilities/actions."""
@@ -161,6 +175,27 @@ class SelectorGCSimulation:
                 "initialization",
                 f"Agent {agent.name} initialized with strategy: {getattr(agent, 'strategy', {})}"
             )
+    
+    def _setup_message_hooks(self):
+        """Setup message hooks for real-time streaming."""
+        # Check if streaming is enabled via environment or config
+        enable_streaming = os.environ.get('ENABLE_REALTIME_STREAMING', 'true').lower() == 'true'
+        
+        if not enable_streaming:
+            return
+            
+        # Add file stream hook
+        hook_manager = get_hook_manager()
+        stream_hook = FileStreamHook(self.sim_logger.log_dir)
+        hook_manager.add_hook(stream_hook)
+        
+        # Wrap all agents with hooked versions
+        for agent in self.agents:
+            HookedConversableAgent(agent, self.simulation_id, self.run_id)
+            
+        # Also wrap the manager
+        if hasattr(self, 'manager'):
+            HookedConversableAgent(self.manager, self.simulation_id, self.run_id)
 
     def force_info_return(
         self,
@@ -225,6 +260,9 @@ class SelectorGCSimulation:
             self.sim_logger.save_logs()
             return None
 
+        # Get the hook manager for streaming
+        hook_manager = get_hook_manager()
+
         # log each message and agent action
         messages = []
         for idx, msg in enumerate(simulation_result.chat_history):
@@ -235,6 +273,14 @@ class SelectorGCSimulation:
             agent_name = msg["name"]
             content = msg["content"]
             messages.append({"agent": agent_name, "message": content})
+
+            # Stream the message in real-time
+            hook_manager.on_message(agent_name, content, {
+                "round": current_round,
+                "index": idx,
+                "simulation_id": self.simulation_id,
+                "run_id": self.run_id
+            })
 
             self.sim_logger.log_message(agent_name, content, {"round": current_round})
             for ag in self.agents:
@@ -285,6 +331,10 @@ class SelectorGCSimulation:
     async def run(self):
         """Run the simulation, logging at start and completion."""
         self.sim_logger.logger.info(f"Starting simulation {self.run_id}")
+        
+        # Notify hooks of simulation start
+        hook_manager = get_hook_manager()
+        hook_manager.on_simulation_start(self.simulation_id, self.run_id)
 
         # pre-conversation log
         for ag in self.agents:
@@ -312,6 +362,9 @@ class SelectorGCSimulation:
         
         self.environment.get("runs", []).append(processed)
         self.calculate_utility()
+        
+        # Notify hooks of simulation end
+        hook_manager.on_simulation_end(self.simulation_id, self.run_id, processed)
 
         # if processed:
         #     processed["private_reflections"] = [

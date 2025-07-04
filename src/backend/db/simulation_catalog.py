@@ -18,7 +18,8 @@ class SimulationCatalog(MongoBase):
             "simulation_id": simulation_id,
             "name": name,
             "expected_runs": num_runs,
-            "progress_percentage": 0
+            "progress_percentage": 0,
+            "status": "queued"
         })
 
         return simulation_id
@@ -26,13 +27,28 @@ class SimulationCatalog(MongoBase):
     def update_progress(self, simulation_id):
         query = {"simulation_id": simulation_id}
 
-        expected_runs = self.catalog_collection.find_one(query)["expected_runs"]
+        doc = self.catalog_collection.find_one(query)
+        if not doc:
+            return 0
+            
+        expected_runs = doc["expected_runs"]
         completed_runs = len(self.simulation_results.retrieve(simulation_id))
         progress_percentage = int((completed_runs / expected_runs) * 100)
 
-        self.catalog_collection.update_one(query, {"$set": {"progress_percentage": progress_percentage}})
+        # Update progress and status
+        update_fields = {"progress_percentage": progress_percentage}
+        if progress_percentage >= 100:
+            update_fields["status"] = "completed"
+            
+        self.catalog_collection.update_one(query, {"$set": update_fields})
 
         return progress_percentage
+    
+    def update_status(self, simulation_id, status):
+        """Update the status of a simulation."""
+        query = {"simulation_id": simulation_id}
+        self.catalog_collection.update_one(query, {"$set": {"status": status}})
+        return True
     
     def get_all(self):
         try:
@@ -47,7 +63,8 @@ class SimulationCatalog(MongoBase):
                 "simulation_id": doc["simulation_id"],
                 "name": doc["name"],
                 "expected_runs": doc["expected_runs"],
-                "progress_percentage": doc["progress_percentage"]
+                "progress_percentage": doc["progress_percentage"],
+                "status": doc.get("status", "unknown")
             })
 
         return catalog
@@ -59,3 +76,18 @@ class SimulationCatalog(MongoBase):
     def delete(self, simulation_id):
         result = self.catalog_collection.delete_one({"simulation_id": simulation_id})
         return result.deleted_count
+    
+    def find_by_id(self, simulation_id):
+        """Find a simulation by its ID.
+        
+        Args:
+            simulation_id: The simulation ID to find
+            
+        Returns:
+            dict: The simulation document or None if not found
+        """
+        try:
+            return self.catalog_collection.find_one({"simulation_id": simulation_id})
+        except Exception as e:
+            logger.error("Error finding simulation by ID: %s", e)
+            return None

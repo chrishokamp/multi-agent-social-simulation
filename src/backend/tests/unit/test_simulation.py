@@ -103,8 +103,9 @@ class TestSelectorGCSimulation:
         assert result["messages"][0]["agent"] == "Agent1"
         assert result["messages"][0]["message"] == "Hello"
         assert len(result["output_variables"]) == 2
-        assert "result" in result["output_variables"]
-        assert result["output_variables"]["result"] == "success"
+        output_vars = {var["name"]: var["value"] for var in result["output_variables"]}
+        assert "result" in output_vars
+        assert output_vars["result"] == "success"
     
     def test_process_result_too_few_messages(self):
         """Test result processing with too few messages."""
@@ -165,7 +166,7 @@ class TestSelectorGCSimulation:
         }
         
         assert all(key in result for key in expected.keys())
-        assert result["output_variables"] == {}
+        assert result["output_variables"] == []
     
     def test_process_result_handles_none_values(self):
         """Test result processing handles None and Unspecified values."""
@@ -196,7 +197,7 @@ class TestSelectorGCSimulation:
         assert result is not None
         assert len(result["output_variables"]) == 3
         # Check that None and "Unspecified" are both converted to "Unspecified"
-        values = [v for v in result["output_variables"].values()]
+        values = [v["value"] for v in result["output_variables"]]
         assert "Unspecified" in values
         assert None not in values
     
@@ -304,8 +305,9 @@ class TestSelectorGCSimulation:
             
             # Verify output variables were extracted correctly
             assert len(result["output_variables"]) == 1
-            assert "price" in result["output_variables"]
-            assert result["output_variables"]["price"] == 100
+            output_vars = {var["name"]: var["value"] for var in result["output_variables"]}
+            assert "price" in output_vars
+            assert output_vars["price"] == 100
 
     def test_process_result_with_group_chat_result(self):
         """Test that _process_result works with GroupChatResult (the fix for the bug)."""
@@ -357,7 +359,7 @@ class TestSelectorGCSimulation:
             
             # Verify output variables were extracted
             assert len(result["output_variables"]) == 3
-            output_dict = {k: v for k, v in result["output_variables"].items()}
+            output_dict = {var["name"]: var["value"] for var in result["output_variables"]}
             assert output_dict["final_price"] == 375
             assert output_dict["deal_reached"] is True
             assert output_dict["negotiation_rounds"] == 3
