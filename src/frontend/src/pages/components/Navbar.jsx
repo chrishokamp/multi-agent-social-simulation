@@ -9,13 +9,11 @@ const Navbar = () => {
           <li key={id} className="nav-li">
             <a
               href={href}
-              className="flex items-center gap-2 text-md text-white hover:text-violet-400"
-              onClick={() => {
-                href;
-              }}
+              className="navbar-link flex items-center gap-2 text-md"
             >
               <Icon
-                className={`text-violet-500 ${name === 'Dashboard' ? 'h-6 w-6 -mr-0.75' : 'h-5 w-5'}`}
+                className={name === 'Dashboard' ? 'h-6 w-6 -mr-0.75' : 'h-5 w-5'}
+                style={{ color: 'hsl(var(--text-000))' }}
               />
               {name}
             </a>
@@ -26,18 +24,16 @@ const Navbar = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[60]">
-      <div className="bg-midnight shadow-lg shadow-violet-600/60">
-        <div className="max-w-7xl mx-auto flex justify-between items-center py-6">
-          <div className="flex items-center">
-            <a href="/">
-              <img src="../assets/quantexa-logo-white.svg" alt="logo" className="w-34 h-6" />
-            </a>
-          </div>
-          <nav className="sm:flex hidden">
-            <NavItems />
-          </nav>
+    <header className="navbar-brand fixed top-0 left-0 right-0 z-[60]">
+      <div className="max-w-7xl mx-auto flex justify-between items-center py-6">
+        <div className="flex items-center gap-2 text-md">
+          <a href="/" className="navbar-brand flex items-center ">
+            NegotiationGym 🏋️
+          </a>
         </div>
+        <nav className="sm:flex hidden">
+          <NavItems />
+        </nav>
       </div>
     </header>
   );

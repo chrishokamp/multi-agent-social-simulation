@@ -8,8 +8,8 @@ import { RiDashboardHorizontalFill } from "react-icons/ri";
 export const navLinks = [
     {
         id: 1,
-        name: 'Configurator',
-        href: '/configurator',
+        name: 'Configuration',
+        href: '/Configuration',
         icon: GrConfigure,
     },
     {
@@ -17,12 +17,6 @@ export const navLinks = [
         name: 'Catalog',
         href: '/simulations',
         icon: FaListUl,
-    },
-    {
-        id: 3,
-        name: 'Renderer',
-        href: '/renderer',
-        icon: FaImage,
     },
     {
         id: 4,
@@ -34,16 +28,10 @@ export const navLinks = [
 
 export const features = [
     {
-        title: 'Agent Configurator',
+        title: 'Agent Configuration',
         description:
             'Define roles, goals, and hyperparameters. Queue your simulation. Let us do the rest.',
         icon: GrConfigure,
-    },
-    {
-        title: 'Simulation Renderer',
-        description:
-            'Visualize multi-agent interactions, including adversarial or partial-information scenarios.',
-        icon: FaImage,
     },
     {
         title: 'Analytics Dashboard',

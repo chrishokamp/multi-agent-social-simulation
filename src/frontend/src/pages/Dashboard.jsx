@@ -288,9 +288,9 @@ const Dashboard = () => {
     let series = [];
 
     // Define chart colors that match the site's palette
-    const primaryColor = '#a78bfa'; // violet-400
-    const secondaryColor = '#27ddc6'; // teal color shown in the code
-    const accentColor = '#8b5cf6'; // violet-500
+    const primaryColor = 'hsl(var(--accent-pro-200))';
+    const secondaryColor = 'hsl(var(--accent-secondary-100))';
+    const accentColor = 'hsl(var(--accent-pro-100))';
 
     // Handle comparison mode
     if (comparison.enabled && comparison.variable && comparison.runs.length > 0) {
@@ -433,7 +433,7 @@ const Dashboard = () => {
         text: `${chartConfig.yAxis} vs ${chartConfig.xAxis}`,
         left: 'center',
         top: 10,
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
       },
       grid: {
         left: '5%', // Increased to prevent left overflow
@@ -447,7 +447,7 @@ const Dashboard = () => {
         axisPointer: {
           type: 'cross',
           label: {
-            backgroundColor: '#6a7985',
+            backgroundColor: 'hsl(var(--accent-pro-000))',
           },
         },
         formatter: function (params) {
@@ -462,27 +462,27 @@ const Dashboard = () => {
           return result;
         },
         textStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
-        backgroundColor: 'rgba(80, 60, 130, 0.9)', // Dark violet background
-        borderColor: '#8b5cf6', // violet-500
+        backgroundColor: 'hsl(var(--accent-pro-900))',
+        borderColor: 'hsl(var(--accent-pro-200))',
         borderWidth: 1,
       },
       legend: {
         data: series.map((s) => s.name),
         top: 40,
         left: 'center',
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
         show: chartConfig.showLegend,
         type: 'scroll', // Enable scrolling for many items
         pageButtonPosition: 'end', // Position of page buttons
         pageButtonItemGap: 5, // Gap between page buttons
         pageButtonGap: 5, // Gap between page buttons and page info
-        pageIconColor: '#a78bfa', // violet-400
-        pageIconInactiveColor: '#4c1d95', // violet-900
+        pageIconColor: 'hsl(var(--accent-pro-200))',
+        pageIconInactiveColor: 'hsl(var(--accent-pro-900))',
         pageIconSize: 12, // Size of page buttons
         pageTextStyle: {
-          color: '#a78bfa', // violet-400
+          color: 'hsl(var(--accent-pro-200))',
         },
       },
       toolbox: {
@@ -491,13 +491,13 @@ const Dashboard = () => {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
             title: 'Save as Image',
             iconStyle: {
-              color: '#a78bfa', // violet-400
-              borderColor: '#fff',
+              color: 'hsl(var(--accent-pro-200))',
+              borderColor: 'hsl(var(--oncolor-100))',
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: '#8b5cf6', // violet-500 on hover
+                color: 'hsl(var(--accent-pro-100))',
               },
             },
           },
@@ -515,27 +515,27 @@ const Dashboard = () => {
         nameLocation: 'middle',
         nameGap: 30,
         nameTextStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           formatter: xNumeric ? (value) => value : null,
           margin: 15, // Extra margin to prevent cutoff
           rotate: xData.length > 10 ? 45 : 0, // Rotate labels if there are many points
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700 for axis lines
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700 for ticks
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         splitLine: {
           lineStyle: {
-            color: '#4c1d95', // violet-900 for grid lines
+            color: 'hsl(var(--accent-pro-900))',
             opacity: 0.3,
           },
         },
@@ -547,25 +547,25 @@ const Dashboard = () => {
           nameLocation: 'middle',
           nameGap: 50,
           nameTextStyle: {
-            color: '#fff',
+            color: 'hsl(var(--oncolor-100))',
           },
           axisLabel: {
-            color: '#fff',
+            color: 'hsl(var(--oncolor-100))',
             margin: 15, // Extra margin to prevent cutoff
           },
           axisLine: {
             lineStyle: {
-              color: '#6d28d9', // violet-700 for axis lines
+              color: 'hsl(var(--accent-pro-000))',
             },
           },
           axisTick: {
             lineStyle: {
-              color: '#6d28d9', // violet-700 for ticks
+              color: 'hsl(var(--accent-pro-000))',
             },
           },
           splitLine: {
             lineStyle: {
-              color: '#4c1d95', // violet-900 for grid lines
+              color: 'hsl(var(--accent-pro-900))',
               opacity: 0.3,
             },
           },
@@ -579,20 +579,20 @@ const Dashboard = () => {
               nameLocation: 'middle',
               nameGap: 50,
               nameTextStyle: {
-                color: '#27ddc6', // Teal for secondary axis
+                color: 'hsl(var(--accent-secondary-100))',
               },
               axisLabel: {
-                color: '#27ddc6',
+                color: 'hsl(var(--accent-secondary-100))',
                 margin: 15, // Extra margin to prevent cutoff
               },
               axisLine: {
                 lineStyle: {
-                  color: '#27ddc6', // Teal for secondary axis
+                  color: 'hsl(var(--accent-secondary-100))',
                 },
               },
               axisTick: {
                 lineStyle: {
-                  color: '#27ddc6', // Teal for secondary axis
+                  color: 'hsl(var(--accent-secondary-100))',
                 },
               },
               splitLine: {
@@ -664,15 +664,15 @@ const Dashboard = () => {
       title: {
         text: 'Messages per Run',
         left: 'center',
-        textStyle: { color: '#fff' },
+        textStyle: { color: 'hsl(var(--oncolor-100))' },
       },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(80, 60, 130, 0.9)',
-        borderColor: '#8b5cf6',
+        backgroundColor: 'hsl(var(--accent-pro-900))',
+        borderColor: 'hsl(var(--accent-pro-200))',
         borderWidth: 1,
         textStyle: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
         },
       },
       grid: {
@@ -686,39 +686,39 @@ const Dashboard = () => {
         type: 'category',
         data: messageLabels,
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           margin: 10,
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: '#fff',
+          color: 'hsl(var(--oncolor-100))',
           margin: 10,
         },
         axisLine: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         axisTick: {
           lineStyle: {
-            color: '#6d28d9', // violet-700
+            color: 'hsl(var(--accent-pro-000))',
           },
         },
         splitLine: {
           lineStyle: {
-            color: '#4c1d95', // violet-900
+            color: 'hsl(var(--accent-pro-900))',
             opacity: 0.3,
           },
         },
@@ -730,13 +730,13 @@ const Dashboard = () => {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
             title: 'Save as Image',
             iconStyle: {
-              color: '#a78bfa', // violet-400
-              borderColor: '#fff',
+              color: 'hsl(var(--accent-pro-200))',
+              borderColor: 'hsl(var(--oncolor-100))',
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: '#8b5cf6', // violet-500 on hover
+                color: 'hsl(var(--accent-pro-100))',
               },
             },
           },
@@ -752,7 +752,7 @@ const Dashboard = () => {
           data: messagesData,
           smooth: true,
           itemStyle: {
-            color: '#27ddc6', // Teal color
+            color: 'hsl(var(--accent-secondary-100))',
           },
           areaStyle: {
             color: {
@@ -762,8 +762,8 @@ const Dashboard = () => {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: 'rgba(39, 221, 206, 0.5)' },
-                { offset: 1, color: 'rgba(39, 221, 206, 0)' },
+                { offset: 0, color: 'hsl(var(--accent-secondary-100) / 0.5)' },
+                { offset: 1, color: 'hsl(var(--accent-secondary-100) / 0)' },
               ],
             },
           },
@@ -796,7 +796,7 @@ const Dashboard = () => {
     return (
       <div className="w-full min-h-screen bg-transparent flex flex-col justify-center items-center">
         <Navbar />
-        <div className="text-white text-xl mt-20">Loading dashboard data...</div>
+        <div className=" text-xl mt-20">Loading dashboard data...</div>
       </div>
     );
   }
@@ -804,12 +804,12 @@ const Dashboard = () => {
   // Render opening screen if no simulation ID is provided
   if (isOpeningScreenVisible) {
     return (
-      <div className="w-full min-h-screen">
+      <div className="min-h-screen">
         <Navbar />
-        <div className="fixed inset-0 flex items-center justify-center">
-          <div className="bg-violet-900/5 backdrop-blur-3xl p-10 w-96 md:w-1/2 lg:w-1/3 min-h-[300px] flex flex-col justify-center rounded-xl shadow-violet-600/60 shadow-card text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-violet-400">Select a Simulation</h2>
-            <p className="text-lg text-gray-400 mt-4">
+        <div className="flex items-center justify-center mt-40"> {/* Adjusted top margin */}
+          <div className="w-full max-w-3xl px-4 container rounded mt-20 p-10">
+            <h2 className="text-2xl p-2 font-bold">Select a Simulation</h2>
+            <p className="text-lg">
               Choose the simulation that you want to analyse.
             </p>
 
@@ -819,13 +819,13 @@ const Dashboard = () => {
                 <div
                   key={sim.simulation_id}
                   onClick={() => setSimulationId(sim.simulation_id)}
-                  className={`p-3 my-2 flex justify-between items-center bg-violet-900/15 border rounded-lg text-left cursor-pointer transition-colors duration-200 ${
+                  className={`container p-3 my-2 flex justify-between items-center border rounded text-left cursor-pointer transition-colors duration-200 ${
                     simulationId === sim.simulation_id
-                      ? 'bg-violet-900/30 border border-violet-500'
-                      : 'border border-violet-400/50 hover:bg-violet-900/30'
+                      ? ' border'
+                      : 'border'
                   }`}
                 >
-                  <p className="text-white">{sim.name || `Simulation ${sim.simulation_id}`}</p>
+                  <p className="">{sim.name || `Simulation ${sim.simulation_id}`}</p>
                   {simulationId === sim.simulation_id && (
                     <span className="text-emerald-500 text-xl">&#x2713;</span> // Checkmark icon
                   )}
@@ -834,7 +834,7 @@ const Dashboard = () => {
             </div>
 
             {/* Error Message */}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
+            {error && <p className="danger p-2 rounded">{error}</p>}
 
             {/* View Dashboard Button */}
             <div className="mt-6">
@@ -843,9 +843,9 @@ const Dashboard = () => {
                 disabled={!simulationId}
                 className={`${
                   !simulationId
-                    ? 'bg-violet-900/50 cursor-not-allowed'
-                    : 'bg-violet-800 hover:shadow-button'
-                } text-white px-6 py-3 rounded-full transition-colors duration-200 cursor-pointer`}
+                    ? 'cursor-not-allowed'
+                    : ' hover:shadow-button'
+                }  px-6 py-3 rounded-full transition-colors duration-200 cursor-pointer`}
               >
                 View Dashboard
               </button>
@@ -861,7 +861,7 @@ const Dashboard = () => {
     return (
       <div className="w-full min-h-screen bg-transparent p-4">
         <Navbar />
-        <div className="mt-20 text-red-500 text-center">
+        <div className="danger">
           Error loading simulation data. Please check the simulation ID and try again.
         </div>
       </div>
@@ -873,13 +873,13 @@ const Dashboard = () => {
     <div className="w-full min-h-screen p-4 bg-transparent">
       <Navbar />
       <div className="flex justify-between items-center mb-4 mt-22">
-        <h1 className="text-2xl text-white font-bold">Simulation Dashboard</h1>
+        <h1 className="text-2xl  font-bold">Simulation Dashboard</h1>
 
         {/* action buttons */}
         <div className="flex space-x-2">
           <Link
             to="/simulations"
-            className="px-4 py-2 bg-violet-800 hover:shadow-button text-white rounded-lg transition-colors flex items-center"
+            className="px-4 py-2 hover:shadow-button  rounded transition-colors flex items-center"
           >
             <TbArrowBackUp className="mr-2 h-5 w-5" />
             Catalog
@@ -887,7 +887,7 @@ const Dashboard = () => {
 
           <button
             onClick={handleDownloadConfig}
-            className="px-4 py-2 bg-violet-800 hover:shadow-button text-white rounded-lg transition-colors flex items-center"
+            className="px-4 py-2 hover:shadow-button  rounded transition-colors flex items-center"
           >
             <IoMdSave className="mr-2 h-5 w-5" />
             Download&nbsp;JSON
@@ -896,8 +896,8 @@ const Dashboard = () => {
       </div>
     
       {/* Simulation Info Panel */}
-      <div className="text-white">
-        <div className="p-2 bg-violet-600/5 border border-violet-400 rounded mb-4">
+      <div className="">
+        <div className="p-2 rounded mb-4">
           <p>
             <span className="font-bold">Simulation ID: </span>
             {simulationId}
@@ -929,8 +929,8 @@ const Dashboard = () => {
           onClick={toggleAdvancedMode}
           className={`px-4 py-2 rounded-md ${
             !advancedMode
-              ? 'bg-violet-800 text-white'
-              : 'bg-violet-900/30 border border-violet-400 text-white'
+              ? ' '
+              : ' border  '
           }`}
         >
           Basic Mode
@@ -939,8 +939,8 @@ const Dashboard = () => {
           onClick={toggleAdvancedMode}
           className={`px-4 py-2 rounded-md ${
             advancedMode
-              ? 'bg-violet-800 text-white'
-              : 'bg-violet-900/30 border border-violet-400 text-white'
+              ? ''
+              : ' border '
           }`}
         >
           Advanced Mode
@@ -949,11 +949,11 @@ const Dashboard = () => {
 
       {/* Chart Configuration Panel */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 bg-violet-800/20 rounded">
-          <h2 className="text-xl text-white font-semibold">Chart Configuration</h2>
+        <div className="flex justify-between items-center mb-4 p-2rounded">
+          <h2 className="text-xl  font-semibold">Chart Configuration</h2>
           <button
             onClick={() => toggleSection('chartConfig')}
-            className="p-2 bg-violet-700 hover:bg-violet-600 text-white rounded-md transition-colors"
+            className="p-2  rounded-md transition-colors"
           >
             {collapsibleSections.chartConfig ? (
               <IoEyeOffOutline size={20} />
@@ -964,15 +964,15 @@ const Dashboard = () => {
         </div>
 
         {collapsibleSections.chartConfig && (
-          <div className="p-4 bg-violet-900/10 rounded-lg border border-violet-500/50">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-white">
+          <div className="p-4  rounded border">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
               {/* Chart Type Selection */}
               <div>
                 <label className="block mb-2">Chart Type</label>
                 <select
                   value={chartConfig.type}
                   onChange={(e) => setChartConfig({ ...chartConfig, type: e.target.value })}
-                  className="w-full p-2 border rounded text-black bg-white"
+                  className="w-full p-2 border rounded  "
                 >
                   <option value="bar">Bar Chart</option>
                   <option value="line">Line Chart</option>
@@ -988,7 +988,7 @@ const Dashboard = () => {
                 <select
                   value={chartConfig.xAxis}
                   onChange={(e) => setChartConfig({ ...chartConfig, xAxis: e.target.value })}
-                  className="w-full p-2 border rounded text-black bg-white"
+                  className="w-full p-2 border rounded  "
                 >
                   <option value="">--Select--</option>
                   {availableVariables.map((variable) => (
@@ -1005,7 +1005,7 @@ const Dashboard = () => {
                 <select
                   value={chartConfig.yAxis}
                   onChange={(e) => setChartConfig({ ...chartConfig, yAxis: e.target.value })}
-                  className="w-full p-2 border rounded text-black bg-white"
+                  className="w-full p-2 border rounded  "
                 >
                   <option value="">--Select--</option>
                   {availableVariables.map((variable) => (
@@ -1059,11 +1059,11 @@ const Dashboard = () => {
 
             {/* Advanced Options (only in advanced mode) */}
             {advancedMode && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 ">
                 {/* Secondary Y-Axis */}
-                <div className="p-3 border border-violet-400/30 rounded bg-violet-800/10">
+                <div className="p-3 border  rounded ">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-violet-300">Secondary Y-Axis</h3>
+                    <h3 className="font-medium ">Secondary Y-Axis</h3>
                     <label className="inline-flex items-center">
                       <input
                         type="checkbox"
@@ -1085,7 +1085,7 @@ const Dashboard = () => {
                         onChange={(e) =>
                           setSecondaryYAxis({ ...secondaryYAxis, variable: e.target.value })
                         }
-                        className="w-full p-2 border rounded text-black bg-white"
+                        className="w-full p-2 border rounded  "
                       >
                         <option value="">--Select--</option>
                         {availableVariables.map((variable) => (
@@ -1099,9 +1099,9 @@ const Dashboard = () => {
                 </div>
 
                 {/* Data Filtering */}
-                <div className="p-3 border border-violet-400/30 rounded bg-violet-800/10">
+                <div className="p-3 border  rounded ">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-violet-300">Data Filtering</h3>
+                    <h3 className="font-medium ">Data Filtering</h3>
                     <label className="inline-flex items-center">
                       <input
                         type="checkbox"
@@ -1124,7 +1124,7 @@ const Dashboard = () => {
                           onChange={(e) =>
                             setFilterOptions({ ...filterOptions, variable: e.target.value })
                           }
-                          className="w-full p-2 border rounded text-black bg-white"
+                          className="w-full p-2 border rounded  "
                         >
                           <option value="">--Select--</option>
                           {availableVariables
@@ -1144,7 +1144,7 @@ const Dashboard = () => {
                           onChange={(e) =>
                             setFilterOptions({ ...filterOptions, operator: e.target.value })
                           }
-                          className="w-full p-2 border rounded text-black bg-white"
+                          className="w-full p-2 border rounded  "
                         >
                           <option value=">">Greater than (&gt;)</option>
                           <option value=">=">Greater than or equal (&gt;=)</option>
@@ -1163,7 +1163,7 @@ const Dashboard = () => {
                           onChange={(e) =>
                             setFilterOptions({ ...filterOptions, value: e.target.value })
                           }
-                          className="w-full p-2 border rounded text-black bg-white"
+                          className="w-full p-2 border rounded  "
                         />
                       </div>
                     </div>
@@ -1171,9 +1171,9 @@ const Dashboard = () => {
                 </div>
 
                 {/* Run Comparison */}
-                <div className="p-3 border border-violet-400/30 rounded bg-violet-800/10 md:col-span-2">
+                <div className="p-3 border  rounded  md:col-span-2">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-violet-300">Run Comparison</h3>
+                    <h3 className="font-medium ">Run Comparison</h3>
                     <label className="inline-flex items-center">
                       <input
                         type="checkbox"
@@ -1196,7 +1196,7 @@ const Dashboard = () => {
                           onChange={(e) =>
                             setComparison({ ...comparison, variable: e.target.value })
                           }
-                          className="w-full p-2 border rounded text-black bg-white"
+                          className="w-full p-2 border rounded  "
                         >
                           <option value="">--Select--</option>
                           {availableVariables.map((variable) => (
@@ -1227,8 +1227,8 @@ const Dashboard = () => {
                               }}
                               className={`px-2 py-1 rounded text-sm ${
                                 comparison.runs.includes(index + 1)
-                                  ? 'bg-violet-500 text-white'
-                                  : 'bg-gray-700 text-white'
+                                  ? ' '
+                                  : ' '
                               }`}
                             >
                               Run {index + 1}
@@ -1248,7 +1248,7 @@ const Dashboard = () => {
       {/* Main Visualization */}
       <div className="mb-6">
         {chartConfig.xAxis && chartConfig.yAxis ? (
-          <div className="bg-violet-950/30 p-4 rounded-lg border border-violet-500/30">
+          <div className=" p-4 rounded border">
             <ReactECharts
               option={generateChartOptions()}
               style={{ height: '500px', width: '100%' }}
@@ -1257,9 +1257,9 @@ const Dashboard = () => {
             />
           </div>
         ) : (
-          <div className="text-white text-center p-8 bg-violet-950/30 rounded-lg border border-violet-500/30">
-            <p className="text-lg">Please select variables for X and Y axes to visualize data.</p>
-            <p className="text-violet-400 mt-2">
+          <div className="empty-panel">
+            <p className="empty-panel-title">Please select variables for X and Y axes to visualize data.</p>
+            <p className="empty-panel-desc">
               Use the Chart Configuration panel above to customize your visualization.
             </p>
           </div>
@@ -1269,11 +1269,11 @@ const Dashboard = () => {
       {/* Statistics Panel */}
       {chartConfig.yAxis && isDataNumeric(getDataForVariable(chartConfig.yAxis)) && (
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-4 p-2 bg-violet-800/20 rounded">
-            <h2 className="text-xl text-white font-semibold">Statistics for {chartConfig.yAxis}</h2>
+          <div className="panel-header">
+            <h2 className="panel-title">Statistics for {chartConfig.yAxis}</h2>
             <button
               onClick={() => toggleSection('statistics')}
-              className="p-2 bg-violet-700 hover:bg-violet-600 text-white rounded-md transition-colors"
+              className="panel-toggle"
             >
               {collapsibleSections.statistics ? (
                 <IoEyeOffOutline size={20} />
@@ -1284,37 +1284,37 @@ const Dashboard = () => {
           </div>
 
           {collapsibleSections.statistics && (
-            <div className="p-4 bg-violet-900/10 rounded-lg border border-violet-500/50">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="panel-body">
+              <div className="stats-grid">
                 {Object.entries(computeStats(chartConfig.yAxis) || {}).map(([stat, value]) => (
                   <div
                     key={stat}
-                    className="bg-violet-800/20 p-3 rounded border border-violet-400/40"
+                    className="stat-card"
                   >
-                    <h3 className="text-violet-300 font-medium">
+                    <h3 className="stat-label">
                       {stat.charAt(0).toUpperCase() + stat.slice(1)}
                     </h3>
-                    <p className="text-white text-xl font-semibold">{value}</p>
+                    <p className="stat-value">{value}</p>
                   </div>
                 ))}
               </div>
 
               {secondaryYAxis.enabled && secondaryYAxis.variable && (
                 <div className="mt-4">
-                  <h3 className="text-lg text-violet-300 font-medium mb-2">
+                  <h3 className="stat-secondary-title">
                     Statistics for {secondaryYAxis.variable} (Secondary Y-Axis)
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="stats-grid">
                     {Object.entries(computeStats(secondaryYAxis.variable) || {}).map(
                       ([stat, value]) => (
                         <div
                           key={stat}
-                          className="bg-violet-800/20 p-3 rounded border border-violet-400/40"
+                          className="stat-card secondary"
                         >
                           <h3 className="text-teal-300 font-medium">
                             {stat.charAt(0).toUpperCase() + stat.slice(1)}
                           </h3>
-                          <p className="text-white text-xl font-semibold">{value}</p>
+                          <p className=" text-xl font-semibold">{value}</p>
                         </div>
                       )
                     )}
@@ -1328,11 +1328,11 @@ const Dashboard = () => {
 
       {/* All Variables Summary */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 bg-violet-800/20 rounded">
-          <h2 className="text-xl text-white font-semibold">All Variables Summary</h2>
+        <div className="flex justify-between items-center mb-4 p-2 rounded">
+          <h2 className="text-xl font-semibold">All Variables Summary</h2>
           <button
             onClick={() => toggleSection('variables')}
-            className="p-2 bg-violet-700 hover:bg-violet-600 text-white rounded-md transition-colors"
+            className="p-2rounded-md transition-colors"
           >
             {collapsibleSections.variables ? (
               <IoEyeOffOutline size={20} />
@@ -1352,25 +1352,25 @@ const Dashboard = () => {
               return (
                 <div
                   key={variable}
-                  className="text-white bg-violet-600/5 border border-violet-400/50 p-4 rounded shadow hover:shadow-md hover:shadow-violet-400/30 cursor-pointer transition-all duration-200"
+                  className=" border p-4 rounded shadow hover:shadow-md cursor-pointer transition-all duration-200"
                   onClick={() => setChartConfig({ ...chartConfig, yAxis: variable })}
                 >
-                  <h3 className="font-medium text-lg mb-2 text-violet-300">{variable}</h3>
+                  <h3 className="font-medium text-lg mb-2">{variable}</h3>
                   {numeric ? (
                     <div>
-                      <p className="text-sm text-gray-400">Mean: {stats.mean}</p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm">Mean: {stats.mean}</p>
+                      <p className="text-sm">
                         Range: {stats.min} - {stats.max}
                       </p>
-                      <p className="text-sm text-gray-400">StdDev: {stats.stdDev}</p>
+                      <p className="text-sm">StdDev: {stats.stdDev}</p>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm">
                       {values.slice(0, 3).join(', ')}
                       {values.length > 3 ? '...' : ''}
                     </p>
                   )}
-                  <div className="mt-2 text-xs text-violet-400">Click to set as Y-axis</div>
+                  <div className="mt-2 text-xs">Click to set as Y-axis</div>
                 </div>
               );
             })}
@@ -1380,11 +1380,11 @@ const Dashboard = () => {
 
       {/* Data Table */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 bg-violet-800/20 rounded">
-          <h2 className="text-xl text-white font-semibold">Data Table</h2>
+        <div className="flex justify-between items-center mb-4 p-2 rounded">
+          <h2 className="text-xlfont-semibold">Data Table</h2>
           <button
             onClick={() => toggleSection('dataTable')}
-            className="p-2 bg-violet-700 hover:bg-violet-600 text-white rounded-md transition-colors"
+            className="p-2"
           >
             {collapsibleSections.dataTable ? (
               <IoEyeOffOutline size={20} />
@@ -1396,14 +1396,14 @@ const Dashboard = () => {
 
         {collapsibleSections.dataTable && (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-white border-collapse">
+            <table className="min-w-full">
               <thead>
-                <tr className="bg-violet-800/20">
-                  <th className="text-white border border-violet-400/40 px-4 py-2">Run</th>
+                <tr >
+                  <th >Run</th>
                   {availableVariables.map((variable) => (
                     <th
                       key={`header-${variable}`}
-                      className="text-white border border-violet-400/40 px-4 py-2"
+                      
                     >
                       {variable}
                     </th>
@@ -1412,8 +1412,8 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {simulationData.runs.map((run, index) => (
-                  <tr key={`run-${index}`} className="even:bg-violet-900/5">
-                    <td className="text-white border border-violet-400/20 px-4 py-2">
+                  <tr key={`run-${index}`} >
+                    <td >
                       {index + 1}
                     </td>
                     {availableVariables.map((variable) => {
@@ -1430,7 +1430,7 @@ const Dashboard = () => {
                       return (
                         <td
                           key={`cell-${index}-${variable}`}
-                          className="border border-violet-400/20 px-4 py-2"
+                          
                         >
                           {value}
                         </td>
