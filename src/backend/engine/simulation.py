@@ -5,6 +5,7 @@ import textwrap
 import uuid
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import random
 
 from pydantic import BaseModel, ValidationError
 from autogen import (
@@ -13,7 +14,7 @@ from autogen import (
     ConversableAgent,
     LLMConfig,
 )
-from agents import UtilityAgent, BuyerAgent, SellerAgent
+from agents import UtilityAgent, BuyerAgent, SellerAgent, NegotiationCoachAgent, NegotiationCoachBuyerAgent, NegotiationCoachSellerAgent
 from utils import create_logger, client_for_endpoint
 from logging_framework.core import SimulationLogger
 
@@ -23,6 +24,9 @@ _utility_class_registry = {
     "UtilityAgent": UtilityAgent,
     "BuyerAgent":   BuyerAgent,
     "SellerAgent":  SellerAgent,
+    "NegotiationCoachAgent": NegotiationCoachAgent,
+    "NegotiationCoachBuyerAgent": NegotiationCoachBuyerAgent,
+    "NegotiationCoachSellerAgent": NegotiationCoachSellerAgent,
 }
 
 
@@ -107,7 +111,7 @@ class SelectorGCSimulation:
             )
             self.config["agents"].append(ira)
 
-        # build agent instances
+                                
         self.agents = []
         for agent_cfg in self.config["agents"]:
             cls_name = agent_cfg.get("utility_class", "UtilityAgent")
@@ -257,6 +261,15 @@ class SelectorGCSimulation:
 
         # persist and return
         self.sim_logger.save_logs()
+        strategies = {}
+
+        for agent in self.agents:
+            strat = self.environment.get(f"strategies_{agent.name.lower()}", [])
+            if strat:
+                strategies[agent.name.lower()] = strat
+        if strategies:
+            with open(self.sim_logger.log_dir / "strategies.json", "w") as f:
+                json.dump(strategies, f, indent=2)
         return {
             "run_id": self.run_id,
             "system_prompts": {ag.name: ag.system_prompt for ag in self.agents},
