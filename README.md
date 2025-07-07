@@ -103,7 +103,7 @@ npm install
 npm run dev
 ```
 
-The UI will be available at `http://localhost:3000`
+The UI will be available at `http://localhost:5173`
 
 ## Usage Examples
 
