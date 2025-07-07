@@ -29,16 +29,25 @@ help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Quick start:"
-	@echo "  make install    - Install all dependencies"
-	@echo "  make dev        - Start development servers"
+	@echo "  make uv-setup           - Setup UV virtual environment (recommended)"
+	@echo "  make venv-install       - Setup standard virtual environment"
+	@echo "  make dev                - Start development servers"
 
 # Installation targets
 .PHONY: install
 install: install-backend install-frontend ## Install all dependencies
 
 .PHONY: install-backend
-install-backend: ## Install backend dependencies
+install-backend: ## Install backend dependencies (requires active virtual environment)
 	@echo "$(YELLOW)Installing backend dependencies...$(NC)"
+	@if [ -z "$$VIRTUAL_ENV" ] && [ ! -f "$(UV_VENV)/bin/activate" ]; then \
+		echo "$(RED)Error: No virtual environment active!$(NC)"; \
+		echo "Please run one of:"; \
+		echo "  make uv-setup && source .venv/bin/activate"; \
+		echo "  python3 -m venv venv && source venv/bin/activate"; \
+		echo "  make venv-install"; \
+		exit 1; \
+	fi
 	cd $(BACKEND_DIR) && $(PIP) install -r requirements.txt
 	@echo "$(GREEN)Backend dependencies installed!$(NC)"
 
@@ -239,6 +248,7 @@ venv: ## Create Python virtual environment
 venv-install: venv ## Create venv and install backend dependencies
 	@echo "$(YELLOW)Installing in virtual environment...$(NC)"
 	. $(VENV)/bin/activate && cd $(BACKEND_DIR) && pip install -r requirements.txt
+	. $(VENV)/bin/activate && pip install -e $(BACKEND_DIR)
 	@echo "$(GREEN)Dependencies installed in venv!$(NC)"
 
 # UV environment management
@@ -256,8 +266,14 @@ uv-install: ## Install backend dependencies with uv
 	@echo "$(GREEN)Dependencies installed with uv!$(NC)"
 
 .PHONY: uv-setup
-uv-setup: uv-venv uv-install ## Create uv environment and install dependencies
+uv-setup: uv-venv uv-install uv-install-backend ## Create uv environment and install dependencies
 	@echo "$(GREEN)UV environment setup complete!$(NC)"
+
+.PHONY: uv-install-backend
+uv-install-backend: ## Install backend package in editable mode with uv
+	@echo "$(YELLOW)Installing backend package in editable mode with uv...$(NC)"
+	$(UV) pip install -e $(BACKEND_DIR)
+	@echo "$(GREEN)Backend package installed!$(NC)"
 
 # Example simulation
 .PHONY: run-example
