@@ -13,21 +13,26 @@ A framework for creating and running multi-agent social simulations powered by L
 
 ### 1. Setup Environment
 
-Using UV (recommended):
+**Option A: Using UV (recommended)**
 ```bash
-source .venv/bin/activate
 make uv-setup
+source .venv/bin/activate
 ```
 
-Or with pip:
+**Option B: Using pip with virtual environment**
 ```bash
-pip install -r src/backend/requirements.txt
+python3 -m venv venv
+source venv/bin/activate
+make install
+pip install -e src/backend
 ```
 
-Run unittests
+**Option C: Using make with automatic virtual environment setup**
+```bash
+make venv-install
+source venv/bin/activate
 ```
-make test
-```
+
 
 #### Environment Variable Setup
 
@@ -45,6 +50,7 @@ export OLLAMA_MODEL="qwen3:4b"
 # Optional: if using user interface
 export DB_CONNECTION_STRING="mongodb://localhost:27017"
 ```
+
 
 ### 2. Run Simulations using the API
 
@@ -97,7 +103,7 @@ npm install
 npm run dev
 ```
 
-The UI will be available at `http://localhost:3000`
+The UI will be available at `http://localhost:5173`
 
 ## Usage Examples
 

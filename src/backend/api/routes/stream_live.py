@@ -115,13 +115,7 @@ def stream_simulation():
                                             if event.get('type') == 'message':
                                                 # Get run_id from metadata if available
                                                 event_run_id = event.get('metadata', {}).get('run_id') or event.get('run_id') or run_id or 'default'
-                                                yield f"data: {json.dumps({
-                                                    'type': 'message',
-                                                    'run_id': event_run_id,
-                                                    'agent': event.get('agent'),
-                                                    'content': event.get('content'),
-                                                    'timestamp': event.get('timestamp', time.time())
-                                                })}\n\n"
+                                                yield f"data: {json.dumps({'type': 'message', 'run_id': event_run_id, 'agent': event.get('agent'), 'content': event.get('content'), 'timestamp': event.get('timestamp', time.time())})}\n\n"
                                             elif event.get('type') == 'complete':
                                                 yield f"data: {json.dumps({'type': 'complete', 'status': 'finished'})}\n\n"
                                                 return
@@ -149,13 +143,7 @@ def stream_simulation():
                 if 'messages' in results:
                     messages = results.get('messages', [])
                     for idx, msg in enumerate(messages):
-                        yield f"data: {json.dumps({
-                            'type': 'message',
-                            'run_id': run_id or 'default',
-                            'agent': msg.get('agent'),
-                            'content': msg.get('message'),
-                            'timestamp': time.time() + idx * 0.1
-                        })}\n\n"
+                        yield f"data: {json.dumps({'type': 'message', 'run_id': run_id or 'default', 'agent': msg.get('agent'), 'content': msg.get('message'), 'timestamp': time.time() + idx * 0.1})}\n\n"
                         time.sleep(0.05)  # Small delay for visual effect
                         
                 # Also check for 'runs' structure (multiple runs)
@@ -170,13 +158,7 @@ def stream_simulation():
                         # Send all messages from this run
                         messages = run.get('messages', [])
                         for idx, msg in enumerate(messages):
-                            yield f"data: {json.dumps({
-                                'type': 'message',
-                                'run_id': run_id_value,
-                                'agent': msg.get('agent'),
-                                'content': msg.get('message'),
-                                'timestamp': time.time() + idx * 0.1
-                            })}\n\n"
+                            yield f"data: {json.dumps({'type': 'message', 'run_id': run_id_value, 'agent': msg.get('agent'), 'content': msg.get('message'), 'timestamp': time.time() + idx * 0.1})}\n\n"
                             time.sleep(0.05)  # Small delay for visual effect
             else:
                 # No results yet
