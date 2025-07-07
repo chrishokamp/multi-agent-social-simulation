@@ -30,7 +30,7 @@ if 'ENABLE_REALTIME_STREAMING' not in os.environ:
 from engine.simulation import SelectorGCSimulation
 from logging_framework.reporters import HTMLReporter, PDFReporter
 from logging_framework.visualization import SimulationVisualizer
-from logging_framework.enhanced_visualization import EnhancedSimulationVisualizer
+from logging_framework.multi_panel_visualizer import EnhancedSimulationVisualizer
 
 dotenv.load_dotenv()
 
