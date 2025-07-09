@@ -7,27 +7,29 @@ import {
 } from '@heroicons/react/24/outline';
 import './ChatStream.css';
 
-const ChatStream = ({ simulationId, isSimulationComplete }) => {
+const ChatStream = ({ simulationId, isSimulationComplete, totalRuns = 0 }) => {
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('loading');
   const [currentRunId, setCurrentRunId] = useState(null);
-  const [runIds, setRunIds] = useState(new Set());
+  const [runIds, setRunIds] = useState([]);  // Changed to array to maintain order
   const [optimizationEvents, setOptimizationEvents] = useState({});
+  const [backendTotalRuns, setBackendTotalRuns] = useState(0);
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const isPausedRef = useRef(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Autoscroll disabled per user request
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   const connectToStream = () => {
     if (eventSourceRef.current) {
@@ -47,13 +49,21 @@ const ChatStream = ({ simulationId, isSimulationComplete }) => {
             setStatus('connected');
             setIsStreaming(true);
             setError(''); // Clear any previous errors
+            if (data.total_runs !== undefined) {
+              setBackendTotalRuns(data.total_runs);
+            }
             break;
             
           case 'message':
             if (!isPausedRef.current) {
               const runId = data.run_id || 'default';
               setCurrentRunId(runId);
-              setRunIds(prev => new Set([...prev, runId]));
+              setRunIds(prev => {
+                if (!prev.includes(runId)) {
+                  return [...prev, runId];
+                }
+                return prev;
+              });
               
               setMessages(prev => [...prev, {
                 id: `${data.timestamp}-${data.agent}-${Math.random()}`,
@@ -81,6 +91,9 @@ const ChatStream = ({ simulationId, isSimulationComplete }) => {
             
           case 'status':
             setStatus(data.status);
+            if (data.total_runs !== undefined) {
+              setBackendTotalRuns(data.total_runs);
+            }
             if (data.mode) {
               console.log(`Streaming mode: ${data.mode}`);
             }
@@ -216,9 +229,9 @@ const ChatStream = ({ simulationId, isSimulationComplete }) => {
               </div>
               
               {/* Run indicator */}
-              {runIds.size > 0 && (
+              {(runIds.length > 0 || totalRuns > 0 || backendTotalRuns > 0) && (
                 <div className="text-xs text-white/80">
-                  Run {Array.from(runIds).indexOf(currentRunId) + 1} of {runIds.size}
+                  Run {currentRunId ? runIds.indexOf(currentRunId) + 1 : 1} of {totalRuns || backendTotalRuns || runIds.length}
                 </div>
               )}
             </div>
@@ -288,12 +301,12 @@ const ChatStream = ({ simulationId, isSimulationComplete }) => {
               return (
                 <React.Fragment key={message.id}>
                   {/* Run divider with optimization info */}
-                  {isNewRun && runIds.size > 1 && (
+                  {isNewRun && (totalRuns > 1 || backendTotalRuns > 1 || runIds.length > 1) && (
                     <div className="my-4">
                       <div className="flex items-center space-x-2 py-2">
                         <div className="flex-1 h-px bg-gray-300"></div>
                         <span className="text-xs text-gray-500 px-2">
-                          Run {Array.from(runIds).indexOf(message.runId) + 1}
+                          Run {runIds.indexOf(message.runId) + 1}
                         </span>
                         <div className="flex-1 h-px bg-gray-300"></div>
                       </div>
@@ -303,7 +316,7 @@ const ChatStream = ({ simulationId, isSimulationComplete }) => {
                        optimizationEvents[messages[index - 1].runId] && (
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2 mb-3">
                           <div className="text-xs font-medium text-purple-700 mb-2">
-                            🔧 Agent Optimizations After Run {Array.from(runIds).indexOf(messages[index - 1].runId) + 1}
+                            🔧 Agent Optimizations After Run {runIds.indexOf(messages[index - 1].runId) + 1}
                           </div>
                           {Object.entries(optimizationEvents[messages[index - 1].runId]).map(([agent, data]) => (
                             <div key={agent} className="text-xs text-purple-600 mb-1">

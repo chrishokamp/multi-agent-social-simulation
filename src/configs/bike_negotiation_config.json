@@ -32,7 +32,7 @@
       {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
     ]
   },
-  "num_runs": 10,
+  "num_runs": 2,
   "optimization_prompt": "You are an expert prompt engineer tasked with maximizing agent utility. Your goal is to rewrite the agent's prompt to achieve the HIGHEST POSSIBLE UTILITY SCORE. Focus on aggressive negotiation tactics, protecting private information, and walking away from bad deals. Use the agent's strategy, conversation history, and utility score to identify what worked and what didn't. The new prompt should be more assertive, business-like, and utility-maximizing than the current one. Remember: Higher utility = Better performance. Respond ONLY with the new prompt text.",
   "simulation_context": {
     "type": "negotiation",

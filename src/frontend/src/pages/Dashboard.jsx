@@ -293,10 +293,10 @@ const Dashboard = () => {
     // Generate series
     let series = [];
 
-    // Define chart colors that match the site's palette
-    const primaryColor = 'hsl(var(--accent-pro-200))';
-    const secondaryColor = 'hsl(var(--accent-secondary-100))';
-    const accentColor = 'hsl(var(--accent-pro-100))';
+    // Define chart colors - professional, muted palette
+    const primaryColor = '#4B5563';  // gray-600
+    const secondaryColor = '#7C3AED';  // violet-600
+    const accentColor = '#2563EB';  // blue-600
 
     // Handle comparison mode
     if (comparison.enabled && comparison.variable && comparison.runs.length > 0) {
@@ -305,22 +305,24 @@ const Dashboard = () => {
         name: chartConfig.yAxis,
         type: chartConfig.type === 'area' ? 'line' : chartConfig.type,
         barMaxWidth: chartConfig.type === 'bar' ? '60%' : undefined,
-        areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.3 } : undefined,
+        areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.15 } : undefined,
         itemStyle: { color: primaryColor },
         data: dataPoints.map((point) => [point.x, point.y]),
         emphasis: { focus: 'series' },
         label: {
           show: chartConfig.showDataLabels,
           position: 'top',
-          textStyle: { color: '#fff' },
+          textStyle: { 
+            color: '#374151',  // gray-700
+            fontSize: 11
+          },
         },
         markLine: chartConfig.showTrendline
           ? {
               silent: true,
               lineStyle: {
-                color: '#fff',
+                color: '#9CA3AF',  // gray-400
                 width: 1,
-                opacity: 0.5,
                 type: 'dashed',
               },
               data: [{ type: 'average', name: 'Avg' }],
@@ -333,8 +335,9 @@ const Dashboard = () => {
 
       comparison.runs.forEach((runIndex, idx) => {
         const actualIndex = runIndex - 1;
-        // Use different shades of the accent color for each comparison
-        const comparisonColor = `rgba(139, 92, 246, ${0.5 + idx * 0.1})`; // violet-500 with varying opacity
+        // Use different professional colors for each comparison
+        const comparisonColors = ['#7C3AED', '#2563EB', '#059669', '#DC2626'];  // violet, blue, emerald, red
+        const comparisonColor = comparisonColors[idx % comparisonColors.length];
 
         series.push({
           name: `Run ${runIndex} - ${comparison.variable}`,
@@ -367,22 +370,24 @@ const Dashboard = () => {
         name: chartConfig.yAxis,
         type: chartConfig.type === 'area' ? 'line' : chartConfig.type,
         barMaxWidth: chartConfig.type === 'bar' ? '60%' : undefined,
-        areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.3 } : undefined,
+        areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.15 } : undefined,
         itemStyle: { color: primaryColor },
         data: dataPoints.map((point) => [point.x, point.y]),
         emphasis: { focus: 'series' },
         label: {
           show: chartConfig.showDataLabels,
           position: 'top',
-          textStyle: { color: '#fff' },
+          textStyle: { 
+            color: '#374151',  // gray-700
+            fontSize: 11
+          },
         },
         markLine: chartConfig.showTrendline
           ? {
               silent: true,
               lineStyle: {
-                color: '#fff',
+                color: '#9CA3AF',  // gray-400
                 width: 1,
-                opacity: 0.5,
                 type: 'dashed',
               },
               data: [{ type: 'average', name: 'Avg' }],
@@ -439,7 +444,7 @@ const Dashboard = () => {
           name: chartConfig.yAxis,
           type: chartConfig.type === 'area' ? 'line' : chartConfig.type,
           barMaxWidth: chartConfig.type === 'bar' ? '60%' : undefined,
-          areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.3 } : undefined,
+          areaStyle: chartConfig.type === 'area' ? { color: primaryColor, opacity: 0.15 } : undefined,
           itemStyle: { color: primaryColor },
           smooth: chartConfig.type === 'line' || chartConfig.type === 'area',
           data: isBarChart ? barValues.filter(v => v !== undefined && v !== null) : dataPoints.map((point) => [point.x, point.y]),
@@ -471,23 +476,27 @@ const Dashboard = () => {
       backgroundColor: 'transparent',
       title: {
         text: isPieChart ? `${chartConfig.yAxis} by ${chartConfig.xAxis}` : `${chartConfig.yAxis} vs ${chartConfig.xAxis}`,
-        left: 'center',
-        top: 10,
-        textStyle: { color: 'hsl(var(--oncolor-100))' },
+        left: 'left',
+        top: 5,
+        textStyle: { 
+          color: '#1F2937',  // gray-800
+          fontSize: 14,
+          fontWeight: 600
+        },
       },
       grid: isPieChart ? undefined : {
-        left: '5%', // Increased to prevent left overflow
-        right: secondaryYAxis.enabled ? '10%' : '5%', // Increased for secondary axis
-        bottom: '15%', // Increased to prevent bottom overflow
-        top: '18%', // Increased to prevent top overflow
-        containLabel: true, // Ensures labels are contained within the grid
+        left: '3%',
+        right: secondaryYAxis.enabled ? '8%' : '3%',
+        bottom: '12%',
+        top: '12%',
+        containLabel: true,
       },
       tooltip: {
         trigger: isPieChart ? 'item' : 'axis',
         axisPointer: isPieChart ? undefined : {
           type: 'cross',
           label: {
-            backgroundColor: 'hsl(var(--accent-pro-000))',
+            backgroundColor: '#374151',  // gray-700
           },
         },
         formatter: isPieChart 
@@ -499,55 +508,60 @@ const Dashboard = () => {
                 // For line/scatter, param.value is an [x,y] array
                 const val = Array.isArray(param.value) ? param.value[1] : param.value;
                 const runIndex = param.dataIndex + 1;
-                result += `Run ${runIndex}<br/>${param.seriesName}: ${val}<br/><br/>`;
+                result += `Run ${runIndex}<br/>${param.seriesName}: ${val}<br/>`;
               });
               return result;
             },
         textStyle: {
-          color: 'hsl(var(--oncolor-100))',
+          color: '#F9FAFB',  // gray-50
+          fontSize: 12
         },
-        backgroundColor: 'hsl(var(--accent-pro-900))',
-        borderColor: 'hsl(var(--accent-pro-200))',
+        backgroundColor: '#1F2937',  // gray-800
+        borderColor: '#374151',  // gray-700
         borderWidth: 1,
       },
       legend: {
         data: series.map((s) => s.name),
-        top: 40,
-        left: 'center',
-        textStyle: { color: 'hsl(var(--oncolor-100))' },
+        top: 28,
+        left: 'left',
+        textStyle: { 
+          color: '#4B5563',  // gray-600
+          fontSize: 12
+        },
         show: chartConfig.showLegend,
-        type: 'scroll', // Enable scrolling for many items
-        pageButtonPosition: 'end', // Position of page buttons
-        pageButtonItemGap: 5, // Gap between page buttons
-        pageButtonGap: 5, // Gap between page buttons and page info
-        pageIconColor: 'hsl(var(--accent-pro-200))',
-        pageIconInactiveColor: 'hsl(var(--accent-pro-900))',
-        pageIconSize: 12, // Size of page buttons
+        type: 'scroll',
+        pageButtonPosition: 'end',
+        pageButtonItemGap: 3,
+        pageButtonGap: 3,
+        pageIconColor: '#6B7280',  // gray-500
+        pageIconInactiveColor: '#D1D5DB',  // gray-300
+        pageIconSize: 10,
         pageTextStyle: {
-          color: 'hsl(var(--accent-pro-200))',
+          color: '#6B7280',  // gray-500
+          fontSize: 11
         },
       },
       toolbox: {
         feature: {
           saveAsImage: {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
-            title: 'Save as Image',
+            title: 'Save',
             iconStyle: {
-              color: 'hsl(var(--accent-pro-200))',
-              borderColor: 'hsl(var(--oncolor-100))',
+              color: '#6B7280',  // gray-500
+              borderColor: '#E5E7EB',  // gray-200
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: 'hsl(var(--accent-pro-100))',
+                color: '#4B5563',  // gray-600
               },
             },
           },
         },
-        right: 20,
-        top: 20,
-        itemSize: 20, // Larger icon
-        itemGap: 10,
+        right: 10,
+        top: 5,
+        itemSize: 16,
+        itemGap: 8,
       },
       xAxis: isPieChart ? undefined : {
         type: isBarChart ? 'category' : xNumeric ? 'value' : 'category',
@@ -557,28 +571,30 @@ const Dashboard = () => {
         nameLocation: 'middle',
         nameGap: 30,
         nameTextStyle: {
-          color: 'hsl(var(--oncolor-100))',
+          color: '#4B5563',  // gray-600
+          fontSize: 12
         },
         axisLabel: {
-          color: 'hsl(var(--oncolor-100))',
+          color: '#6B7280',  // gray-500
           formatter: xNumeric ? (value) => value : null,
-          margin: 15, // Extra margin to prevent cutoff
-          rotate: xData.length > 10 ? 45 : 0, // Rotate labels if there are many points
+          margin: 8,
+          rotate: xData.length > 10 ? 45 : 0,
+          fontSize: 11
         },
         axisLine: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#D1D5DB',  // gray-300
           },
         },
         axisTick: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#E5E7EB',  // gray-200
           },
         },
         splitLine: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-900))',
-            opacity: 0.3,
+            color: '#F3F4F6',  // gray-100
+            type: 'dashed'
           },
         },
       },
@@ -589,26 +605,28 @@ const Dashboard = () => {
           nameLocation: 'middle',
           nameGap: 50,
           nameTextStyle: {
-            color: 'hsl(var(--oncolor-100))',
+            color: '#4B5563',  // gray-600
+            fontSize: 12
           },
           axisLabel: {
-            color: 'hsl(var(--oncolor-100))',
-            margin: 15, // Extra margin to prevent cutoff
+            color: '#6B7280',  // gray-500
+            margin: 8,
+            fontSize: 11
           },
           axisLine: {
             lineStyle: {
-              color: 'hsl(var(--accent-pro-000))',
+              color: '#D1D5DB',  // gray-300
             },
           },
           axisTick: {
             lineStyle: {
-              color: 'hsl(var(--accent-pro-000))',
+              color: '#E5E7EB',  // gray-200
             },
           },
           splitLine: {
             lineStyle: {
-              color: 'hsl(var(--accent-pro-900))',
-              opacity: 0.3,
+              color: '#F3F4F6',  // gray-100
+              type: 'dashed'
             },
           },
           scale: true, // Better scale for numeric data to prevent edge clipping
@@ -621,20 +639,22 @@ const Dashboard = () => {
               nameLocation: 'middle',
               nameGap: 50,
               nameTextStyle: {
-                color: 'hsl(var(--accent-secondary-100))',
+                color: '#7C3AED',  // violet-600
+                fontSize: 12
               },
               axisLabel: {
-                color: 'hsl(var(--accent-secondary-100))',
-                margin: 15, // Extra margin to prevent cutoff
+                color: '#7C3AED',  // violet-600
+                margin: 8,
+                fontSize: 11
               },
               axisLine: {
                 lineStyle: {
-                  color: 'hsl(var(--accent-secondary-100))',
+                  color: '#7C3AED',  // violet-600
                 },
               },
               axisTick: {
                 lineStyle: {
-                  color: 'hsl(var(--accent-secondary-100))',
+                  color: '#7C3AED',  // violet-600
                 },
               },
               splitLine: {
@@ -705,88 +725,96 @@ const Dashboard = () => {
     return {
       title: {
         text: 'Messages per Run',
-        left: 'center',
-        textStyle: { color: 'hsl(var(--oncolor-100))' },
+        left: 'left',
+        top: 5,
+        textStyle: { 
+          color: '#1F2937',  // gray-800
+          fontSize: 14,
+          fontWeight: 600
+        },
       },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'hsl(var(--accent-pro-900))',
-        borderColor: 'hsl(var(--accent-pro-200))',
+        backgroundColor: '#1F2937',  // gray-800
+        borderColor: '#374151',  // gray-700
         borderWidth: 1,
         textStyle: {
-          color: 'hsl(var(--oncolor-100))',
+          color: '#F9FAFB',  // gray-50
+          fontSize: 12
         },
       },
       grid: {
-        left: '5%',
-        right: '5%',
-        bottom: '15%',
-        top: '18%',
+        left: '3%',
+        right: '3%',
+        bottom: '12%',
+        top: '15%',
         containLabel: true,
       },
       xAxis: {
         type: 'category',
         data: messageLabels,
         axisLabel: {
-          color: 'hsl(var(--oncolor-100))',
-          margin: 10,
+          color: '#6B7280',  // gray-500
+          margin: 8,
+          fontSize: 11
         },
         axisLine: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#D1D5DB',  // gray-300
           },
         },
         axisTick: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#E5E7EB',  // gray-200
           },
         },
       },
       yAxis: {
         type: 'value',
         axisLabel: {
-          color: 'hsl(var(--oncolor-100))',
-          margin: 10,
+          color: '#6B7280',  // gray-500
+          margin: 8,
+          fontSize: 11
         },
         axisLine: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#D1D5DB',  // gray-300
           },
         },
         axisTick: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-000))',
+            color: '#E5E7EB',  // gray-200
           },
         },
         splitLine: {
           lineStyle: {
-            color: 'hsl(var(--accent-pro-900))',
-            opacity: 0.3,
+            color: '#F3F4F6',  // gray-100
+            type: 'dashed'
           },
         },
-        scale: true, // Better scale for numeric data
+        scale: true,
       },
       toolbox: {
         feature: {
           saveAsImage: {
             icon: 'path://M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l2.007-7.454c.158-.474.457-.85.85-1.093A2.25 2.25 0 018 6h8v9zm-1-7a1 1 0 10-2 0 1 1 0 002 0z',
-            title: 'Save as Image',
+            title: 'Save',
             iconStyle: {
-              color: 'hsl(var(--accent-pro-200))',
-              borderColor: 'hsl(var(--oncolor-100))',
+              color: '#6B7280',  // gray-500
+              borderColor: '#E5E7EB',  // gray-200
               borderWidth: 1,
             },
             emphasis: {
               iconStyle: {
-                color: 'hsl(var(--accent-pro-100))',
+                color: '#4B5563',  // gray-600
               },
             },
           },
         },
-        right: 20,
-        top: 20,
-        itemSize: 20, // Larger icon
-        itemGap: 10,
+        right: 10,
+        top: 5,
+        itemSize: 16,
+        itemGap: 8,
       },
       series: [
         {
@@ -794,7 +822,10 @@ const Dashboard = () => {
           data: messagesData,
           smooth: true,
           itemStyle: {
-            color: 'hsl(var(--accent-secondary-100))',
+            color: '#2563EB',  // blue-600
+          },
+          lineStyle: {
+            width: 2
           },
           areaStyle: {
             color: {
@@ -804,8 +835,8 @@ const Dashboard = () => {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: 'hsl(var(--accent-secondary-100) / 0.5)' },
-                { offset: 1, color: 'hsl(var(--accent-secondary-100) / 0)' },
+                { offset: 0, color: 'rgba(37, 99, 235, 0.2)' },  // blue-600 with opacity
+                { offset: 1, color: 'rgba(37, 99, 235, 0)' },
               ],
             },
           },
@@ -967,8 +998,8 @@ const Dashboard = () => {
           
           <div className="space-y-1 text-sm">
             <p>
-              <span className="font-medium text-gray-600">ID:</span>{' '}
-              <span className="font-mono">{simulationId}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">ID:</span>{' '}
+              <span className="font-mono text-gray-900 dark:text-gray-100">{simulationId}</span>
             </p>
             
             {simulationStatus === 'pending' && (
@@ -983,22 +1014,24 @@ const Dashboard = () => {
             {simulationStatus === 'completed' && (
               <>
                 <p>
-                  <span className="font-medium text-gray-600">Agents:</span>{' '}
-                  {Array.from(
-                    new Set(
-                      simulationData.runs
-                        .flatMap((run) => run.messages?.map((msg) => msg.agent) || [])
-                        .filter((agent) => agent !== 'InformationReturnAgent')
-                    )
-                  ).join(', ') || 'No agents found'}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Agents:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">
+                    {Array.from(
+                      new Set(
+                        simulationData.runs
+                          .flatMap((run) => run.messages?.map((msg) => msg.agent) || [])
+                          .filter((agent) => agent !== 'InformationReturnAgent')
+                      )
+                    ).join(', ') || 'No agents found'}
+                  </span>
                 </p>
                 <p>
-                  <span className="font-medium text-gray-600">Total Runs:</span>{' '}
-                  {simulationData.runs.length}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Total Runs:</span>{' '}
+                  <span className="text-gray-900 dark:text-gray-100">{simulationData.runs.length}</span>
                 </p>
                 <p>
-                  <span className="font-medium text-gray-600">Status:</span>{' '}
-                  <span className="text-green-600">✓ Completed</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Status:</span>{' '}
+                  <span className="text-green-600 dark:text-green-400 font-medium">✓ Completed</span>
                 </p>
               </>
             )}
@@ -1011,13 +1044,14 @@ const Dashboard = () => {
         <ChatStream 
           simulationId={simulationId} 
           isSimulationComplete={!isPending && simulationData?.runs?.length > 0}
+          totalRuns={simulationData?.runs?.length || 0}
         />
       </div>
 
       {/* Messages per Run Chart */}
       {!isPending && (
-        <div className="mb-6">
-          <ReactECharts option={generateMessageChartOption()} className="h-80 w-full" />
+        <div className="mb-4 max-w-3xl">
+          <ReactECharts option={generateMessageChartOption()} className="h-48 w-full" />
         </div>
       )}
       
@@ -1025,20 +1059,20 @@ const Dashboard = () => {
       <div className="mb-6 flex space-x-4">
         <button
           onClick={toggleAdvancedMode}
-          className={`px-4 py-2 rounded-md ${
+          className={`px-4 py-2 rounded-md font-medium transition-all ${
             !advancedMode
-              ? ' '
-              : ' border  '
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
           }`}
         >
           Basic Mode
         </button>
         <button
           onClick={toggleAdvancedMode}
-          className={`px-4 py-2 rounded-md ${
+          className={`px-4 py-2 rounded-md font-medium transition-all ${
             advancedMode
-              ? ''
-              : ' border '
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
           }`}
         >
           Advanced Mode
@@ -1047,30 +1081,30 @@ const Dashboard = () => {
 
       {/* Chart Configuration Panel */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2rounded">
-          <h2 className="text-xl  font-semibold">Chart Configuration</h2>
+        <div className="flex justify-between items-center mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Chart Configuration</h2>
           <button
             onClick={() => toggleSection('chartConfig')}
-            className="p-2  rounded-md transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
             {collapsibleSections.chartConfig ? (
-              <IoEyeOffOutline size={20} />
+              <IoEyeOffOutline size={20} className="text-gray-700 dark:text-gray-300" />
             ) : (
-              <IoEyeOutline size={20} />
+              <IoEyeOutline size={20} className="text-gray-700 dark:text-gray-300" />
             )}
           </button>
         </div>
 
         {collapsibleSections.chartConfig && (
-          <div className="p-4  rounded border">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Chart Type Selection */}
               <div>
-                <label className="block mb-2">Chart Type</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Chart Type</label>
                 <select
                   value={chartConfig.type}
                   onChange={(e) => setChartConfig({ ...chartConfig, type: e.target.value })}
-                  className="w-full p-2 border rounded  "
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="bar">Bar Chart</option>
                   <option value="line">Line Chart</option>
@@ -1082,11 +1116,11 @@ const Dashboard = () => {
 
               {/* X-Axis Selection */}
               <div>
-                <label className="block mb-2">X-Axis Variable</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">X-Axis Variable</label>
                 <select
                   value={chartConfig.xAxis}
                   onChange={(e) => setChartConfig({ ...chartConfig, xAxis: e.target.value })}
-                  className="w-full p-2 border rounded  "
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">--Select--</option>
                   {availableVariables.map((variable) => (
@@ -1099,11 +1133,11 @@ const Dashboard = () => {
 
               {/* Y-Axis Selection */}
               <div>
-                <label className="block mb-2">Y-Axis Variable</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Y-Axis Variable</label>
                 <select
                   value={chartConfig.yAxis}
                   onChange={(e) => setChartConfig({ ...chartConfig, yAxis: e.target.value })}
-                  className="w-full p-2 border rounded  "
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">--Select--</option>
                   {availableVariables.map((variable) => (
@@ -1116,38 +1150,38 @@ const Dashboard = () => {
 
               {/* Visualization Options */}
               <div className="flex flex-col justify-between">
-                <label className="block mb-2">Visualization Options</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Visualization Options</label>
                 <div className="flex flex-col space-y-2">
-                  <label className="inline-flex items-center">
+                  <label className="inline-flex items-center text-sm text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
                       checked={chartConfig.showTrendline}
                       onChange={(e) =>
                         setChartConfig({ ...chartConfig, showTrendline: e.target.checked })
                       }
-                      className="mr-2"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     Show Trendline
                   </label>
-                  <label className="inline-flex items-center">
+                  <label className="inline-flex items-center text-sm text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
                       checked={chartConfig.showLegend}
                       onChange={(e) =>
                         setChartConfig({ ...chartConfig, showLegend: e.target.checked })
                       }
-                      className="mr-2"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     Show Legend
                   </label>
-                  <label className="inline-flex items-center">
+                  <label className="inline-flex items-center text-sm text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
                       checked={chartConfig.showDataLabels}
                       onChange={(e) =>
                         setChartConfig({ ...chartConfig, showDataLabels: e.target.checked })
                       }
-                      className="mr-2"
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     Show Data Labels
                   </label>
@@ -1343,99 +1377,18 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Main Visualization */}
-      <div className="mb-6">
-        {chartConfig.xAxis && chartConfig.yAxis ? (
-          <div className=" p-4 rounded border">
-            <ReactECharts
-              option={generateChartOptions()}
-              style={{ height: '500px', width: '100%' }}
-              className="bg-transparent"
-              opts={{ renderer: 'canvas' }}
-            />
-          </div>
-        ) : (
-          <div className="empty-panel">
-            <p className="empty-panel-title">Please select variables for X and Y axes to visualize data.</p>
-            <p className="empty-panel-desc">
-              Use the Chart Configuration panel above to customize your visualization.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Statistics Panel */}
-      {chartConfig.yAxis && isDataNumeric(getDataForVariable(chartConfig.yAxis)) && (
-        <div className="mb-6">
-          <div className="panel-header">
-            <h2 className="panel-title">Statistics for {chartConfig.yAxis}</h2>
-            <button
-              onClick={() => toggleSection('statistics')}
-              className="panel-toggle"
-            >
-              {collapsibleSections.statistics ? (
-                <IoEyeOffOutline size={20} />
-              ) : (
-                <IoEyeOutline size={20} />
-              )}
-            </button>
-          </div>
-
-          {collapsibleSections.statistics && (
-            <div className="panel-body">
-              <div className="stats-grid">
-                {Object.entries(computeStats(chartConfig.yAxis) || {}).map(([stat, value]) => (
-                  <div
-                    key={stat}
-                    className="stat-card"
-                  >
-                    <h3 className="stat-label">
-                      {stat.charAt(0).toUpperCase() + stat.slice(1)}
-                    </h3>
-                    <p className="stat-value">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {secondaryYAxis.enabled && secondaryYAxis.variable && (
-                <div className="mt-4">
-                  <h3 className="stat-secondary-title">
-                    Statistics for {secondaryYAxis.variable} (Secondary Y-Axis)
-                  </h3>
-                  <div className="stats-grid">
-                    {Object.entries(computeStats(secondaryYAxis.variable) || {}).map(
-                      ([stat, value]) => (
-                        <div
-                          key={stat}
-                          className="stat-card secondary"
-                        >
-                          <h3 className="text-teal-300 font-medium">
-                            {stat.charAt(0).toUpperCase() + stat.slice(1)}
-                          </h3>
-                          <p className=" text-xl font-semibold">{value}</p>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* All Variables Summary */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 rounded">
-          <h2 className="text-xl font-semibold">All Variables Summary</h2>
+        <div className="flex justify-between items-center mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">All Variables Summary</h2>
           <button
             onClick={() => toggleSection('variables')}
-            className="p-2rounded-md transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
             {collapsibleSections.variables ? (
-              <IoEyeOffOutline size={20} />
+              <IoEyeOffOutline size={20} className="text-gray-700 dark:text-gray-300" />
             ) : (
-              <IoEyeOutline size={20} />
+              <IoEyeOutline size={20} className="text-gray-700 dark:text-gray-300" />
             )}
           </button>
         </div>
@@ -1450,25 +1403,29 @@ const Dashboard = () => {
               return (
                 <div
                   key={variable}
-                  className=" border p-4 rounded shadow hover:shadow-md cursor-pointer transition-all duration-200"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500"
                   onClick={() => setChartConfig({ ...chartConfig, yAxis: variable })}
                 >
-                  <h3 className="font-medium text-lg mb-2">{variable}</h3>
+                  <h3 className="font-medium text-lg mb-2 text-gray-900 dark:text-gray-100">{variable}</h3>
                   {numeric && stats ? (
-                    <div>
-                      <p className="text-sm">Mean: {stats.mean}</p>
-                      <p className="text-sm">
-                        Range: {stats.min} - {stats.max}
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-medium">Mean:</span> {stats.mean}
                       </p>
-                      <p className="text-sm">StdDev: {stats.stdDev}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-medium">Range:</span> {stats.min} - {stats.max}
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-medium">StdDev:</span> {stats.stdDev}
+                      </p>
                     </div>
                   ) : (
-                    <p className="text-sm">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
                       {values.slice(0, 3).join(', ')}
                       {values.length > 3 ? '...' : ''}
                     </p>
                   )}
-                  <div className="mt-2 text-xs">Click to set as Y-axis</div>
+                  <div className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium">Click to set as Y-axis</div>
                 </div>
               );
             })}
@@ -1476,42 +1433,164 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* Main Visualization */}
+      <div className="mb-4 max-w-4xl">
+        {chartConfig.xAxis && chartConfig.yAxis ? (
+          <div className="bg-gray-900/5 dark:bg-gray-800 p-3 rounded-lg border border-gray-300 dark:border-gray-700 shadow-sm">
+            <ReactECharts
+              option={generateChartOptions()}
+              style={{ height: '320px', width: '100%' }}
+              className="bg-transparent"
+              opts={{ renderer: 'canvas' }}
+            />
+          </div>
+        ) : (
+          <div className="bg-gray-100 dark:bg-gray-800/50 border-2 border-dashed border-gray-400 dark:border-gray-600 rounded-lg p-8 text-center">
+            <p className="text-base font-medium text-gray-800 dark:text-gray-300 mb-1">Please select variables for X and Y axes to visualize data.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-500">
+              Use the Chart Configuration panel above to customize your visualization.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Statistics Panel */}
+      {chartConfig.yAxis && isDataNumeric(getDataForVariable(chartConfig.yAxis)) && (
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Statistics for {chartConfig.yAxis}
+            </h2>
+            <button
+              onClick={() => toggleSection('statistics')}
+              className="p-2 hover:bg-white/50 dark:hover:bg-gray-800/50 rounded-full transition-all duration-200"
+            >
+              {collapsibleSections.statistics ? (
+                <IoEyeOffOutline size={20} className="text-gray-600 dark:text-gray-400" />
+              ) : (
+                <IoEyeOutline size={20} className="text-gray-600 dark:text-gray-400" />
+              )}
+            </button>
+          </div>
+
+          {collapsibleSections.statistics && (
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {Object.entries(computeStats(chartConfig.yAxis) || {}).map(([stat, value]) => {
+                  // Define icons and colors for each stat
+                  const statConfig = {
+                    count: { icon: '📊', color: 'from-blue-400 to-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },
+                    mean: { icon: '📈', color: 'from-green-400 to-green-600', bgColor: 'bg-green-50 dark:bg-green-900/20' },
+                    median: { icon: '🎯', color: 'from-purple-400 to-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-900/20' },
+                    stdDev: { icon: '📉', color: 'from-orange-400 to-orange-600', bgColor: 'bg-orange-50 dark:bg-orange-900/20' },
+                    min: { icon: '⬇️', color: 'from-red-400 to-red-600', bgColor: 'bg-red-50 dark:bg-red-900/20' },
+                    max: { icon: '⬆️', color: 'from-indigo-400 to-indigo-600', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20' }
+                  };
+                  
+                  const config = statConfig[stat] || { icon: '📊', color: 'from-gray-400 to-gray-600', bgColor: 'bg-gray-50 dark:bg-gray-900/20' };
+                  
+                  return (
+                    <div
+                      key={stat}
+                      className={`${config.bgColor} rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 transform hover:scale-105`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">{config.icon}</span>
+                        <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                          {stat === 'stdDev' ? 'Std Dev' : stat.charAt(0).toUpperCase() + stat.slice(1)}
+                        </h3>
+                      </div>
+                      <p className={`text-2xl font-bold bg-gradient-to-r ${config.color} bg-clip-text text-transparent`}>
+                        {value}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {secondaryYAxis.enabled && secondaryYAxis.variable && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                    Statistics for {secondaryYAxis.variable} (Secondary Y-Axis)
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {Object.entries(computeStats(secondaryYAxis.variable) || {}).map(
+                      ([stat, value]) => {
+                        const statConfig = {
+                          count: { icon: '📊', color: 'from-teal-400 to-teal-600', bgColor: 'bg-teal-50 dark:bg-teal-900/20' },
+                          mean: { icon: '📈', color: 'from-cyan-400 to-cyan-600', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20' },
+                          median: { icon: '🎯', color: 'from-sky-400 to-sky-600', bgColor: 'bg-sky-50 dark:bg-sky-900/20' },
+                          stdDev: { icon: '📉', color: 'from-lime-400 to-lime-600', bgColor: 'bg-lime-50 dark:bg-lime-900/20' },
+                          min: { icon: '⬇️', color: 'from-rose-400 to-rose-600', bgColor: 'bg-rose-50 dark:bg-rose-900/20' },
+                          max: { icon: '⬆️', color: 'from-violet-400 to-violet-600', bgColor: 'bg-violet-50 dark:bg-violet-900/20' }
+                        };
+                        
+                        const config = statConfig[stat] || { icon: '📊', color: 'from-gray-400 to-gray-600', bgColor: 'bg-gray-50 dark:bg-gray-900/20' };
+                        
+                        return (
+                          <div
+                            key={stat}
+                            className={`${config.bgColor} rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 transform hover:scale-105`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-2xl">{config.icon}</span>
+                              <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                                {stat === 'stdDev' ? 'Std Dev' : stat.charAt(0).toUpperCase() + stat.slice(1)}
+                              </h3>
+                            </div>
+                            <p className={`text-2xl font-bold bg-gradient-to-r ${config.color} bg-clip-text text-transparent`}>
+                              {value}
+                            </p>
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Data Table */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 p-2 rounded">
-          <h2 className="text-xlfont-semibold">Data Table</h2>
+        <div className="flex justify-between items-center mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Data Table</h2>
           <button
             onClick={() => toggleSection('dataTable')}
-            className="p-2"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
             {collapsibleSections.dataTable ? (
-              <IoEyeOffOutline size={20} />
+              <IoEyeOffOutline size={20} className="text-gray-700 dark:text-gray-300" />
             ) : (
-              <IoEyeOutline size={20} />
+              <IoEyeOutline size={20} className="text-gray-700 dark:text-gray-300" />
             )}
           </button>
         </div>
 
         {collapsibleSections.dataTable && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr >
-                  <th >Run</th>
+          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    Run
+                  </th>
                   {availableVariables.map((variable) => (
                     <th
                       key={`header-${variable}`}
-                      
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                     >
                       {variable}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {simulationData.runs.map((run, index) => (
-                  <tr key={`run-${index}`} >
-                    <td >
+                  <tr key={`run-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                       {index + 1}
                     </td>
                     {availableVariables.map((variable) => {
@@ -1528,7 +1607,7 @@ const Dashboard = () => {
                       return (
                         <td
                           key={`cell-${index}-${variable}`}
-                          
+                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
                         >
                           {value}
                         </td>

@@ -73,20 +73,33 @@ def stream_simulation():
     
     def generate():
         """Generator function for SSE streaming."""
-        # Send initial connection message
-        yield f"data: {json.dumps({'type': 'connected', 'simulation_id': simulation_id})}\n\n"
-        
+        # Get total runs information if available
+        total_runs = 0
         try:
             # First check if simulation is running
             client = MongoClient(os.environ.get("DB_CONNECTION_STRING", "mongodb://localhost:27017"))
             catalog_db = SimulationCatalog(client)
             sim_info = catalog_db.find_by_id(simulation_id)
             
+            # Get expected runs from catalog
+            if sim_info and 'expected_runs' in sim_info:
+                total_runs = sim_info.get('expected_runs', 0)
+            else:
+                # Fall back to checking results
+                results = get_simulation_results(simulation_id)
+                if results and 'runs' in results:
+                    total_runs = len(results.get('runs', []))
+                elif results and 'messages' in results:
+                    total_runs = 1
+            
             is_running = sim_info and sim_info.get('status') in ['queued', 'running', 'started']
+            
+            # Send initial connection message with total runs info
+            yield f"data: {json.dumps({'type': 'connected', 'simulation_id': simulation_id, 'total_runs': total_runs})}\n\n"
             
             # If simulation is running and live mode is enabled, try file streaming
             if is_running and live_mode:
-                yield f"data: {json.dumps({'type': 'status', 'status': 'live_streaming', 'mode': 'file'})}\n\n"
+                yield f"data: {json.dumps({'type': 'status', 'status': 'live_streaming', 'mode': 'file', 'total_runs': total_runs})}\n\n"
                 
                 # Find stream files by checking their contents for the simulation_id
                 stream_files = find_stream_files(simulation_id)
@@ -137,7 +150,7 @@ def stream_simulation():
             results = get_simulation_results(simulation_id)
             
             if results:
-                yield f"data: {json.dumps({'type': 'status', 'status': 'streaming', 'mode': 'database'})}\n\n"
+                yield f"data: {json.dumps({'type': 'status', 'status': 'streaming', 'mode': 'database', 'total_runs': total_runs})}\n\n"
                 
                 # Check if results has 'messages' directly (single run)
                 if 'messages' in results:
