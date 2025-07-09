@@ -279,7 +279,14 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
     runs_data = []
     for run in history:
         run_data = {"run_id": run["run_id"]}
-        run_data.update(run["outputs"])
+        
+        # Convert outputs list to dictionary if needed
+        if isinstance(run["outputs"], list):
+            outputs_dict = {item["name"]: item["value"] for item in run["outputs"]}
+        else:
+            outputs_dict = run["outputs"]
+        run_data.update(outputs_dict)
+        
         # Only include numeric utility values
         for agent, util in run["utilities"].items():
             if isinstance(util, (int, float)) and not isinstance(util, bool):
@@ -287,6 +294,67 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
             else:
                 run_data[f"{agent}_utility"] = None  # Use None for non-numeric values
         runs_data.append(run_data)
+    
+    # Handle empty history
+    if not runs_data:
+        # Create empty report with message
+        html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Consolidated Simulation Report</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            h1, h2 {{
+                color: #333;
+            }}
+            .summary-card {{
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            .empty-message {{
+                color: #666;
+                font-style: italic;
+                text-align: center;
+                padding: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>Consolidated Simulation Report</h1>
+        
+        <div class="summary-card">
+            <h2>Overview</h2>
+            <p><strong>Configuration:</strong> {config_path.name if isinstance(config_path, Path) else config_path}</p>
+            <p><strong>Total Runs:</strong> 0</p>
+            <p><strong>Timestamp:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+        
+        <div class="summary-card">
+            <div class="empty-message">
+                <p>No data available. The simulation history is empty.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+        
+        # Save report
+        report_path = output_dir / "consolidated_report.html"
+        with open(report_path, 'w') as f:
+            f.write(html_content)
+        
+        print(f"Consolidated report saved to: {report_path}")
+        return
     
     df = pd.DataFrame(runs_data)
     
@@ -405,7 +473,7 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
         
         <div class="summary-card">
             <h2>Overview</h2>
-            <p><strong>Configuration:</strong> {config_path.name}</p>
+            <p><strong>Configuration:</strong> {config_path.name if isinstance(config_path, Path) else config_path}</p>
             <p><strong>Total Runs:</strong> {len(history)}</p>
             <p><strong>Timestamp:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </div>
@@ -434,8 +502,13 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
     
     # Add column headers for outputs and utilities
     if history:
-        for var in history[0]['outputs'].keys():
-            html_content += f"<th>{var}</th>"
+        # Handle outputs whether they're list or dict
+        if isinstance(history[0]['outputs'], list):
+            for item in history[0]['outputs']:
+                html_content += f"<th>{item['name']}</th>"
+        else:
+            for var in history[0]['outputs'].keys():
+                html_content += f"<th>{var}</th>"
         for agent in history[0]['utilities'].keys():
             html_content += f"<th>{agent} Utility</th>"
     
@@ -445,8 +518,13 @@ def _generate_consolidated_report(output_dir: Path, history: list, config_path: 
     for run in history:
         html_content += f"<tr><td>{run['run_id']}</td>"
         
-        for var_value in run['outputs'].values():
-            html_content += f"<td>{var_value}</td>"
+        # Handle outputs whether they're list or dict
+        if isinstance(run['outputs'], list):
+            for item in run['outputs']:
+                html_content += f"<td>{item['value']}</td>"
+        else:
+            for var_value in run['outputs'].values():
+                html_content += f"<td>{var_value}</td>"
         
         for util_value in run['utilities'].values():
             if isinstance(util_value, (int, float)) and not isinstance(util_value, bool):
