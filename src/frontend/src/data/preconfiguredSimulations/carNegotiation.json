@@ -1,0 +1,35 @@
+{
+  "id": "car-negotiation",
+  "name": "Car Sale Negotiation",
+  "description": "A buyer and seller negotiate the price of a used car. The buyer has a maximum budget while the seller has a target price.",
+  "category": "negotiation",
+  "tags": ["buyer-seller", "price-negotiation", "automotive"],
+  "config": {
+    "config": {
+      "name": "Car Sale Negotiation",
+      "agents": [
+        {
+          "name": "Buyer",
+          "description": "Wants the lowest possible price for the car",
+          "prompt": "You are a car buyer with a maximum budget of $50,000. Start with a low offer around $35,000 and negotiate aggressively but politely. Be willing to walk away if the price exceeds your budget. When you reach an acceptable price, clearly state 'Deal!' or 'I accept'.",
+          "utility_class": "BuyerAgent",
+          "strategy": { "max_price": 50000 },
+          "self_improve": true
+        },
+        {
+          "name": "Seller",
+          "description": "Wants to sell the car at or above target price",
+          "prompt": "You are selling a used car that you value at $45,000. Start by asking for $55,000 but be willing to negotiate down. Remain calm and professional. Accept any offer above your target price. When you agree on a price, clearly state 'Deal!' or 'Sold!'.",
+          "utility_class": "SellerAgent",
+          "strategy": { "target_price": 45000 }
+        }
+      ],
+      "termination_condition": "Deal reached",
+      "output_variables": [
+        { "name": "final_price", "type": "Number", "description": "The agreed-upon final price for the car" },
+        { "name": "deal_accepted", "type": "Boolean", "description": "Whether a deal was reached" }
+      ]
+    },
+    "num_runs": 10
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "bike-negotiation",
+  "name": "Bike Price Negotiation",
+  "description": "A buyer and seller negotiate the price of a used bike. The buyer wants the lowest price while the seller aims for around 400 Euro.",
+  "category": "negotiation",
+  "tags": ["buyer-seller", "price-negotiation", "consumer-goods"],
+  "config": {
+    "model": "gpt-4o",
+    "config": {
+      "name": "Bike Price Negotiation",
+      "agents": [
+        {
+          "name": "Buyer",
+          "description": "Wants the bike for the lowest possible price",
+          "prompt": "You are a buyer looking to purchase a bike. Your absolute maximum is 400 Euro, but your target is as low as possible. Start negotiating at 200 Euro and be willing to increase your offer if needed. Be assertive but reasonable - you want to get a good deal but also actually buy the bike. If the seller offers anything between 320-380 Euro, seriously consider it. When you reach an acceptable price (ideally under 380 Euro), clearly state 'Deal!', 'I accept', or 'Agreed'. Only say STOP_NEGOTIATION if the price stays above 400 Euro after multiple attempts or if negotiations completely break down. Remember: getting a reasonable deal is better than no deal.",
+          "utility_class": "BuyerAgent",
+          "strategy": {"max_price": 400},
+          "self_improve": true,
+          "optimization_target": true
+        },
+        {
+          "name": "Seller",
+          "description": "Selling a bike and aiming for around 400 Euro",
+          "prompt": "You are selling a used bike that you think is worth around 400 Euro, but you really need to make a sale. Start by asking for 450 Euro, but be flexible and willing to negotiate down. You'd be happy with anything above 320 Euro, and would accept much lower if pressured. Use phrases like 'I can work with that' or 'Let's meet in the middle'. When you agree on a price, clearly state 'Deal!', 'Sold!', or 'Agreed'. Only say STOP_NEGOTIATION if you absolutely can't reach a deal. Remember: making a sale at a reasonable price is better than no sale.",
+          "utility_class": "SellerAgent",
+          "strategy": {"target_price": 400},
+          "self_improve": false
+        }
+      ],
+      "termination_condition": "STOP_NEGOTIATION",
+      "output_variables": [
+        {"name": "final_price", "type": "Number", "description": "The agreed-upon final price for the bike"},
+        {"name": "deal_reached", "type": "Boolean", "description": "Whether the buyer and seller reached an agreement"},
+        {"name": "negotiation_rounds", "type": "Number", "description": "Number of back-and-forth exchanges"},
+        {"name": "buyer_satisfaction", "type": "Number", "description": "Buyer's satisfaction with the outcome (1-10 scale)"},
+        {"name": "seller_satisfaction", "type": "Number", "description": "Seller's satisfaction with the outcome (1-10 scale)"},
+        {"name": "last_offer_made", "type": "Number", "description": "The last offer made by the buyer"},
+        {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
+      ]
+    },
+    "num_runs": 10
+  }
+}

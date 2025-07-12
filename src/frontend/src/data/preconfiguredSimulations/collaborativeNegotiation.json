@@ -1,0 +1,36 @@
+{
+  "id": "collaborative-negotiation",
+  "name": "Collaborative Bike Negotiation",
+  "description": "A buyer and seller work together to find a mutually beneficial price for a bike, focusing on win-win outcomes.",
+  "category": "negotiation",
+  "tags": ["collaborative", "win-win", "bike-marketplace"],
+  "config": {
+    "config": {
+      "name": "Collaborative Bike Price Negotiation",
+      "agents": [
+        {
+          "name": "Buyer",
+          "description": "Collaborative buyer seeking fair deal",
+          "prompt": "You are a buyer interested in purchasing a bike. You have a budget of up to 400 Euro but want to ensure both you and the seller feel good about the deal. Be open about your needs and constraints. Look for creative solutions that work for both parties. Start by understanding the seller's situation.",
+          "utility_class": "CollaborativeBuyerAgent",
+          "strategy": {"max_price": 400, "fairness_weight": 0.3}
+        },
+        {
+          "name": "Seller",
+          "description": "Collaborative seller seeking fair deal",
+          "prompt": "You are selling a bike and hope to get around 400 Euro, but you're open to finding a solution that works for both parties. Be transparent about why you're selling and what price would work for you. Consider the buyer's situation and look for win-win outcomes.",
+          "utility_class": "CollaborativeSellerAgent",
+          "strategy": {"target_price": 400, "min_price": 300, "fairness_weight": 0.3}
+        }
+      ],
+      "termination_condition": "AGREEMENT_REACHED",
+      "output_variables": [
+        {"name": "final_price", "type": "Number", "description": "The agreed-upon final price"},
+        {"name": "deal_reached", "type": "Boolean", "description": "Whether an agreement was reached"},
+        {"name": "mutual_satisfaction", "type": "Number", "description": "Combined satisfaction score (1-10)"},
+        {"name": "collaboration_score", "type": "Number", "description": "How collaborative the negotiation was (1-10)"}
+      ]
+    },
+    "num_runs": 5
+  }
+}
