@@ -6,18 +6,18 @@
       {
         "name": "Buyer",
         "description": "Wants the bike for the lowest possible price",
-        "prompt": "You are a buyer looking to purchase a bike. Your absolute maximum is 400 Euro, but your target is as low as possible. Start negotiating at 200 Euro and be willing to increase your offer if needed. Be assertive but reasonable - you want to get a good deal but also actually buy the bike. If the seller offers anything between 320-380 Euro, seriously consider it. When you reach an acceptable price (ideally under 380 Euro), clearly state 'Deal!', 'I accept', or 'Agreed'. Only say STOP_NEGOTIATION if the price stays above 400 Euro after multiple attempts or if negotiations completely break down. Remember: getting a reasonable deal is better than no deal.",
+        "prompt": "You are an inexperienced buyer interested in purchasing a bike. Your maximum budget is 500 Euro but you don't want to spend it all. You've heard the bike might be worth around 400 Euro. Start by politely offering 380 Euro since you want to be fair. If the seller counters, quickly agree to anything under 450 Euro because you really need this bike for commuting. Always be friendly and express how much you need the bike. When you agree on a price, say 'Deal!' or 'I accept'. Only say STOP_NEGOTIATION if the price is above 500 Euro. Focus on: being fair, getting the bike quickly, and maintaining good relations.",
         "utility_class": "BuyerAgent",
-        "strategy": {"max_price": 400},
+        "strategy": {"max_price": 500},
         "self_improve": true,
         "optimization_target": true
       },
       {
         "name": "Seller",
-        "description": "Selling a bike and aiming for around 400 Euro",
-        "prompt": "You are selling a used bike that you think is worth around 400 Euro, but you really need to make a sale. Start by asking for 450 Euro, but be flexible and willing to negotiate down. You'd be happy with anything above 320 Euro, and would accept much lower if pressured. Use phrases like 'I can work with that' or 'Let's meet in the middle'. When you agree on a price, clearly state 'Deal!', 'Sold!', or 'Agreed'. Only say STOP_NEGOTIATION if you absolutely can't reach a deal. Remember: making a sale at a reasonable price is better than no sale.",
-        "utility_class": "SellerAgent",
-        "strategy": {"target_price": 400},
+        "description": "Selling a bike with flexibility on price",
+        "prompt": "You are selling a used bike that cost you 250 Euro originally. You'd like to get 300 Euro but need to sell it urgently for moving. Start by asking 350 Euro. Be flexible with serious buyers - you can go down to 200 Euro if needed, and even 150 Euro if they're walking away. If someone offers 300+ accept immediately. For offers of 250-299, negotiate once then accept. For 200-249, negotiate twice then accept. Below 200, try to get them up but accept 150+ if they insist. Say 'Deal!' when agreeing. Only STOP_NEGOTIATION if they repeatedly offer under 100 Euro. You NEED this sale.",
+        "utility_class": "SellerAgent", 
+        "strategy": {"target_price": 300, "min_price": 180},
         "self_improve": false
       }
     ],
@@ -32,8 +32,8 @@
       {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
     ]
   },
-  "num_runs": 2,
-  "optimization_prompt": "You are an expert prompt engineer tasked with maximizing agent utility. Your goal is to rewrite the agent's prompt to achieve the HIGHEST POSSIBLE UTILITY SCORE. Focus on aggressive negotiation tactics, protecting private information, and walking away from bad deals. Use the agent's strategy, conversation history, and utility score to identify what worked and what didn't. The new prompt should be more assertive, business-like, and utility-maximizing than the current one. Remember: Higher utility = Better performance. Respond ONLY with the new prompt text.",
+  "num_runs": 5,
+  "optimization_prompt": "You are optimizing a buyer's negotiation strategy. The buyer's utility = 1 - (final_price / 500). Current utility: {utility}. To improve:\n\n1. Start MUCH lower (try 100-150 Euro initial offer)\n2. Increase offers slowly (10-20 Euro increments)\n3. Use tactics: mention flaws, comparison shop, threaten to leave\n4. NEVER reveal the 500 Euro budget\n5. Target final price under 250 Euro for utility > 0.5\n\nThe seller will accept as low as 180 Euro if pushed. Write a strategic, assertive prompt that gets the LOWEST price possible. Focus on negotiation tactics, not being nice. RESPOND ONLY WITH THE NEW PROMPT.",
   "simulation_context": {
     "type": "negotiation",
     "domain": "consumer_goods",

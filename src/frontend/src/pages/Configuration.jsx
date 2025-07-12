@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService.js';
 import Navbar from './components/Navbar.jsx';
+import { preconfiguredSimulations, simulationCategories } from '../data/preconfiguredSimulations/index.js';
 
 import { FaLongArrowAltRight } from 'react-icons/fa';
 import { FaRandom } from 'react-icons/fa';
@@ -365,9 +366,112 @@ const Tab = ({ label, isActive, onClick }) => {
   );
 };
 
+const PreconfiguredSelector = ({ onSelect, onCustomize, isSubmitting }) => {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSimulation, setSelectedSimulation] = useState(null);
+
+  const filteredSimulations = selectedCategory === 'all' 
+    ? preconfiguredSimulations 
+    : preconfiguredSimulations.filter(sim => sim.category === selectedCategory);
+
+  const handleSelect = (simulation) => {
+    setSelectedSimulation(simulation);
+  };
+
+  const handleUseSimulation = () => {
+    if (selectedSimulation) {
+      onSelect(selectedSimulation.config);
+    }
+  };
+
+  const handleCustomizeSimulation = () => {
+    if (selectedSimulation) {
+      onCustomize(selectedSimulation.config);
+    }
+  };
+
+  return (
+    <div className="container p-3 mt-0 border-light rounded tab-connected relative">
+      {isSubmitting && (
+        <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-10 rounded">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-light mb-2"></div>
+            <p className="">Creating Simulation...</p>
+          </div>
+        </div>
+      )}
+      <h2 className="text-xl font-bold mb-4">Select a Preconfigured Simulation</h2>
+      
+      {/* Category Filter */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">Filter by Category</label>
+        <select
+          className="form-input custom-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          {simulationCategories.map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Simulation Cards */}
+      <div className="grid gap-4 mb-4">
+        {filteredSimulations.map(sim => (
+          <div
+            key={sim.id}
+            className={`p-4 border rounded cursor-pointer transition-all ${
+              selectedSimulation?.id === sim.id 
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+            onClick={() => handleSelect(sim)}
+          >
+            <h3 className="font-semibold text-lg">{sim.name}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{sim.description}</p>
+            <div className="flex flex-wrap gap-2">
+              {sim.tags.map(tag => (
+                <span 
+                  key={tag} 
+                  className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            {selectedSimulation?.id === sim.id && (
+              <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded">
+                <p className="text-sm font-medium mb-1">Configuration Details:</p>
+                <p className="text-xs">• {sim.config.config.agents.length} agents</p>
+                <p className="text-xs">• {sim.config.num_runs} runs</p>
+                <p className="text-xs">• {sim.config.config.output_variables.length} output variables</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Action Buttons */}
+      {selectedSimulation && (
+        <div className="flex gap-3">
+          <Button color="green" onClick={handleUseSimulation}>
+            <MdOutlineQueuePlayNext className="inline mr-2" />
+            Use This Simulation
+          </Button>
+          <Button color="darkpurple" onClick={handleCustomizeSimulation}>
+            <RiAiGenerate className="inline mr-2" />
+            Customize & Edit
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Configuration = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('ai');
+  const [activeTab, setActiveTab] = useState('preconfigured');
   // Manual configuration state
   const [name, setName] = useState('');
   const [numRuns, setNumRuns] = useState(1);
@@ -510,6 +614,39 @@ const Configuration = () => {
     setError('');
   };
 
+  // Handle preconfigured simulation selection
+  const handlePreconfiguredSelect = async (config) => {
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await apiService.createSimulation(config);
+      console.log('Simulation created:', response);
+      navigate('/simulations');
+    } catch (err) {
+      setError(`Failed to create simulation: ${err.message}`);
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle customizing a preconfigured simulation
+  const handlePreconfiguredCustomize = (config) => {
+    // Switch to manual tab and populate the form
+    setActiveTab('manual');
+    
+    if (config.config) {
+      setName(config.config.name || '');
+      setNumRuns(config.num_runs || 10);
+      setAgents(config.config.agents || []);
+      setTerminationCondition(config.config.termination_condition || '');
+      setOutputVariables(config.config.output_variables || []);
+      setSimulationConfig(config);
+      
+      // Also populate raw JSON for reference
+      setRawJson(JSON.stringify(config, null, 2));
+    }
+  };
+
   const submitSimulation = async () => {
     if (!simulationConfig) {
       createSimulationConfig();
@@ -545,12 +682,17 @@ const Configuration = () => {
         {/* Tab navigation */}
         <div className="flex justify-center items-center">
           <Tab
-            label="Automatic Configuration"
+            label="Preconfigured"
+            isActive={activeTab === 'preconfigured'}
+            onClick={() => setActiveTab('preconfigured')}
+          />
+          <Tab
+            label="AI Generation"
             isActive={activeTab === 'ai'}
             onClick={() => setActiveTab('ai')}
           />
           <Tab
-            label="Manual Configuration"
+            label="Manual Setup"
             isActive={activeTab === 'manual'}
             onClick={() => setActiveTab('manual')}
           />
@@ -558,6 +700,14 @@ const Configuration = () => {
 
         {/* Tab content */}
         <div className="">
+          {activeTab === 'preconfigured' && (
+            <PreconfiguredSelector
+              onSelect={handlePreconfiguredSelect}
+              onCustomize={handlePreconfiguredCustomize}
+              isSubmitting={isSubmitting}
+            />
+          )}
+
           {activeTab === 'manual' && (
             <div className="container p-3 mt-0 border-light rounded tab-connected">
               {/* Raw JSON input */}
@@ -631,23 +781,27 @@ const Configuration = () => {
             />
           )}
 
-          <JsonPreview data={simulationConfig} />
+          {activeTab !== 'preconfigured' && (
+            <>
+              <JsonPreview data={simulationConfig} />
 
-          <div className="flex flex-col md:flex-row gap-3 mt-4 items-center justify-center">
-            {activeTab === 'manual' && (
-              <Button onClick={createSimulationConfig}>
-                <RiAiGenerate className="mr-2 inline-block mb-0.5 h-5 w-5" />
-                Generate Configuration
-              </Button>
-            )}
+              <div className="flex flex-col md:flex-row gap-3 mt-4 items-center justify-center">
+                {activeTab === 'manual' && (
+                  <Button onClick={createSimulationConfig}>
+                    <RiAiGenerate className="mr-2 inline-block mb-0.5 h-5 w-5" />
+                    Generate Configuration
+                  </Button>
+                )}
 
-            {simulationConfig && (
-              <Button onClick={submitSimulation} disabled={isSubmitting}>
-                <MdOutlineQueuePlayNext className="mr-2 inline-block mb-0.5 h-5 w-5" />
-                {isSubmitting ? 'Creating Simulation...' : 'Run Simulation'}
-              </Button>
-            )}
-          </div>
+                {simulationConfig && (
+                  <Button onClick={submitSimulation} disabled={isSubmitting}>
+                    <MdOutlineQueuePlayNext className="mr-2 inline-block mb-0.5 h-5 w-5" />
+                    {isSubmitting ? 'Creating Simulation...' : 'Run Simulation'}
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

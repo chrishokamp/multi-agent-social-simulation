@@ -126,12 +126,16 @@ def main(config_path: Path, max_messages: int, min_messages: int,
     environment = {"runs": [], "outputs": {}}
     history = []
     all_sim_dirs = []
+    
+    # Initialize config once and update it between runs
+    current_config = materialise_config(raw)
 
     for run_idx in range(1, num_runs + 1):
         print(f"\n{'='*60}")
         print(f"Run {run_idx}/{num_runs}")
         print(f"{'='*60}")
-        config = materialise_config(raw)
+        # Use the current config which gets updated with new prompts
+        config = copy.deepcopy(current_config)
         
         # Create run-specific log directory
         run_log_dir = output_dir / f"run_{run_idx:03d}"
@@ -164,7 +168,25 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         agent_utilities = {}
         for agent in sim.agents:
             if hasattr(agent, 'compute_utility'):
-                utility = agent.compute_utility({"outputs": outputs})
+                # compute_utility modifies the environment but returns it, not the utility value
+                env = {"runs": [{"output_variables": outputs}]}
+                updated_env = agent.compute_utility(env)
+                
+                # Extract the actual utility value
+                if hasattr(agent, 'extract_utility_value'):
+                    utility = agent.extract_utility_value(updated_env)
+                else:
+                    # Fallback: try to extract manually
+                    utility = 0.0
+                    if updated_env and "runs" in updated_env and updated_env["runs"]:
+                        last_run = updated_env["runs"][-1]
+                        output_vars = last_run.get("output_variables", [])
+                        if isinstance(output_vars, list):
+                            for var in output_vars:
+                                if var.get("name") == "utility" and isinstance(var.get("value"), dict):
+                                    utility = float(var["value"].get(agent.name, 0.0))
+                                    break
+                
                 agent_utilities[agent.name] = utility
                 print(f"{agent.name} utility: {utility}")
                 
@@ -182,12 +204,23 @@ def main(config_path: Path, max_messages: int, min_messages: int,
             "utilities": agent_utilities,
             "log_dir": str(run_log_dir)
         })
+        
+        # Add this run to the environment so agents can learn from it
+        environment["runs"].append({
+            "run_id": str(sim.run_id) if hasattr(sim, 'run_id') else f"run_{run_idx}",
+            "output_variables": outputs if isinstance(outputs, list) else [{"name": k, "value": v} for k, v in outputs.items()],
+            "messages": result.get("messages", []) if result else [],
+            "system_prompts": result.get("system_prompts", {}) if result else {}
+        })
 
         # persist improved prompts for next run
         for agent in sim.agents:
-            for cfg in config["agents"]:
+            for cfg in current_config["agents"]:
                 if cfg["name"] == agent.name:
-                    cfg["prompt"] = getattr(agent, "system_prompt", cfg.get("prompt"))
+                    new_prompt = getattr(agent, "system_prompt", cfg.get("prompt"))
+                    if new_prompt != cfg.get("prompt"):
+                        print(f"\n🔄 {agent.name} learned new prompt (length: {len(cfg.get('prompt', ''))} → {len(new_prompt)})")
+                    cfg["prompt"] = new_prompt
         
         all_sim_dirs.append(run_log_dir)
         

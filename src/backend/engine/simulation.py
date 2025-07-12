@@ -135,6 +135,7 @@ class SelectorGCSimulation:
             
             # allow self-improvement from prior runs
             if self.environment.get("runs") and agent_cfg.get("self_improve", False):
+                print(f"🧠 {ag.name} is learning from {len(self.environment.get('runs', []))} previous runs...")
                 ag.learn_from_feedback(self.environment)
             self.agents.append(ag)
 
@@ -165,9 +166,10 @@ class SelectorGCSimulation:
             ag_logger = self.sim_logger.get_agent_logger(agent.name)
             agent._logger = ag_logger
 
-            # log initial utility if supported
+            # log initial utility if supported (skip for now as there are no runs yet)
+            # Initial utility will be 0 since no negotiation has occurred
             if hasattr(agent, "compute_utility"):
-                init_util = agent.compute_utility(self.environment.get("config", {}))
+                init_util = 0.0  # No runs yet, so utility is 0
                 ag_logger.log_utility(0, init_util, self.environment.get("config", {}))
 
             # log creation
@@ -327,6 +329,12 @@ class SelectorGCSimulation:
             if len(self.environment.get("runs", [])) > 0:
                 # we have >=1 runs to learn from
                 self.environment = ag.compute_utility(self.environment)
+                
+                # Log the utility if we have a logger
+                if hasattr(ag, '_logger') and hasattr(ag, 'extract_utility_value'):
+                    utility_value = ag.extract_utility_value(self.environment)
+                    current_run = len(self.environment.get("runs", []))
+                    ag._logger.log_utility(current_run, utility_value, self.environment)
 
     async def run(self):
         """Run the simulation, logging at start and completion."""

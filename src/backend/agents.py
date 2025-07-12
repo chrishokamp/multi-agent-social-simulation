@@ -56,6 +56,31 @@ class UtilityAgent(AssistantAgent, ABC):
         return [
             run["output_variables"]["utility"] for run in self._last_environment["runs"]
         ]
+    
+    def extract_utility_value(self, environment: Mapping[str, Any]) -> float:
+        """
+        Extract the utility value for this agent from the environment.
+        Used to get the float utility value after compute_utility modifies the environment.
+        """
+        if not environment or "runs" not in environment or not environment["runs"]:
+            return 0.0
+        
+        most_recent_run = environment["runs"][-1]
+        output_vars = most_recent_run.get("output_variables", [])
+        
+        # Handle both list and dict formats
+        if isinstance(output_vars, dict):
+            utility_dict = output_vars.get("utility", {})
+            return float(utility_dict.get(self.name, 0.0))
+        else:
+            # List format
+            for var in output_vars:
+                if var.get("name") == "utility":
+                    utility_dict = var.get("value", {})
+                    if isinstance(utility_dict, dict):
+                        return float(utility_dict.get(self.name, 0.0))
+        
+        return 0.0
 
     def compute_utility(
         self,
