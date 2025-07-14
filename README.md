@@ -78,6 +78,7 @@ The NegotiationGym user interface facilitates end-to-end configuration, monitori
 ![NegotiationGym Configure Simulation](images/negotiation-gym-configure-simulation.png)
 ![NegotiationGym Simulation Catalog](images/negotiation-gym-simulation-catalog.png)
 ![NegotiationGym Dashboard](images/negotiation-gym-dashboard.png)
+![NegotiationGym All Variables](images/negotiation-gym-all-variables.png)
 
 
 
