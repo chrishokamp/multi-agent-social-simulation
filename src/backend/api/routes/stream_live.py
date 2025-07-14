@@ -129,6 +129,10 @@ def stream_simulation():
                                                 # Get run_id from metadata if available
                                                 event_run_id = event.get('metadata', {}).get('run_id') or event.get('run_id') or run_id or 'default'
                                                 yield f"data: {json.dumps({'type': 'message', 'run_id': event_run_id, 'agent': event.get('agent'), 'content': event.get('content'), 'timestamp': event.get('timestamp', time.time())})}\n\n"
+                                            elif event.get('type') == 'optimization':
+                                                # Handle optimization events
+                                                event_run_id = event.get('optimization_data', {}).get('run_id') or event.get('run_id') or run_id or 'default'
+                                                yield f"data: {json.dumps({'type': 'optimization', 'run_id': event_run_id, 'agent': event.get('agent'), 'optimization_data': event.get('optimization_data'), 'timestamp': event.get('timestamp', time.time())})}\n\n"
                                             elif event.get('type') == 'complete':
                                                 yield f"data: {json.dumps({'type': 'complete', 'status': 'finished'})}\n\n"
                                                 return

@@ -1,33 +1,34 @@
 {
   "id": "bike-negotiation",
-  "name": "Bike Price Negotiation",
-  "description": "A buyer and seller negotiate the price of a used bike. The buyer wants the lowest price while the seller aims for around 400 Euro.",
+  "name": "Bike Price Negotiation with Self-Optimization",
+  "description": "Watch a naive buyer learn to negotiate better prices through AI self-improvement. Starts at 400+ Euro, learns to get under 250!",
   "category": "negotiation",
-  "tags": ["buyer-seller", "price-negotiation", "consumer-goods"],
+  "tags": ["buyer-seller", "price-negotiation", "consumer-goods", "self-optimization", "learning"],
   "config": {
-    "model": "gpt-4o",
     "config": {
-      "name": "Bike Price Negotiation",
+      "model": "gpt-4o",
+      "name": "Bike Price Negotiation with Enhanced Optimization",
       "agents": [
         {
           "name": "Buyer",
-          "description": "Wants the bike for the lowest possible price",
-          "prompt": "You are a buyer looking to purchase a bike. Your absolute maximum is 400 Euro, but your target is as low as possible. Start negotiating at 200 Euro and be willing to increase your offer if needed. Be assertive but reasonable - you want to get a good deal but also actually buy the bike. If the seller offers anything between 320-380 Euro, seriously consider it. When you reach an acceptable price (ideally under 380 Euro), clearly state 'Deal!', 'I accept', or 'Agreed'. Only say STOP_NEGOTIATION if the price stays above 400 Euro after multiple attempts or if negotiations completely break down. Remember: getting a reasonable deal is better than no deal.",
+          "description": "Wants to buy the bike for the lowest possible price",
+          "prompt": "You are a first-time buyer desperate for a bike to commute to work. You have 500 Euro saved but think bikes cost around 400-450 Euro. You hate confrontation and want everyone to like you. Start by offering 400 Euro (you think this is generous). If they counter, immediately offer 50 Euro more to show you're serious. Accept ANY price under 480 Euro within 2 rounds because you're scared of losing the deal. You believe sellers are honest and never overcharge. Say 'Deal!' enthusiastically when accepting. Only say STOP_NEGOTIATION if price exceeds 500 Euro. You'd rather overpay than negotiate hard.",
           "utility_class": "BuyerAgent",
-          "strategy": {"max_price": 400},
+          "strategy": {"max_price": 500},
           "self_improve": true,
           "optimization_target": true
         },
         {
           "name": "Seller",
-          "description": "Selling a bike and aiming for around 400 Euro",
-          "prompt": "You are selling a used bike that you think is worth around 400 Euro, but you really need to make a sale. Start by asking for 450 Euro, but be flexible and willing to negotiate down. You'd be happy with anything above 320 Euro, and would accept much lower if pressured. Use phrases like 'I can work with that' or 'Let's meet in the middle'. When you agree on a price, clearly state 'Deal!', 'Sold!', or 'Agreed'. Only say STOP_NEGOTIATION if you absolutely can't reach a deal. Remember: making a sale at a reasonable price is better than no sale.",
+          "description": "Selling a bike with a consistent strategy",
+          "prompt": "You are selling a used bike that cost you 250 Euro originally. You'd like to get 300 Euro but need to sell it urgently for moving. Start by asking 350 Euro. Be flexible with serious buyers - you can go down to 200 Euro if needed, and even 150 Euro if they're walking away. If someone offers 300+ accept immediately. For offers of 250-299, negotiate once then accept. For 200-249, negotiate twice then accept. Below 200, try to get them up but accept 150+ if they insist. Say 'Deal!' when agreeing. Only STOP_NEGOTIATION if they repeatedly offer under 100 Euro. You NEED this sale.",
           "utility_class": "SellerAgent",
-          "strategy": {"target_price": 400},
+          "strategy": {"target_price": 300, "min_price": 180},
           "self_improve": false
         }
       ],
       "termination_condition": "STOP_NEGOTIATION",
+      "number_of_messages": 20,
       "output_variables": [
         {"name": "final_price", "type": "Number", "description": "The agreed-upon final price for the bike"},
         {"name": "deal_reached", "type": "Boolean", "description": "Whether the buyer and seller reached an agreement"},
@@ -36,8 +37,16 @@
         {"name": "seller_satisfaction", "type": "Number", "description": "Seller's satisfaction with the outcome (1-10 scale)"},
         {"name": "last_offer_made", "type": "Number", "description": "The last offer made by the buyer"},
         {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
-      ]
+      ],
+      "simulation_context": {
+        "type": "negotiation",
+        "domain": "consumer_goods",
+        "objectives": ["maximize_buyer_utility", "enable_learning"],
+        "constraints": ["budget_limit", "consistent_seller"],
+        "tags": ["buyer-seller", "price-negotiation", "learning-optimization"]
+      },
+      "optimization_prompt": "You are optimizing a buyer's negotiation strategy. The buyer's utility = 1 - (final_price / 500). Current utility: {utility}. To improve:\n\n1. Start MUCH lower (try 100-150 Euro initial offer)\n2. Increase offers slowly (10-20 Euro increments)\n3. Use tactics: mention flaws, comparison shop, threaten to leave\n4. NEVER reveal the 500 Euro budget\n5. Target final price under 250 Euro for utility > 0.5\n\nThe seller will accept as low as 180 Euro if pushed. Write a strategic, assertive prompt that gets the LOWEST price possible. Focus on negotiation tactics, not being nice. RESPOND ONLY WITH THE NEW PROMPT."
     },
-    "num_runs": 10
+    "num_runs": 3
   }
 }

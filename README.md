@@ -73,6 +73,14 @@ make run-simulation CONFIG="path/to/your/config"
 ```
 ### 3. Run and Explore Simulations using the User Interface
 
+The NegotiationGym user interface facilitates end-to-end configuration, monitoring, and exploration of simulations. 
+
+![NegotiationGym Configure Simulation](images/negotiation-gym-configure-simulation.png)
+![NegotiationGym Simulation Catalog](images/negotiation-gym-simulation-catalog.png)
+![NegotiationGym Dashboard](images/negotiation-gym-dashboard.png)
+
+
+
 ### MongoDB Setup
 
 **macOS:**

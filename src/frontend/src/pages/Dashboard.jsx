@@ -207,8 +207,36 @@ const Dashboard = () => {
 
     return simulationData.runs.map((run) => {
       const found = run.output_variables?.find((v) => v.name === variableName);
-      // Try to convert to number if possible, otherwise return the string value
-      const value = found ? found.value : null;
+      if (!found) return null;
+      
+      let value = found.value;
+      
+      // Handle nested utility objects
+      if (variableName === 'utility' && typeof value === 'object' && value !== null) {
+        // If it's a utility object like {"Buyer": 0.5, "Seller": 0.8}, 
+        // return the sum or average of all agent utilities
+        const utilityValues = Object.values(value).filter(v => typeof v === 'number');
+        if (utilityValues.length > 0) {
+          // Return average utility across all agents
+          value = utilityValues.reduce((sum, v) => sum + v, 0) / utilityValues.length;
+        }
+      }
+      
+      // Handle cases where value might be an object with a numeric property
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Look for common numeric properties
+        if ('value' in value) value = value.value;
+        else if ('amount' in value) value = value.amount;
+        else if ('score' in value) value = value.score;
+        else if ('result' in value) value = value.result;
+        // If still an object, try to get the first numeric value
+        else {
+          const numericValue = Object.values(value).find(v => typeof v === 'number');
+          if (numericValue !== undefined) value = numericValue;
+        }
+      }
+      
+      // Try to convert to number if possible, otherwise return the value
       return !isNaN(Number(value)) ? Number(value) : value;
     });
   };
@@ -1421,8 +1449,20 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {values.slice(0, 3).join(', ')}
-                      {values.length > 3 ? '...' : ''}
+                      {values.slice(0, 3).map((v, i) => {
+                        if (typeof v === 'object' && v !== null) {
+                          if (variable === 'utility' && !Array.isArray(v)) {
+                            // Format utility objects
+                            const entries = Object.entries(v)
+                              .filter(([k, val]) => typeof val === 'number')
+                              .map(([k, val]) => `${k}: ${val.toFixed(3)}`);
+                            return entries.join(', ');
+                          }
+                          return JSON.stringify(v);
+                        }
+                        return String(v);
+                      }).join(' | ')}
+                      {values.length > 3 ? ' ...' : ''}
                     </p>
                   )}
                   <div className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium">Click to set as Y-axis</div>
@@ -1602,6 +1642,31 @@ const Dashboard = () => {
                       } else {
                         const found = run.output_variables?.find((v) => v.name === variable);
                         value = found ? found.value : 'N/A';
+                        
+                        // Handle object values for display
+                        if (typeof value === 'object' && value !== null) {
+                          if (variable === 'utility' && !Array.isArray(value)) {
+                            // Format utility objects nicely
+                            const entries = Object.entries(value)
+                              .filter(([k, v]) => typeof v === 'number')
+                              .map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`);
+                            value = entries.join(', ');
+                          } else if (Array.isArray(value)) {
+                            value = `[${value.join(', ')}]`;
+                          } else {
+                            // Try to extract a meaningful value or show JSON
+                            if ('value' in value) value = value.value;
+                            else if ('amount' in value) value = value.amount;
+                            else if ('score' in value) value = value.score;
+                            else if ('result' in value) value = value.result;
+                            else value = JSON.stringify(value);
+                          }
+                        }
+                        
+                        // Format numbers nicely
+                        if (typeof value === 'number') {
+                          value = value % 1 === 0 ? value : value.toFixed(3);
+                        }
                       }
 
                       return (

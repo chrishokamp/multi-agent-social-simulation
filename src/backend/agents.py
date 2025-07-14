@@ -185,6 +185,19 @@ class UtilityAgent(AssistantAgent, ABC):
         if hasattr(self, 'simulation_id') and hasattr(self, 'run_id'):
             from engine.message_hook import get_hook_manager
             hook_manager = get_hook_manager()
+            
+            # Send a message event showing the agent is optimizing
+            hook_manager.on_message(
+                agent_name="System",
+                content=f"🧠 {self.name} is optimizing their strategy based on previous performance (utility: {utility:.3f})",
+                metadata={
+                    "simulation_id": self.simulation_id,
+                    "run_id": self.run_id,
+                    "is_optimization": True,
+                    "agent_optimizing": self.name
+                }
+            )
+            
             hook_manager.on_optimization(
                 agent_name=self.name,
                 optimization_data={
@@ -197,6 +210,32 @@ class UtilityAgent(AssistantAgent, ABC):
                     "run_id": getattr(self, 'run_id', None)
                 }
             )
+            
+            # Send a completion message showing the result
+            if new_prompt != self.system_prompt:
+                hook_manager.on_message(
+                    agent_name="System",
+                    content=f"✅ {self.name} successfully updated their strategy",
+                    metadata={
+                        "simulation_id": self.simulation_id,
+                        "run_id": self.run_id,
+                        "is_optimization": True,
+                        "agent_optimizing": self.name,
+                        "optimization_complete": True
+                    }
+                )
+            else:
+                hook_manager.on_message(
+                    agent_name="System",
+                    content=f"💭 {self.name} decided to keep their current strategy",
+                    metadata={
+                        "simulation_id": self.simulation_id,
+                        "run_id": self.run_id,
+                        "is_optimization": True,
+                        "agent_optimizing": self.name,
+                        "optimization_complete": True
+                    }
+                )
         
         self.system_prompt = new_prompt
         return

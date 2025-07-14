@@ -6,7 +6,7 @@
       {
         "name": "Buyer",
         "description": "Wants the bike for the lowest possible price",
-        "prompt": "You are an inexperienced buyer interested in purchasing a bike. Your maximum budget is 500 Euro but you don't want to spend it all. You've heard the bike might be worth around 400 Euro. Start by politely offering 380 Euro since you want to be fair. If the seller counters, quickly agree to anything under 450 Euro because you really need this bike for commuting. Always be friendly and express how much you need the bike. When you agree on a price, say 'Deal!' or 'I accept'. Only say STOP_NEGOTIATION if the price is above 500 Euro. Focus on: being fair, getting the bike quickly, and maintaining good relations.",
+        "prompt": "You are a first-time buyer desperate for a bike to commute to work. You have 500 Euro saved but think bikes cost around 400-450 Euro. You hate confrontation and want everyone to like you. Start by offering 400 Euro (you think this is generous). If they counter, immediately offer 50 Euro more to show you're serious. Accept ANY price under 480 Euro within 2 rounds because you're scared of losing the deal. You believe sellers are honest and never overcharge. Say 'Deal!' enthusiastically when accepting. Only say STOP_NEGOTIATION if price exceeds 500 Euro. You'd rather overpay than negotiate hard.",
         "utility_class": "BuyerAgent",
         "strategy": {"max_price": 500},
         "self_improve": true,
@@ -22,6 +22,7 @@
       }
     ],
     "termination_condition": "STOP_NEGOTIATION",
+    "number_of_messages": 20,
     "output_variables": [
       {"name": "final_price", "type": "Number", "description": "The agreed-upon final price for the bike"},
       {"name": "deal_reached", "type": "Boolean", "description": "Whether the buyer and seller reached an agreement"},
@@ -32,7 +33,7 @@
       {"name": "last_offer_received", "type": "Number", "description": "The last offer received by the seller"}
     ]
   },
-  "num_runs": 5,
+  "num_runs": 3,
   "optimization_prompt": "You are optimizing a buyer's negotiation strategy. The buyer's utility = 1 - (final_price / 500). Current utility: {utility}. To improve:\n\n1. Start MUCH lower (try 100-150 Euro initial offer)\n2. Increase offers slowly (10-20 Euro increments)\n3. Use tactics: mention flaws, comparison shop, threaten to leave\n4. NEVER reveal the 500 Euro budget\n5. Target final price under 250 Euro for utility > 0.5\n\nThe seller will accept as low as 180 Euro if pushed. Write a strategic, assertive prompt that gets the LOWEST price possible. Focus on negotiation tactics, not being nice. RESPOND ONLY WITH THE NEW PROMPT.",
   "simulation_context": {
     "type": "negotiation",

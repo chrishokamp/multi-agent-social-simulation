@@ -1,5 +1,7 @@
+from pymongo import DESCENDING
 from db.base import MongoBase
 from db.simulation_results import SimulationResults
+from datetime import datetime
 
 from utils import create_logger
 logger = create_logger(__name__)
@@ -19,7 +21,8 @@ class SimulationCatalog(MongoBase):
             "name": name,
             "expected_runs": num_runs,
             "progress_percentage": 0,
-            "status": "queued"
+            "status": "queued",
+            "created_at": datetime.utcnow()
         })
 
         return simulation_id
@@ -52,19 +55,26 @@ class SimulationCatalog(MongoBase):
     
     def get_all(self):
         try:
-            data = self.catalog_collection.find()
+            # Sort by _id descending to get most recent first
+            data = self.catalog_collection.find().sort("_id", DESCENDING)
         except Exception as e:
             logger.error("Error fetching data from catalog: %s", e)
             return []
         catalog = []
 
         for doc in data:
+            created_at = doc.get("created_at", None)
+            # Convert datetime to ISO string for JSON serialization
+            if created_at and isinstance(created_at, datetime):
+                created_at = created_at.isoformat()
+            
             catalog.append({
                 "simulation_id": doc["simulation_id"],
                 "name": doc["name"],
                 "expected_runs": doc["expected_runs"],
                 "progress_percentage": doc["progress_percentage"],
-                "status": doc.get("status", "unknown")
+                "status": doc.get("status", "unknown"),
+                "created_at": created_at
             })
 
         return catalog

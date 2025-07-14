@@ -4,6 +4,7 @@ import time
 import signal
 import asyncio
 import concurrent.futures
+import copy
 from pymongo import MongoClient
 
 from db.simulation_queue import SimulationQueue
@@ -79,10 +80,13 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, upd
 
     env = {"runs": []}
 
+    # Create a mutable deep copy of the config to persist prompt updates
+    current_config = copy.deepcopy(simulation_config)
+    
     for i in range(num_runs):
         # each SelectorGCSimulation will call learn_from_feedback()
         # on the previous `env` and then replay with the updated prompt
-        sim = SelectorGCSimulation(simulation_config, environment=env, simulation_id=simulation_id)
+        sim = SelectorGCSimulation(current_config, environment=env, simulation_id=simulation_id)
         simulation_result = asyncio.run(sim.run())
 
         if not simulation_result:
@@ -91,6 +95,17 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, upd
             continue
 
         logger.info(f"Simulation {simulation_id} run {i+1} completed with result type: {type(simulation_result)}")
+        
+        # Persist optimized prompts for next run
+        if hasattr(sim, 'agents'):
+            for agent in sim.agents:
+                for cfg in current_config.get("agents", []):
+                    if cfg["name"] == agent.name:
+                        # Update the prompt with the potentially optimized version
+                        optimized_prompt = getattr(agent, "system_prompt", cfg.get("prompt"))
+                        if optimized_prompt != cfg.get("prompt"):
+                            logger.info(f"Agent {agent.name} prompt updated from {len(cfg.get('prompt', ''))} to {len(optimized_prompt)} chars")
+                        cfg["prompt"] = optimized_prompt
         
         if update_catalog:
             try:

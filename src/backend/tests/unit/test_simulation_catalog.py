@@ -85,13 +85,18 @@ class TestSimulationCatalog(unittest.TestCase):
         
         # Assertions
         self.assertEqual(result, simulation_id)
-        self.mock_collection.insert_one.assert_called_once_with({
-            "simulation_id": simulation_id,
-            "name": name,
-            "expected_runs": num_runs,
-            "progress_percentage": 0,
-            "status": "queued"  # New field
-        })
+        # Check that insert_one was called
+        self.mock_collection.insert_one.assert_called_once()
+        # Get the actual call arguments
+        call_args = self.mock_collection.insert_one.call_args[0][0]
+        # Check all expected fields
+        self.assertEqual(call_args["simulation_id"], simulation_id)
+        self.assertEqual(call_args["name"], name)
+        self.assertEqual(call_args["expected_runs"], num_runs)
+        self.assertEqual(call_args["progress_percentage"], 0)
+        self.assertEqual(call_args["status"], "queued")
+        # created_at should be present
+        self.assertIn("created_at", call_args)
         
     def test_insert_validates_parameters(self):
         """Test insert method validates input parameters."""
@@ -135,13 +140,15 @@ class TestSimulationCatalog(unittest.TestCase):
         
     def test_get_all_returns_catalog_list(self):
         """Test get_all returns formatted catalog list."""
+        from datetime import datetime
         mock_data = [
             {
                 "simulation_id": "sim1",
                 "name": "Simulation 1",
                 "expected_runs": 5,
                 "progress_percentage": 100,
-                "status": "completed"
+                "status": "completed",
+                "created_at": datetime(2025, 1, 1, 12, 0, 0)
             },
             {
                 "simulation_id": "sim2",
@@ -152,15 +159,20 @@ class TestSimulationCatalog(unittest.TestCase):
             }
         ]
         
-        self.mock_collection.find.return_value = mock_data
+        # Create a mock cursor that returns our data
+        mock_cursor = MagicMock()
+        mock_cursor.__iter__.return_value = iter(mock_data)
+        self.mock_collection.find.return_value.sort.return_value = mock_cursor
         
         result = self.catalog.get_all()
         
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["simulation_id"], "sim1")
         self.assertEqual(result[0]["status"], "completed")
+        self.assertEqual(result[0]["created_at"], "2025-01-01T12:00:00")
         self.assertEqual(result[1]["progress_percentage"], 66)
         self.assertEqual(result[1]["status"], "unknown")  # Default value
+        self.assertIsNone(result[1]["created_at"])  # No created_at in mock data
         
     def test_update_progress_calculates_percentage(self):
         """Test update_progress calculates and updates percentage."""

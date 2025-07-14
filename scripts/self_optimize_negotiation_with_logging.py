@@ -206,9 +206,19 @@ def main(config_path: Path, max_messages: int, min_messages: int,
         })
         
         # Add this run to the environment so agents can learn from it
+        # Include utilities in output_variables for dashboard compatibility
+        output_vars = outputs if isinstance(outputs, list) else [{"name": k, "value": v} for k, v in outputs.items()]
+        
+        # Add utilities to output_variables
+        for agent_name, utility_value in agent_utilities.items():
+            output_vars.append({
+                "name": f"{agent_name}_utility",
+                "value": utility_value
+            })
+        
         environment["runs"].append({
             "run_id": str(sim.run_id) if hasattr(sim, 'run_id') else f"run_{run_idx}",
-            "output_variables": outputs if isinstance(outputs, list) else [{"name": k, "value": v} for k, v in outputs.items()],
+            "output_variables": output_vars,
             "messages": result.get("messages", []) if result else [],
             "system_prompts": result.get("system_prompts", {}) if result else {}
         })
@@ -246,10 +256,55 @@ def main(config_path: Path, max_messages: int, min_messages: int,
                 print(f"   ⚠️  Visualization error: {e}")
 
     # Save consolidated history
+    # Also create a dashboard-compatible version with utilities in output_variables
+    dashboard_history = []
+    for run in history:
+        dashboard_run = run.copy()
+        # Convert outputs to list format if needed
+        if isinstance(run["outputs"], dict):
+            output_vars = [{"name": k, "value": v} for k, v in run["outputs"].items()]
+        else:
+            output_vars = run["outputs"].copy()
+        
+        # Add utilities to output_variables
+        for agent_name, utility_value in run["utilities"].items():
+            output_vars.append({
+                "name": f"{agent_name}_utility",
+                "value": utility_value
+            })
+        
+        dashboard_run["output_variables"] = output_vars
+        dashboard_history.append(dashboard_run)
+    
     out_path = output_dir / "consolidated_history.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
     print(f"\nConsolidated history written to {out_path}")
+    
+    # Save dashboard-compatible version
+    dashboard_path = output_dir / "dashboard_history.json"
+    with open(dashboard_path, "w", encoding="utf-8") as f:
+        json.dump(dashboard_history, f, indent=2)
+    print(f"Dashboard-compatible history written to {dashboard_path}")
+    
+    # Create a simulation results file that mimics the API format
+    simulation_results = {
+        "simulation_id": output_dir.name,
+        "runs": []
+    }
+    
+    for run in dashboard_history:
+        simulation_results["runs"].append({
+            "run_id": run["run_id"],
+            "output_variables": run["output_variables"],
+            "num_messages": len(run.get("messages", [])) if "messages" in run else 10,
+            "messages": run.get("messages", [])
+        })
+    
+    results_path = output_dir / "simulation_results.json"
+    with open(results_path, "w", encoding="utf-8") as f:
+        json.dump(simulation_results, f, indent=2)
+    print(f"Simulation results (API format) written to {results_path}")
 
     # Generate reports for each run
     print(f"\n📄 Generating detailed reports...")
