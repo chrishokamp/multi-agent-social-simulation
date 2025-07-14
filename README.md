@@ -273,9 +273,6 @@ Makefile             # Build and development commands
 ## Visualization
 
 The framework includes rich visualization capabilities:
-
-- **2D Rendering**: Top-down view of agent interactions
-- **3D Environment**: Immersive 3D agent representation
 - **Conversation Flow**: Real-time message visualization
 - **Analytics Dashboard**: Performance metrics and trends
 - **Utility Tracking**: Agent satisfaction over time
