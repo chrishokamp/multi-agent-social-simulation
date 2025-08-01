@@ -71,6 +71,9 @@ In order to run with a specific config:
 ```bash
 make run-simulation CONFIG="path/to/your/config"
 ```
+
+See examples of simulation config files in [src/configs](src/configs/).
+
 ### 3. Run and Explore Simulations using the User Interface
 
 The NegotiationGym user interface facilitates end-to-end configuration, monitoring, and exploration of simulations. 
