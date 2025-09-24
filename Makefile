@@ -275,25 +275,6 @@ uv-install-backend: ## Install backend package in editable mode with uv
 	$(UV) pip install -e $(BACKEND_DIR)
 	@echo "$(GREEN)Backend package installed!$(NC)"
 
-# Example simulation
-.PHONY: run-example
-run-example: ## Run the car negotiation example simulation
-	@echo "$(YELLOW)Running car negotiation example simulation...$(NC)"
-	@if [ ! -f $(UV_VENV)/bin/python ]; then \
-		echo "$(RED)Error: UV environment not found. Run 'make uv-setup' first.$(NC)"; \
-		exit 1; \
-	fi
-	cd $(BACKEND_DIR) && ../../$(UV_VENV)/bin/python -c "\
-import sys, os, json, asyncio; \
-sys.path.insert(0, '.'); \
-from engine.simulation import SelectorGCSimulation; \
-config_path = '../../src/configs/car-sale-negotiation.json'; \
-with open(config_path) as f: config = json.load(f); \
-sim = SelectorGCSimulation(config['config'], environment=None); \
-result = asyncio.run(sim.run()); \
-print('Simulation completed!'); \
-print('Result:', json.dumps(result, indent=2) if result else 'No result')"
-	@echo "$(GREEN)Example simulation completed!$(NC)"
 
 .PHONY: run-simulation
 run-simulation: ## Run simulation with enhanced self-optimization and rich visualizations
