@@ -2,19 +2,22 @@
 import bikeNegotiation from './bikeNegotiation.json';
 import carNegotiation from './carNegotiation.json';
 import collaborativeNegotiation from './collaborativeNegotiation.json';
+import laptopNegotiationCoaching from './laptopNegotiationCoaching.json';
 
 // Export as an array for easy iteration
 export const preconfiguredSimulations = [
   bikeNegotiation,
   carNegotiation,
-  collaborativeNegotiation
+  collaborativeNegotiation,
+  laptopNegotiationCoaching
 ];
 
 // Export as an object for easy lookup by ID
 export const preconfiguredSimulationsById = {
   'bike-negotiation': bikeNegotiation,
   'car-negotiation': carNegotiation,
-  'collaborative-negotiation': collaborativeNegotiation
+  'collaborative-negotiation': collaborativeNegotiation,
+  'laptop-negotiation-coaching': laptopNegotiationCoaching
 };
 
 // Export categories for filtering
