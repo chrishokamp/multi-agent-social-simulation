@@ -51,6 +51,8 @@ export OLLAMA_MODEL="qwen3:4b"
 export DB_CONNECTION_STRING="mongodb://localhost:27017"
 ```
 
+The framework will search for LLM credentials in the order: `Ollama -> Azure -> OpenAI`. So if you wish to use your `OPENAI_API_KEY`, make sure you have run `unset AZURE_OPENAI_API_KEY && unset OLLAMA_MODEL`
+
 
 ### 2. Run Simulations using the API
 
