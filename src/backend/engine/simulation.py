@@ -82,6 +82,8 @@ class SelectorGCSimulation:
             self.llm_config = LLMConfig(**llm_config_kwargs)
         elif "OPENAI_API_KEY" in os.environ:
             self.llm_config = LLMConfig(api_type="openai", model=model_name)
+        else:
+            raise ValueError("No valid LLM configuration found. Please set OLLAMA_MODEL, or AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT, or OPENAI_API_KEY in environment variables.")
         self.min_messages = config.get("min_messages", 2)
         self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
