@@ -63,7 +63,25 @@ class SelectorGCSimulation:
     ):
         model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
         self.config = config
-        self.llm_config = LLMConfig(api_type="openai", model=model_name)
+        if "OLLAMA_MODEL" in os.environ:
+            llm_config_kwargs = {
+                "model": os.environ["OLLAMA_MODEL"],
+                "api_type": "openai",
+                "base_url": "http://localhost:11434/v1",
+                "api_key": "ollama",
+            }
+            self.llm_config = LLMConfig(**llm_config_kwargs)
+        elif "AZURE_OPENAI_API_KEY" in os.environ and "AZURE_OPENAI_ENDPOINT" in os.environ:
+            llm_config_kwargs = {
+                "model": model_name,
+                "api_key": os.environ.get("AZURE_OPENAI_API_KEY"),
+                "api_type": "azure",
+                "base_url": os.environ["AZURE_OPENAI_ENDPOINT"],
+                "api_version": os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1],  
+            }
+            self.llm_config = LLMConfig(**llm_config_kwargs)
+        elif "OPENAI_API_KEY" in os.environ:
+            self.llm_config = LLMConfig(api_type="openai", model=model_name)
         self.min_messages = config.get("min_messages", 2)
         self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
