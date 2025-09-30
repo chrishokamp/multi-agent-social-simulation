@@ -171,7 +171,7 @@ class SelectorGCSimulation:
         self.manager = StreamingGroupChatManager(
             groupchat=self.group_chat,
             llm_config=self.llm_config,
-            is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper(),
+            is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper() or "STOP_NEGOTIATION" in m.get("content", "").upper(),
         )
 
         # wire up detailed per-agent logging
@@ -230,16 +230,23 @@ class SelectorGCSimulation:
         full_transcript = "\n".join(f"{m['agent']}: {m['message']}" for m in messages)
         
         prompt = textwrap.dedent(f"""
-        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents. 
-        Your goal is to extract specific variables from the conversation and output them in JSON format when a specific termination condition is met.
-        Monitor the conversation and track relevant details as messages are exchanged between the agents.
-        Incase of output variables like string variables, comprehensively look at the conversation and output concise and objective information, i.e in case of a court case simulation demanding verdict as a str, output the verdict as the length of prison sentence etc, do not simply state that the verdict was reached
+        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents.
+        Your goal is to extract specific variables from the conversation and output them in JSON format.
+
+        IMPORTANT: This conversation appears to have concluded without explicit termination signals. Analyze carefully to determine if a deal was reached.
+
+        For deal_reached: Set to true ONLY if:
+        1. Both parties explicitly agreed on a specific price (look for "Deal!", "Agreed", "Perfect", "Yes", "I accept", etc.)
+        2. Practical arrangements were discussed (pickup time, location, payment method, contact details)
+        3. Both parties expressed satisfaction/confirmation about the transaction
+
+        For final_price: Use the specific amount both parties agreed upon. If no agreement, use 0.
 
         --- Conversation Transcript ---
         {full_transcript}
         -------------------------------
 
-        Please output the following output_variables
+        Please output the following output_variables:
         {output_variables}
 
         Return only a valid JSON object, using the "name" fields as keys in your output.
