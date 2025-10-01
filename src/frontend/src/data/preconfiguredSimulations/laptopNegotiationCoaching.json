@@ -1,11 +1,11 @@
 {
   "id": "laptop-negotiation-coaching",
   "name": "Laptop Negotiation Coaching (Buyer-Reflect)",
-  "description": "Research-validated buyer-reflect mode with highest utility for buyers. Negotiation coach analyzes transcripts and provides strategic feedback, leading to sophisticated negotiation tactics and improved outcomes.",
+  "description": "Buyer-reflect mode with highest utility for buyers. Negotiation coach analyzes transcripts and provides strategic feedback, leading to sophisticated negotiation tactics and improved outcomes.",
   "category": "negotiation",
   "tags": ["buyer-seller", "price-negotiation", "laptop-marketplace", "negotiation-coaching", "buyer-reflect", "research-validated", "self-optimization"],
   "config": {
-    "model": "gpt-4o",
+    "model": "gpt-5",
     "config": {
       "name": "Laptop Negotiation - Buyer Self-Reflection Only",
       "agents": [
