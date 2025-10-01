@@ -84,14 +84,22 @@ def run_all_runs(simulation_id: str, simulation_config: dict, num_runs: int, upd
     current_config = copy.deepcopy(simulation_config)
     
     for i in range(num_runs):
-        # each SelectorGCSimulation will call learn_from_feedback()
-        # on the previous `env` and then replay with the updated prompt
-        sim = SelectorGCSimulation(current_config, environment=env, simulation_id=simulation_id)
-        simulation_result = asyncio.run(sim.run())
+        try:
+            # each SelectorGCSimulation will call learn_from_feedback()
+            # on the previous `env` and then replay with the updated prompt
+            sim = SelectorGCSimulation(current_config, environment=env, simulation_id=simulation_id)
+            simulation_result = asyncio.run(sim.run())
 
-        if not simulation_result:
-            print(f"Run {i} failed; retrying...")
-            logger.error(f"Simulation {simulation_id} run {i+1} returned no result")
+            if not simulation_result:
+                print(f"Run {i} failed; retrying...")
+                logger.error(f"Simulation {simulation_id} run {i+1} returned no result")
+                continue
+
+        except Exception as e:
+            logger.error(f"Simulation {simulation_id} run {i+1} failed with error: {e}")
+            logger.error(f"Error type: {type(e).__name__}")
+            print(f"Run {i+1} failed with error: {e}")
+            # Mark this run as failed but continue with other runs
             continue
 
         logger.info(f"Simulation {simulation_id} run {i+1} completed with result type: {type(simulation_result)}")

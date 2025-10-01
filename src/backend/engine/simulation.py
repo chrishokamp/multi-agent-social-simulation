@@ -63,7 +63,27 @@ class SelectorGCSimulation:
     ):
         model_name = model or config.get("model") or os.environ.get("OPENAI_MODEL", "gpt-4o")
         self.config = config
-        self.llm_config = LLMConfig(api_type="openai", model=model_name)
+        if "OLLAMA_MODEL" in os.environ:
+            llm_config_kwargs = {
+                "model": os.environ["OLLAMA_MODEL"],
+                "api_type": "openai",
+                "base_url": "http://localhost:11434/v1",
+                "api_key": "ollama",
+            }
+            self.llm_config = LLMConfig(**llm_config_kwargs)
+        elif "AZURE_OPENAI_API_KEY" in os.environ and "AZURE_OPENAI_ENDPOINT" in os.environ:
+            llm_config_kwargs = {
+                "model": model_name,
+                "api_key": os.environ.get("AZURE_OPENAI_API_KEY"),
+                "api_type": "azure",
+                "base_url": os.environ["AZURE_OPENAI_ENDPOINT"],
+                "api_version": os.environ["AZURE_OPENAI_ENDPOINT"].split("api-version=")[-1],  
+            }
+            self.llm_config = LLMConfig(**llm_config_kwargs)
+        elif "OPENAI_API_KEY" in os.environ:
+            self.llm_config = LLMConfig(api_type="openai", model=model_name)
+        else:
+            raise ValueError("No valid LLM configuration found. Please set OLLAMA_MODEL, or AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT, or OPENAI_API_KEY in environment variables.")
         self.min_messages = config.get("min_messages", 2)
         self.max_messages = config.get("max_messages", 25)
         self.run_id = str(uuid.uuid4())
@@ -151,7 +171,7 @@ class SelectorGCSimulation:
         self.manager = StreamingGroupChatManager(
             groupchat=self.group_chat,
             llm_config=self.llm_config,
-            is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper(),
+            is_termination_msg=lambda m: "TERMINATE" in m.get("content", "").upper() or "STOP_NEGOTIATION" in m.get("content", "").upper(),
         )
 
         # wire up detailed per-agent logging
@@ -210,16 +230,23 @@ class SelectorGCSimulation:
         full_transcript = "\n".join(f"{m['agent']}: {m['message']}" for m in messages)
         
         prompt = textwrap.dedent(f"""
-        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents. 
-        Your goal is to extract specific variables from the conversation and output them in JSON format when a specific termination condition is met.
-        Monitor the conversation and track relevant details as messages are exchanged between the agents.
-        Incase of output variables like string variables, comprehensively look at the conversation and output concise and objective information, i.e in case of a court case simulation demanding verdict as a str, output the verdict as the length of prison sentence etc, do not simply state that the verdict was reached
+        You are an AI assistant tasked with analyzing a conversation between multiple LLM agents.
+        Your goal is to extract specific variables from the conversation and output them in JSON format.
+
+        IMPORTANT: This conversation appears to have concluded without explicit termination signals. Analyze carefully to determine if a deal was reached.
+
+        For deal_reached: Set to true ONLY if:
+        1. Both parties explicitly agreed on a specific price (look for "Deal!", "Agreed", "Perfect", "Yes", "I accept", etc.)
+        2. Practical arrangements were discussed (pickup time, location, payment method, contact details)
+        3. Both parties expressed satisfaction/confirmation about the transaction
+
+        For final_price: Use the specific amount both parties agreed upon. If no agreement, use 0.
 
         --- Conversation Transcript ---
         {full_transcript}
         -------------------------------
 
-        Please output the following output_variables
+        Please output the following output_variables:
         {output_variables}
 
         Return only a valid JSON object, using the "name" fields as keys in your output.
