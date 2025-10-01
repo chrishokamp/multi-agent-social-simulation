@@ -48,13 +48,13 @@
     },
     "variables": {
       "asking_price": {
-        "range": { "min": 900, "max": 1400, "step": 50 }
+        "range": { "min": 3000, "max": 5000, "step": 100 }
       },
       "floor": {
-        "expr": "asking_price - randint(100, 300)"
+        "expr": "asking_price - randint(1000, 1200)"
       },
       "budget": {
-        "expr": "randint(floor + 50, asking_price - 50)"
+        "expr": "randint(floor + 200, asking_price - 100)"
       }
     }
   }
