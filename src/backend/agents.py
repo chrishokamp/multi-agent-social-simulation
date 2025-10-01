@@ -632,7 +632,7 @@ class NegotiationCoachSellerAgent(NegotiationCoachAgent):
         elif deal_reached is True and final_price is not None:
             final_price = float(final_price)
             max_price = float(self.strategy["asking_price"])
-            seller_floor = float(self.strategy.get("asking_price", 0))
+            seller_floor = float(self.strategy.get("floor", 0))
             # Normalise to [0, 1]: 1 ⇒ paid seller_floor, 0 ⇒ paid max_price.
             denominator = max_price - seller_floor
             if denominator == 0:
