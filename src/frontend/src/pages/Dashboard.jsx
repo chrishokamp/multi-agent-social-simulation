@@ -1642,7 +1642,15 @@ const Dashboard = () => {
                       } else {
                         const found = run.output_variables?.find((v) => v.name === variable);
                         value = found ? found.value : 'N/A';
-                        
+
+                        // Handle boolean values consistently (for deal_reached, etc.)
+                        if (variable === 'deal_reached') {
+                          if (typeof value === 'string') {
+                            value = value.toLowerCase() === 'true';
+                          }
+                          value = value ? 'true' : 'false';
+                        }
+
                         // Handle object values for display
                         if (typeof value === 'object' && value !== null) {
                           if (variable === 'utility' && !Array.isArray(value)) {
