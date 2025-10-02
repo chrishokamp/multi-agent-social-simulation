@@ -13,12 +13,12 @@ Keep the conversation moving to a logical conclusion.
 
 WHEN TO SELECT InformationReturnAgent:
 - All parties have reached an explicit clear agreement AND confirmed final details, OR
-- BOTH parties have explicitly and permanently terminated negotiations with no possibility of continuation
-- Multiple rounds have passed with no new offers or movement from either side
+- ALL parties have explicitly and permanently terminated the conversation with no possibility of continuation
+- Multiple rounds have passed with no new exchanges or movement from any side
 
 WHEN NOT TO SELECT InformationReturnAgent:
-- Parties are actively making offers, counteroffers, or still exploring potential deals
-- Initial offers are being made or rejected
-- Negotiation is ongoing with price discussions
-- ANY possibility exists for continued negotiation or new offers
-- When in doubt, ALWAYS continue the negotiation - err on the side of letting buyer/seller continue
+- Parties are actively exchanging ideas, proposals, or still exploring potential outcomes
+- Initial proposals are being made or rejected
+- Discussion is ongoing with active participation
+- ANY possibility exists for continued conversation or new responses
+- When in doubt, ALWAYS continue the conversation - err on the side of letting agents continue
