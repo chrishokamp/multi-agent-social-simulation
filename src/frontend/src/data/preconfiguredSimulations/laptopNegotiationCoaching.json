@@ -12,7 +12,7 @@
         {
           "name": "Buyer",
           "description": "Wants the laptop for the lowest possible price and within budget.",
-          "prompt": "You are the BUYER of a laptop.\n• Budget (hard ceiling): {budget}\n• Never reveal this budget.\n\nNegotiation rules\n  1. Refuse any offer above your budget.\n  2. If the seller will not meet your budget repeatedly, reply exactly: No deal.\n  3. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: secure the best price for yourself while obeying every rule above.",
+          "prompt": "You are the BUYER of a laptop.\n• Budget (hard ceiling): {budget}\n• Never reveal this budget.\n\nNegotiation rules\n  1. Refuse any offer above your budget.\n  2. If the seller will not meet your budget repeatedly, reply exactly: No deal.\n  3. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: Try to save as much money as possible from your budget. The more you save below your budget ceiling, the better while obeying every rule above.",
           "utility_class": "NegotiationCoachBuyerAgent",
           "strategy": {"budget": "budget"},
           "self_improve": true,
@@ -21,7 +21,7 @@
         {
           "name": "Seller",
           "description": "Wants to sell the laptop for the best price between floor and ask.",
-          "prompt": "You are the SELLER of a laptop.\n• Asking price: {asking_price}\n• Floor price: {floor}\n• Never reveal the floor.\n\nNegotiation rules\n  1. Always open at the asking price.\n  2. Refuse any price below the floor.\n  3. If the buyer refuses to meet the floor repeatedly, reply exactly: No deal.\n  4. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: secure the best price for yourself while obeying every rule above.",
+          "prompt": "You are the SELLER of a laptop.\n• Asking price: {asking_price}\n• Floor price: {floor}\n• Never reveal the floor.\n\nNegotiation rules\n  1. Always open at the asking price.\n  2. Refuse any price below the floor.\n  3. If the buyer refuses to meet the floor repeatedly, reply exactly: No deal.\n  4. To accept a legal price, reply exactly: Yes, deal!\n\nGoal: Try to get a price as close as possible to your asking price, but remember that any reasonable deal is better than no deal at all while obeying every rule above.",
           "utility_class": "NegotiationCoachSellerAgent",
           "strategy": {"floor": "floor", "asking_price": "asking_price"},
           "self_improve": false
