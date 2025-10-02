@@ -51,10 +51,10 @@
         "range": { "min": 3000, "max": 5000, "step": 100 }
       },
       "floor": {
-        "expr": "asking_price - randint(1000, 1200)"
+        "expr": "asking_price - randint(1400, 1800)"
       },
       "budget": {
-        "expr": "randint(floor + 200, asking_price - 100)"
+        "expr": "randint(floor + 800, asking_price - 200)"
       }
     }
   }
