@@ -423,7 +423,11 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.negotiation_strategies: list = []
-        self.original_system_prompt = self.system_prompt
+        # Extract clean prompt without any existing strategies
+        if "Negotiation strategies:" in self.system_prompt:
+            self.original_system_prompt = self.system_prompt.split("Negotiation strategies:")[0].rstrip()
+        else:
+            self.original_system_prompt = self.system_prompt
 
     def learn_from_feedback(self, environment: Mapping[str, Any] | None = None) -> None:
         
@@ -436,7 +440,10 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
         if not environment["runs"]:
             return  # no previous runs
         environment.setdefault(agent_strategies_key, [])
-        
+
+        # Restore all previously learned strategies from environment
+        self.negotiation_strategies = environment[agent_strategies_key].copy()
+
         history = self.get_history(environment, n_runs=1)
         most_recent_run = environment["runs"][-1]
         
