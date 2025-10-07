@@ -10,4 +10,15 @@ Make sure the planner agent has assigned tasks before other agents start working
 Only select one agent.
 
 Keep the conversation moving to a logical conclusion.
-InformationReturnAgent should only step in at the end of the conversation.
+
+WHEN TO SELECT InformationReturnAgent:
+- All parties have reached an explicit clear agreement AND confirmed final details AND no further discussion is needed, OR
+- ALL parties have explicitly and permanently terminated the conversation with absolutely no possibility of continuation AND multiple rounds have passed with no movement
+- CRITICAL: Only select when conversation is 100% complete and finished
+
+WHEN NOT TO SELECT InformationReturnAgent:
+- Parties are actively exchanging ideas, proposals, or still exploring potential outcomes
+- Initial proposals are being made or rejected
+- Discussion is ongoing with active participation
+- ANY possibility exists for continued conversation or new responses
+- When in doubt, ALWAYS continue the conversation - err on the side of letting agents continue

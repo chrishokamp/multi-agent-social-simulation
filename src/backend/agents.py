@@ -423,7 +423,11 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.negotiation_strategies: list = []
-        self.original_system_prompt = self.system_prompt
+        # Extract clean prompt without any existing strategies
+        if "Negotiation strategies:" in self.system_prompt:
+            self.original_system_prompt = self.system_prompt.split("Negotiation strategies:")[0].rstrip()
+        else:
+            self.original_system_prompt = self.system_prompt
 
     def learn_from_feedback(self, environment: Mapping[str, Any] | None = None) -> None:
         
@@ -436,7 +440,10 @@ class NegotiationCoachAgent(UtilityAgent, ABC):
         if not environment["runs"]:
             return  # no previous runs
         environment.setdefault(agent_strategies_key, [])
-        
+
+        # Restore all previously learned strategies from environment
+        self.negotiation_strategies = environment[agent_strategies_key].copy()
+
         history = self.get_history(environment, n_runs=1)
         most_recent_run = environment["runs"][-1]
         
@@ -632,7 +639,7 @@ class NegotiationCoachSellerAgent(NegotiationCoachAgent):
         elif deal_reached is True and final_price is not None:
             final_price = float(final_price)
             max_price = float(self.strategy["asking_price"])
-            seller_floor = float(self.strategy.get("asking_price", 0))
+            seller_floor = float(self.strategy.get("floor", 0))
             # Normalise to [0, 1]: 1 ⇒ paid seller_floor, 0 ⇒ paid max_price.
             denominator = max_price - seller_floor
             if denominator == 0:

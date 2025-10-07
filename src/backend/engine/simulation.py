@@ -274,6 +274,11 @@ class SelectorGCSimulation:
             value = parsed_json[variable]
             if value is None or value == "Unspecified":
                 value = "Unspecified"
+
+            # Ensure boolean values are consistent
+            if variable == "deal_reached" and isinstance(value, str):
+                value = value.lower() == "true"
+
             output_variables.append({"name": variable, "value": value})
         return output_variables
 
